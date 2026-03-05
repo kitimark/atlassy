@@ -19,3 +19,9 @@ Use this structure for each idea:
 - `Risks`
 - `Signals To Revisit`
 - `Promotion Path`
+
+## Current Ideas
+
+- `2026-03-adf-markdown-dual-representation.md`
+- `2026-03-token-reduction-confluence-updates.md`
+- `2026-03-confluence-adf-markdown-size-evidence.md`
