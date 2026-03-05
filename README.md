@@ -44,6 +44,12 @@ Detailed planning docs are under `roadmap/`.
 
 Start here: `roadmap/README.md`.
 
+## Ideas
+
+Incubating concepts that are not scheduled yet are stored under `ideas/`.
+
+Start here: `ideas/README.md`.
+
 ## Current Status
 
 Phase 0 (design baseline): in planning.
