@@ -77,3 +77,7 @@ Deliver a minimal-change Confluence update pipeline that keeps ADF fidelity whil
 - If Markdown conversion confidence is low, skip `md_assist_edit` and use direct ADF edit path for targeted prose nodes.
 - If `verify` fails, block publish and return deterministic failure reasons.
 - If publish conflicts after one rebase retry, return a reviewer artifact instead of repeated retries.
+
+## AI Contract Reference
+
+- Machine-oriented state I/O and error contracts are defined in `09-ai-contract-spec.md`.

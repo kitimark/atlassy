@@ -18,6 +18,7 @@ This folder contains design and delivery planning for Atlassy.
 - `06-decisions-and-defaults.md`
 - `07-execution-readiness.md`
 - `08-poc-scope.md`
+- `09-ai-contract-spec.md`
 
 ## Working Rules
 
