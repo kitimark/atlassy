@@ -6,44 +6,45 @@ Incubating (not scheduled)
 
 ## Plain Problem Points
 
-- ADF is reliable for Confluence fidelity but hard for humans to read and edit directly.
-- Markdown is easy to read and edit but cannot represent all Confluence features.
-- Round-trip conversion between Markdown and ADF can cause drift in complex blocks.
-- Large full-body payloads increase token usage and retry cost during AI-assisted editing.
+- Atlassy needs Confluence-native feature coverage that Markdown cannot represent fully.
+- ADF must stay canonical to avoid fidelity drift for tables, macros, media, layouts, and extensions.
+- Human editing quality is higher in Markdown for prose-only edits.
+- Full-page ADF workflows are token-heavy without strict scope and patch controls.
 
 ## Proposed Direction
 
-Use a block-level dual representation:
+Use an ADF-canonical dual-representation model with block routing:
 
-- Markdown-editable blocks for prose and simple structures.
-- Locked ADF blocks for high-risk Confluence-native features.
-- Minimal patch updates that preserve locked ADF blocks unless explicitly targeted.
+- `editable_prose`: use temporary Markdown assist for prose and simple structures.
+- `table_adf`: edit tables in ADF-native mode (v1 allows cell text changes only).
+- `locked_structural`: keep unsupported Confluence-native blocks locked in ADF.
+- Use minimal path-targeted ADF patch updates and preserve all untouched locked blocks.
 
 ## Why Not Now
 
 - Current project phase is focused on foundation and roadmap definition.
-- This idea needs schema and conversion validation before implementation.
-- It introduces additional complexity in parser, patch planner, and fidelity checks.
+- This idea needs robust path mapping between Markdown assist blocks and ADF nodes.
+- It introduces additional complexity in classifier, patch planner, and fidelity checks.
 
 ## Risks
 
-- Incorrect block boundary detection may edit protected content.
-- Over-locking can reduce usability for writers.
-- Under-locking can regress formatting fidelity in production pages.
-- Confluence API behavior changes can affect conversion stability.
+- Incorrect block classification can route unsafe content to Markdown assist.
+- Table path targeting bugs can mutate the wrong cells.
+- Over-locking can reduce usability; under-locking can regress fidelity.
+- Confluence API behavior changes can affect conversion and validation stability.
 
 ## Signals To Revisit
 
-- Repeated fidelity regressions from Markdown-only updates.
+- Repeated fidelity regressions in mixed prose/table editing flows.
 - High token costs from ADF-heavy prompts.
-- Frequent manual rework for tables, media, or macro-rich pages.
+- Frequent manual rework for unsupported structural blocks.
 - Clear owner and capacity available for a dedicated PoC.
 
 ## Promotion Path
 
 Move this idea to `roadmap/` when all conditions are true:
 
-- A v1 scope and support matrix are approved.
+- A v1 support matrix is approved (`editable_prose`, `table_adf`, `locked_structural`).
 - KPI targets are defined and accepted.
-- Test corpus for round-trip fidelity is prepared.
+- Test corpus for prose round-trip and table-cell patch fidelity is prepared.
 - Phase 0 implementation capacity is committed.

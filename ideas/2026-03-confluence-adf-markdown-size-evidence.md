@@ -55,7 +55,8 @@ Aggregate totals:
 
 ## Implications for Atlassy
 
-- Use markdown-first context for planning and authoring.
+- Keep ADF as canonical for planning, patching, and publish.
+- Use Markdown assist only for prose-friendly editing contexts.
 - Preserve fidelity-critical blocks with lock/preserve policy.
 - Prefer section-level retrieval and minimal patch planning.
 - Add dry-run fidelity checks before any publish step.

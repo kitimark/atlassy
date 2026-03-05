@@ -25,3 +25,6 @@ Use this structure for each idea:
 - `2026-03-adf-markdown-dual-representation.md`
 - `2026-03-token-reduction-confluence-updates.md`
 - `2026-03-confluence-adf-markdown-size-evidence.md`
+- `2026-03-advanced-table-editing-modes.md`
+- `2026-03-structural-block-editing-support.md`
+- `2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`

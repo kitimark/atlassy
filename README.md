@@ -2,6 +2,13 @@
 
 Atlassy is a token-efficient Confluence workflow toolkit for AI and MCP-driven editing.
 
+## Editing Model (v1 default)
+
+- ADF is canonical for fetch, diff, patch, verify, and publish.
+- Markdown is a transient assist format for prose-only editing.
+- Tables are edited via ADF-native operations (cell text only in v1).
+- Unsupported structural blocks remain locked until dedicated support is added.
+
 ## Problem
 
 Large Confluence pages increase token usage and make updates fragile.
@@ -26,13 +33,16 @@ Large Confluence pages increase token usage and make updates fragile.
 
 Use a minimal-change pipeline:
 
-`read -> plan -> patch -> verify -> publish`
+`fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> merge_candidates -> patch -> verify -> publish`
 
 ## Planned Capabilities
 
 - `fetch`
-- `index`
-- `plan`
+- `classify`
+- `extract_prose`
+- `md_assist_edit`
+- `adf_table_edit`
+- `merge_candidates`
 - `patch`
 - `verify`
 - `publish`
