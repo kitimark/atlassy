@@ -8,7 +8,9 @@ This folder contains design and delivery planning for Atlassy.
 - Break large planning content into small, reusable documents.
 - Reduce context bloat in AI conversations by referencing focused files.
 
-## Suggested Document Set
+## Roadmap Document Set (current)
+
+- All core v1 planning documents are now tracked in this folder.
 
 - `01-problem-points.md`
 - `02-solution-architecture.md`
