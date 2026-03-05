@@ -52,6 +52,7 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 ### Scope
 
 - Implement orchestration for all v1 states (`fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> merge_candidates -> patch -> verify -> publish`).
+- Implement Phase 1 runtime using Rust workspace foundations and typed state envelopes.
 - Establish diagnostics and replay artifact persistence.
 - Support scoped ADF retrieval and node-path indexing.
 
@@ -97,6 +98,7 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 ### Scope
 
 - Execute dataset and Pattern A/B/C scenarios from `08-poc-scope.md`.
+- Run live Confluence behavior probes in sandbox and align stub simulation scenarios.
 - Run paired baseline vs optimized experiments.
 - Produce batch and aggregate KPI reports.
 
@@ -136,6 +138,17 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 - KPI protocol: `04-kpi-and-experiments.md`
 - Risk controls: `05-risks-and-mitigations.md`
 - Execution checklist: `07-execution-readiness.md`
+- Testing strategy and simulation: `10-testing-strategy-and-simulation.md`
+
+## OpenSpec Change Map
+
+- `phase1-core-pipeline-skeleton-rust`
+- `phase2-prose-assist-route-rust`
+- `phase3-table-cell-route-rust`
+- `phase4-poc-execution-metrics-rust`
+- `phase5-hardening-readiness-rust`
+
+These change IDs are planned execution containers under OpenSpec and should be used to track proposal/design/tasks and implementation progress.
 
 ## Explicitly Deferred Beyond v1
 

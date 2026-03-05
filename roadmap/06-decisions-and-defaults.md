@@ -39,6 +39,21 @@
 - Decision: one scoped rebase retry on version conflict, then fail fast.
 - Rationale: limits retry token waste and prevents hidden repeated mutation.
 
+### D-008: v1 implementation stack
+
+- Decision: implement v1 pipeline runtime in Rust as a CLI-first workspace with reusable core libraries.
+- Default components: `clap` (CLI), `tokio` + `reqwest` (async Confluence integration), `serde` + `serde_json` (state contracts), `tracing` (structured diagnostics), `thiserror` (error taxonomy), and `cargo test` for fixture-backed verification.
+- Rationale: strong type safety, deterministic state handling, and predictable performance for ADF-heavy patch/verify flows.
+- Constraint: product defaults remain unchanged (ADF-canonical flow, route policy, verifier hard gates, and one-retry conflict policy).
+- Note: Rust toolchain installation is a readiness prerequisite before Phase 1 implementation starts.
+
+### D-009: Confluence testing mode policy
+
+- Decision: use live Confluence research in a dedicated sandbox space to capture real API behavior, then run CI and regression suites against a deterministic stubbed Confluence service.
+- Live scope: controlled read/write probes for fetch, publish, version conflicts, and representative error responses.
+- Stub scope: scenario-driven simulation for happy path, retry exhaustion, schema errors, route/scope violations, and transient service failures.
+- Rationale: preserve realism for behavior discovery while keeping automated test runs stable, fast, and reproducible.
+
 ## Default Route Matrix
 
 - `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock, rule.

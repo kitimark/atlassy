@@ -10,6 +10,30 @@ Define the minimum operational, quality, and governance conditions required to r
 - Uses KPI and experiment protocol from `04-kpi-and-experiments.md`.
 - Uses risk controls from `05-risks-and-mitigations.md`.
 - Uses pipeline and contract rules from `02-solution-architecture.md` and `09-ai-contract-spec.md`.
+- Uses test environment and simulation policy from `10-testing-strategy-and-simulation.md`.
+
+## Rust Implementation Blueprint (draft-first)
+
+- Workspace shape:
+  - `crates/atlassy-cli` for operator-facing commands
+  - `crates/atlassy-pipeline` for state orchestration
+  - `crates/atlassy-adf` for routing, patch ops, and lock fingerprints
+  - `crates/atlassy-confluence` for API integration and publish/retry handling
+  - `crates/atlassy-contracts` for state envelope types and validation
+- Default library stack: `clap`, `tokio`, `reqwest`, `serde`, `serde_json`, `tracing`, `thiserror`.
+- Test model: fixture-backed `cargo test` with deterministic replay artifacts.
+- Markdown assist detail policy: keep v1 behavior per route constraints; refine implementation details after Phase 1 skeleton is stable.
+
+## OpenSpec Control Plan (execution)
+
+- OpenSpec is the execution controller; roadmap docs remain strategic baseline.
+- Planned change IDs:
+  - `phase1-core-pipeline-skeleton-rust`
+  - `phase2-prose-assist-route-rust`
+  - `phase3-table-cell-route-rust`
+  - `phase4-poc-execution-metrics-rust`
+  - `phase5-hardening-readiness-rust`
+- Work rule: no implementation task starts without a corresponding OpenSpec change artifact set (`proposal`, `specs`, `design`, `tasks`).
 
 ## Roles and Ownership
 
@@ -33,6 +57,8 @@ Define the minimum operational, quality, and governance conditions required to r
 - Credentials/secrets are provisioned in approved runtime paths.
 - Artifact storage path is writable and retained for replay.
 - Clock synchronization and timestamps are reliable for latency metrics.
+- Rust toolchain (`rustc`, `cargo`) is installed and pinned for the repository runtime.
+- Dedicated sandbox write access is available for controlled live research probes.
 
 ### Gate 3: Pipeline Integrity
 
@@ -47,6 +73,8 @@ Define the minimum operational, quality, and governance conditions required to r
 - Positive tests pass for prose-only and mixed prose/table edits.
 - Negative tests pass for forbidden table operations and out-of-scope mutations.
 - Replay artifacts can reproduce at least one failure in each major error class.
+- Stub simulation scenarios cover all required v1 hard-error paths.
+- Live smoke checks are defined for behavior drift detection.
 
 ### Gate 5: Metrics and Reporting
 

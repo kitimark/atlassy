@@ -9,6 +9,14 @@ Atlassy is a token-efficient Confluence workflow toolkit for AI and MCP-driven e
 - Tables are edited via ADF-native operations (cell text only in v1).
 - Unsupported structural blocks remain locked until dedicated support is added.
 
+## Implementation Stack (v1 default)
+
+- Runtime language: Rust (stable toolchain).
+- Architecture: CLI-first workspace with shared core libraries for pipeline states and ADF operations.
+- Confluence integration: async HTTP client with typed request/response contracts.
+- Verification and diagnostics: contract-validated state envelopes, structured tracing logs, and replay artifacts.
+- Testing: live Confluence research in sandbox plus fixture-backed stub simulation for CI and regression.
+
 ## Problem
 
 Large Confluence pages increase token usage and make updates fragile.
