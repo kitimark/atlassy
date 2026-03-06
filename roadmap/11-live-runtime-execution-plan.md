@@ -23,7 +23,6 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 3. Live Confluence runtime implementation and runtime backend selection (`stub|live`).
 4. Telemetry quality improvements for KPI validity.
 5. End-to-end gated rerun of validation sequence.
-6. Final roadmap status synchronization.
 
 ### Out of Scope
 
@@ -120,22 +119,6 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 - Safety-negative run blocks publish with deterministic error code.
 - Replay verification passes.
 - Decision output is evidence-backed and provenance-stamped.
-
-### WP6: Roadmap and Status Sync
-
-**Goal**
-
-- Keep roadmap status aligned with implemented reality and measured outcomes.
-
-**Required Outcomes**
-
-- Update phase/status references after WP1-WP5 completion.
-- Record final recommendation (`go|iterate|stop`) with provenance context.
-
-**Done Criteria**
-
-- No contradiction across roadmap status docs.
-- Final status clearly states pilot readiness and remaining blockers (if any).
 
 ## Stop Conditions (Immediate Triage)
 
