@@ -1,0 +1,31 @@
+{
+  "type": "doc",
+  "version": 1,
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "id": "intro-heading"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Overview"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "intro-paragraph"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Initial paragraph"
+        }
+      ]
+    }
+  ]
+}
