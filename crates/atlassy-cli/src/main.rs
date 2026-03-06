@@ -55,6 +55,12 @@ enum Commands {
         #[arg(long, default_value = ".")]
         artifacts_dir: PathBuf,
     },
+    RunReadiness {
+        #[arg(long, default_value = ".")]
+        artifacts_dir: PathBuf,
+        #[arg(long)]
+        verify_replay: bool,
+    },
 }
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -300,6 +306,106 @@ struct RegressionSummary {
     optimized: f64,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct ReadinessGateResult {
+    gate_id: String,
+    gate_name: String,
+    target: String,
+    pass: bool,
+    mandatory: bool,
+    owner_role: String,
+    blocking_reason: Option<String>,
+    evidence_refs: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct ReadinessChecklist {
+    schema_version: String,
+    generated_ts: String,
+    owner_roles: ReadinessOwnerRoles,
+    source_artifacts: Vec<String>,
+    gates: Vec<ReadinessGateResult>,
+    blocked: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct ReadinessOwnerRoles {
+    product_owner: String,
+    engineering_owner: String,
+    qa_owner: String,
+    data_metrics_owner: String,
+    release_reviewer: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct RunbookSection {
+    failure_class: String,
+    severity: String,
+    primary_owner_role: String,
+    escalation_owner_role: String,
+    escalation_trigger: String,
+    triage_steps: Vec<String>,
+    evidence_checks: Vec<String>,
+    fallback: bool,
+    blocks_signoff: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct RunbookBundle {
+    schema_version: String,
+    generated_ts: String,
+    sections: Vec<RunbookSection>,
+    blocked: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct RiskStatusDelta {
+    risk_id: String,
+    title: String,
+    priority: String,
+    previous_status: String,
+    current_status: String,
+    reason: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct FailureClassSummary {
+    failure_class: String,
+    severity: String,
+    count: usize,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct DecisionPacket {
+    schema_version: String,
+    generated_ts: String,
+    recommendation: String,
+    blocking_condition: Option<String>,
+    rationale: Vec<String>,
+    gate_outcomes: Vec<ReadinessGateResult>,
+    kpi_summary: Option<KpiReport>,
+    risk_status_deltas: Vec<RiskStatusDelta>,
+    top_failure_classes: Vec<FailureClassSummary>,
+    checklist_path: String,
+    runbook_path: String,
+    report_path: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+struct ReadinessOutputs {
+    checklist: ReadinessChecklist,
+    runbook_bundle: RunbookBundle,
+    decision_packet: DecisionPacket,
+}
+
+#[derive(Debug, Clone)]
+struct ReadinessEvidence {
+    manifest: RunManifest,
+    report: BatchReport,
+    summaries: BTreeMap<String, RunSummary>,
+    source_artifacts: Vec<String>,
+}
+
 #[derive(Debug, Clone)]
 struct FlowGroup {
     page_id: String,
@@ -397,6 +503,21 @@ async fn main() -> Result<(), DynError> {
             let report = execute_batch_from_manifest_file(&manifest, &artifacts_dir)?;
             println!("{}", serde_json::to_string_pretty(&report)?);
         }
+        Commands::RunReadiness {
+            artifacts_dir,
+            verify_replay,
+        } => {
+            let readiness = generate_readiness_outputs_from_artifacts(&artifacts_dir)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&readiness.decision_packet)?
+            );
+            if verify_replay {
+                verify_decision_packet_replay(&artifacts_dir)?;
+                println!("readiness replay verification passed");
+            }
+            ensure_readiness_unblocked(&readiness.decision_packet)?;
+        }
     }
 
     Ok(())
@@ -474,6 +595,862 @@ fn execute_manifest_runs(manifest: &RunManifest, artifacts_dir: &Path) {
         let mut orchestrator = Orchestrator::new(client, artifacts_dir);
         let _ = orchestrator.run(request);
     }
+}
+
+fn generate_readiness_outputs_from_artifacts(
+    artifacts_dir: &Path,
+) -> Result<ReadinessOutputs, DynError> {
+    let evidence = load_readiness_evidence(artifacts_dir)?;
+    let checklist = evaluate_readiness_gates(&evidence);
+    let runbook_bundle = build_operator_runbooks(&evidence.report, &checklist);
+    let risk_status_deltas = build_risk_status_deltas(&evidence.report);
+    let decision_packet =
+        assemble_decision_packet(&evidence, &checklist, &runbook_bundle, risk_status_deltas);
+
+    let outputs = ReadinessOutputs {
+        checklist,
+        runbook_bundle,
+        decision_packet,
+    };
+
+    persist_readiness_outputs(artifacts_dir, &outputs)?;
+    Ok(outputs)
+}
+
+fn load_readiness_evidence(artifacts_dir: &Path) -> Result<ReadinessEvidence, DynError> {
+    let batch_dir = artifacts_dir.join("artifacts").join("batch");
+    let manifest_path = batch_dir.join("manifest.normalized.json");
+    let artifact_index_path = batch_dir.join("artifact-index.json");
+    let report_path = batch_dir.join("report.json");
+
+    let mut manifest: RunManifest = load_required_json(&manifest_path)?;
+    normalize_manifest(&mut manifest);
+
+    let mut artifact_index: BatchArtifactIndex = load_required_json(&artifact_index_path)?;
+    canonicalize_artifact_index(&mut artifact_index);
+
+    let mut report: BatchReport = load_required_json(&report_path)?;
+    report.diagnostics.sort_by(|left, right| {
+        (
+            left.page_id.as_str(),
+            left.pattern.as_str(),
+            left.flow.as_str(),
+            left.run_id.as_str(),
+        )
+            .cmp(&(
+                right.page_id.as_str(),
+                right.pattern.as_str(),
+                right.flow.as_str(),
+                right.run_id.as_str(),
+            ))
+    });
+
+    let mut summaries = BTreeMap::new();
+    for run in &manifest.runs {
+        let summary = load_run_summary(artifacts_dir, &run.run_id)?.ok_or_else(|| {
+            format!(
+                "missing readiness evidence: artifacts/{}/summary.json",
+                run.run_id
+            )
+        })?;
+        summaries.insert(run.run_id.clone(), summary);
+    }
+
+    validate_readiness_evidence(&manifest, &artifact_index, &report, &summaries)?;
+
+    let mut source_artifacts = vec![
+        "artifacts/batch/manifest.normalized.json".to_string(),
+        "artifacts/batch/artifact-index.json".to_string(),
+        "artifacts/batch/report.json".to_string(),
+    ];
+    source_artifacts.extend(
+        manifest
+            .runs
+            .iter()
+            .map(|run| format!("artifacts/{}/summary.json", run.run_id)),
+    );
+    source_artifacts.sort();
+
+    Ok(ReadinessEvidence {
+        manifest,
+        report,
+        summaries,
+        source_artifacts,
+    })
+}
+
+fn load_required_json<T>(path: &Path) -> Result<T, DynError>
+where
+    T: for<'de> serde::Deserialize<'de>,
+{
+    if !path.exists() {
+        return Err(format!(
+            "missing readiness evidence: {} (run `atlassy run-batch --manifest <file>` first)",
+            path.display()
+        )
+        .into());
+    }
+
+    let text = fs::read_to_string(path)?;
+    Ok(serde_json::from_str(&text)?)
+}
+
+fn canonicalize_artifact_index(index: &mut BatchArtifactIndex) {
+    index.runs.sort_by(|left, right| {
+        (
+            left.page_id.as_str(),
+            left.pattern.as_str(),
+            left.edit_intent_hash.as_str(),
+            left.flow.as_str(),
+            left.run_id.as_str(),
+        )
+            .cmp(&(
+                right.page_id.as_str(),
+                right.pattern.as_str(),
+                right.edit_intent_hash.as_str(),
+                right.flow.as_str(),
+                right.run_id.as_str(),
+            ))
+    });
+
+    for run in &mut index.runs {
+        run.state_artifacts.sort_by(|left, right| {
+            PipelineState::ORDER
+                .iter()
+                .position(|state| state.as_str() == left.state)
+                .unwrap_or(usize::MAX)
+                .cmp(
+                    &PipelineState::ORDER
+                        .iter()
+                        .position(|state| state.as_str() == right.state)
+                        .unwrap_or(usize::MAX),
+                )
+                .then_with(|| left.state.cmp(&right.state))
+        });
+    }
+}
+
+fn validate_readiness_evidence(
+    manifest: &RunManifest,
+    artifact_index: &BatchArtifactIndex,
+    report: &BatchReport,
+    summaries: &BTreeMap<String, RunSummary>,
+) -> Result<(), DynError> {
+    if manifest.runs.is_empty() {
+        return Err("missing readiness evidence: normalized manifest has no runs".into());
+    }
+
+    if report.total_runs != manifest.runs.len() {
+        return Err(format!(
+            "missing readiness evidence: report total_runs={} does not match manifest runs={}",
+            report.total_runs,
+            manifest.runs.len()
+        )
+        .into());
+    }
+
+    let artifact_run_ids = artifact_index
+        .runs
+        .iter()
+        .map(|run| run.run_id.clone())
+        .collect::<BTreeSet<_>>();
+    let manifest_run_ids = manifest
+        .runs
+        .iter()
+        .map(|run| run.run_id.clone())
+        .collect::<BTreeSet<_>>();
+
+    if artifact_run_ids != manifest_run_ids {
+        return Err(
+            "missing readiness evidence: artifact index runs do not match manifest runs".into(),
+        );
+    }
+
+    let summary_run_ids = summaries.keys().cloned().collect::<BTreeSet<_>>();
+    if summary_run_ids != manifest_run_ids {
+        return Err("missing readiness evidence: summary artifacts do not cover all runs".into());
+    }
+
+    Ok(())
+}
+
+fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist {
+    let generated_ts = deterministic_generated_ts(&evidence.manifest);
+    let gate_1_pass = !evidence.summaries.is_empty()
+        && evidence
+            .summaries
+            .values()
+            .all(|summary| !summary.pipeline_version.is_empty());
+    let gate_2_pass = !evidence.manifest.runs.is_empty();
+    let gate_3_pass = evidence.report.retry_policy_ok && !evidence.report.safety.safety_failed;
+    let gate_4_pass = evidence.report.scenario_coverage.complete;
+    let gate_5_pass = evidence.report.telemetry_complete && evidence.report.kpi.is_some();
+    let gate_6_pass = !evidence.report.drift.unresolved_material_drift;
+
+    let gates = vec![
+        readiness_gate_result(
+            "gate_1_design_and_contract_freeze",
+            "Design and Contract Freeze",
+            "v1 route matrix and contract evidence are present",
+            gate_1_pass,
+            "engineering_owner",
+            vec![
+                "artifacts/batch/manifest.normalized.json".to_string(),
+                "artifacts/batch/artifact-index.json".to_string(),
+            ],
+            if gate_1_pass {
+                None
+            } else {
+                Some("pipeline version metadata is incomplete".to_string())
+            },
+        ),
+        readiness_gate_result(
+            "gate_2_environment_and_access",
+            "Environment and Access",
+            "batch evidence exists and run set is non-empty",
+            gate_2_pass,
+            "engineering_owner",
+            vec!["artifacts/batch/manifest.normalized.json".to_string()],
+            if gate_2_pass {
+                None
+            } else {
+                Some("no runs found in normalized manifest".to_string())
+            },
+        ),
+        readiness_gate_result(
+            "gate_3_pipeline_integrity",
+            "Pipeline Integrity",
+            "safety gates hold and retry policy remains bounded",
+            gate_3_pass,
+            "qa_owner",
+            vec!["artifacts/batch/report.json".to_string()],
+            if gate_3_pass {
+                None
+            } else {
+                Some("safety violation or retry-policy breach detected".to_string())
+            },
+        ),
+        readiness_gate_result(
+            "gate_4_test_and_fixture_coverage",
+            "Test and Fixture Coverage",
+            "required scenario IDs are covered by batch evidence",
+            gate_4_pass,
+            "qa_owner",
+            vec!["artifacts/batch/report.json".to_string()],
+            if gate_4_pass {
+                None
+            } else {
+                Some("required scenario coverage is incomplete".to_string())
+            },
+        ),
+        readiness_gate_result(
+            "gate_5_metrics_and_reporting",
+            "Metrics and Reporting",
+            "telemetry is complete and aggregate KPI report is present",
+            gate_5_pass,
+            "data_metrics_owner",
+            vec!["artifacts/batch/report.json".to_string()],
+            if gate_5_pass {
+                None
+            } else {
+                Some("telemetry completeness or KPI aggregation is missing".to_string())
+            },
+        ),
+        readiness_gate_result(
+            "gate_6_risk_control_activation",
+            "Risk Control Activation",
+            "no unresolved material drift remains",
+            gate_6_pass,
+            "release_reviewer",
+            vec!["artifacts/batch/report.json".to_string()],
+            if gate_6_pass {
+                None
+            } else {
+                Some("live-vs-stub material drift remains unresolved".to_string())
+            },
+        ),
+    ];
+
+    let blocked = gates.iter().any(|gate| gate.mandatory && !gate.pass);
+
+    ReadinessChecklist {
+        schema_version: "v1".to_string(),
+        generated_ts,
+        owner_roles: readiness_owner_roles(),
+        source_artifacts: evidence.source_artifacts.clone(),
+        gates,
+        blocked,
+    }
+}
+
+fn readiness_gate_result(
+    gate_id: &str,
+    gate_name: &str,
+    target: &str,
+    pass: bool,
+    owner_role: &str,
+    evidence_refs: Vec<String>,
+    blocking_reason: Option<String>,
+) -> ReadinessGateResult {
+    ReadinessGateResult {
+        gate_id: gate_id.to_string(),
+        gate_name: gate_name.to_string(),
+        target: target.to_string(),
+        pass,
+        mandatory: true,
+        owner_role: owner_role.to_string(),
+        blocking_reason,
+        evidence_refs,
+    }
+}
+
+fn readiness_owner_roles() -> ReadinessOwnerRoles {
+    ReadinessOwnerRoles {
+        product_owner: "product_owner".to_string(),
+        engineering_owner: "engineering_owner".to_string(),
+        qa_owner: "qa_owner".to_string(),
+        data_metrics_owner: "data_metrics_owner".to_string(),
+        release_reviewer: "release_reviewer".to_string(),
+    }
+}
+
+fn build_operator_runbooks(report: &BatchReport, checklist: &ReadinessChecklist) -> RunbookBundle {
+    let mut sections = Vec::new();
+
+    if report.diagnostics.iter().any(|diag| {
+        diag.error_class.as_deref() == Some("pipeline_hard")
+            && diag
+                .message
+                .as_deref()
+                .is_some_and(|message| message.contains("`verify`"))
+    }) {
+        sections.push(known_runbook_section(
+            "verify_hard_failure",
+            "high",
+            "qa_owner",
+            "engineering_owner",
+            "recurs for two consecutive batches or blocks all optimized runs",
+            vec![
+                "inspect verify diagnostics for schema, scope, and route violations",
+                "capture offending paths and create regression fixtures",
+                "rerun affected scenario IDs before resuming batch",
+            ],
+            vec![
+                "artifacts/<run_id>/verify/diagnostics.json",
+                "artifacts/<run_id>/summary.json",
+            ],
+        ));
+    }
+
+    if report
+        .diagnostics
+        .iter()
+        .any(|diag| diag.error_class.as_deref() == Some("retry_policy"))
+    {
+        sections.push(known_runbook_section(
+            "retry_exhaustion",
+            "high",
+            "engineering_owner",
+            "release_reviewer",
+            "any run exceeds one scoped retry",
+            vec![
+                "stop the batch and preserve publish diagnostics",
+                "review scoped rebase behavior and conflict surface",
+                "resume only after retry policy compliance is restored",
+            ],
+            vec![
+                "artifacts/<run_id>/publish/diagnostics.json",
+                "artifacts/batch/report.json",
+            ],
+        ));
+    }
+
+    if report.safety.safety_failed {
+        sections.push(known_runbook_section(
+            "safety_gate_violation",
+            "critical",
+            "qa_owner",
+            "release_reviewer",
+            "any locked-node, out-of-scope, or table-shape violation is detected",
+            vec![
+                "pause release-readiness decision flow immediately",
+                "isolate violating runs and classify by error code",
+                "create targeted regression tests before rerun",
+            ],
+            vec![
+                "artifacts/batch/report.json",
+                "artifacts/<run_id>/summary.json",
+            ],
+        ));
+    }
+
+    if report.drift.unresolved_material_drift {
+        sections.push(known_runbook_section(
+            "unresolved_drift",
+            "critical",
+            "engineering_owner",
+            "release_reviewer",
+            "live-vs-stub parity check fails on key behavior",
+            vec![
+                "suspend sign-off and document drift scope",
+                "update stub scenarios and rerun affected suites",
+                "record drift resolution before next recommendation",
+            ],
+            vec!["artifacts/batch/report.json"],
+        ));
+    }
+
+    if report
+        .diagnostics
+        .iter()
+        .any(|diag| diag.error_class.as_deref() == Some("telemetry_incomplete"))
+    {
+        sections.push(known_runbook_section(
+            "telemetry_incomplete",
+            "high",
+            "data_metrics_owner",
+            "engineering_owner",
+            "required telemetry fields are missing from any run",
+            vec![
+                "mark affected runs non-evaluable",
+                "repair telemetry emission and rerun paired keys",
+                "rebuild aggregate report and readiness outputs",
+            ],
+            vec![
+                "artifacts/<run_id>/summary.json",
+                "artifacts/batch/report.json",
+            ],
+        ));
+    }
+
+    let known_classes = sections
+        .iter()
+        .map(|section| section.failure_class.clone())
+        .collect::<BTreeSet<_>>();
+
+    for diag in &report.diagnostics {
+        if let Some(class) = &diag.error_class {
+            let mapped = matches!(
+                class.as_str(),
+                "pipeline_hard" | "retry_policy" | "telemetry_incomplete"
+            ) || (class == "pipeline_hard"
+                && diag
+                    .message
+                    .as_deref()
+                    .is_some_and(|message| message.contains("`verify`")));
+
+            if !mapped {
+                let fallback_name = format!("unknown:{class}");
+                if !known_classes.contains(&fallback_name)
+                    && !sections
+                        .iter()
+                        .any(|section| section.failure_class == fallback_name)
+                {
+                    sections.push(RunbookSection {
+                        failure_class: fallback_name,
+                        severity: "high".to_string(),
+                        primary_owner_role: "engineering_owner".to_string(),
+                        escalation_owner_role: "release_reviewer".to_string(),
+                        escalation_trigger: "unmapped failure class observed in diagnostics"
+                            .to_string(),
+                        triage_steps: vec![
+                            "route the failure to manual review".to_string(),
+                            "define deterministic runbook mapping before next sign-off".to_string(),
+                        ],
+                        evidence_checks: vec!["artifacts/batch/report.json".to_string()],
+                        fallback: true,
+                        blocks_signoff: true,
+                    });
+                }
+            }
+        }
+    }
+
+    if sections.is_empty() {
+        sections.push(known_runbook_section(
+            "no_active_failures",
+            "low",
+            "release_reviewer",
+            "release_reviewer",
+            "no failure-class triage required",
+            vec!["confirm checklist and KPI gates remain passing"],
+            vec!["artifacts/batch/report.json"],
+        ));
+    }
+
+    sections.sort_by(|left, right| left.failure_class.cmp(&right.failure_class));
+    let blocked = checklist.blocked || sections.iter().any(|section| section.blocks_signoff);
+
+    RunbookBundle {
+        schema_version: "v1".to_string(),
+        generated_ts: checklist.generated_ts.clone(),
+        sections,
+        blocked,
+    }
+}
+
+fn known_runbook_section(
+    failure_class: &str,
+    severity: &str,
+    primary_owner_role: &str,
+    escalation_owner_role: &str,
+    escalation_trigger: &str,
+    triage_steps: Vec<&str>,
+    evidence_checks: Vec<&str>,
+) -> RunbookSection {
+    RunbookSection {
+        failure_class: failure_class.to_string(),
+        severity: severity.to_string(),
+        primary_owner_role: primary_owner_role.to_string(),
+        escalation_owner_role: escalation_owner_role.to_string(),
+        escalation_trigger: escalation_trigger.to_string(),
+        triage_steps: triage_steps
+            .into_iter()
+            .map(|step| step.to_string())
+            .collect(),
+        evidence_checks: evidence_checks
+            .into_iter()
+            .map(|check| check.to_string())
+            .collect(),
+        fallback: false,
+        blocks_signoff: matches!(severity, "critical" | "high")
+            && failure_class != "no_active_failures",
+    }
+}
+
+fn build_risk_status_deltas(report: &BatchReport) -> Vec<RiskStatusDelta> {
+    let mut deltas = vec![
+        risk_delta(
+            "R-001",
+            "Out-of-scope mutation",
+            "high",
+            report.safety.out_of_scope_violation_runs.is_empty(),
+            "out-of-scope mutation diagnostics",
+        ),
+        risk_delta(
+            "R-002",
+            "Locked structural node mutation",
+            "high",
+            report.safety.locked_node_violation_runs.is_empty(),
+            "locked-node mutation diagnostics",
+        ),
+        risk_delta(
+            "R-003",
+            "Table shape drift",
+            "high",
+            report.safety.table_shape_violation_runs.is_empty(),
+            "table-shape violation diagnostics",
+        ),
+        risk_delta(
+            "R-004",
+            "Full-page retrieval fallback overuse",
+            "medium",
+            report
+                .kpi
+                .as_ref()
+                .and_then(|kpi| {
+                    kpi.checks
+                        .iter()
+                        .find(|check| check.name == "full_page_retrieval_rate")
+                })
+                .is_none_or(|check| check.pass),
+            "full-page retrieval KPI result",
+        ),
+        risk_delta(
+            "R-005",
+            "Conflict retry token waste",
+            "medium",
+            report.retry_policy_ok,
+            "retry policy gate outcome",
+        ),
+        risk_delta(
+            "R-006",
+            "Schema-invalid candidate payloads",
+            "high",
+            !report
+                .diagnostics
+                .iter()
+                .any(|diag| diag.error_code.as_deref() == Some("ERR_SCHEMA_INVALID")),
+            "verify diagnostics error codes",
+        ),
+        risk_delta(
+            "R-007",
+            "Metrics instrumentation gaps",
+            "medium",
+            report.telemetry_complete,
+            "telemetry completeness gate",
+        ),
+        risk_delta(
+            "R-008",
+            "External service variance masking regressions",
+            "medium",
+            !report.drift.unresolved_material_drift,
+            "live-vs-stub drift status",
+        ),
+    ];
+
+    deltas.sort_by(|left, right| left.risk_id.cmp(&right.risk_id));
+    deltas
+}
+
+fn risk_delta(
+    risk_id: &str,
+    title: &str,
+    priority: &str,
+    mitigated: bool,
+    reason: &str,
+) -> RiskStatusDelta {
+    RiskStatusDelta {
+        risk_id: risk_id.to_string(),
+        title: title.to_string(),
+        priority: priority.to_string(),
+        previous_status: "watch".to_string(),
+        current_status: if mitigated {
+            "mitigated".to_string()
+        } else {
+            "open".to_string()
+        },
+        reason: reason.to_string(),
+    }
+}
+
+fn assemble_decision_packet(
+    evidence: &ReadinessEvidence,
+    checklist: &ReadinessChecklist,
+    runbook_bundle: &RunbookBundle,
+    risk_status_deltas: Vec<RiskStatusDelta>,
+) -> DecisionPacket {
+    let kpi_failed = evidence
+        .report
+        .kpi
+        .as_ref()
+        .is_some_and(|kpi| kpi.checks.iter().any(|check| !check.pass));
+
+    let mut blocking_condition = None;
+    let recommendation = if evidence.report.safety.safety_failed {
+        blocking_condition = Some("safety_gates_failed".to_string());
+        "stop"
+    } else if evidence.report.drift.unresolved_material_drift {
+        blocking_condition = Some("unresolved_material_drift".to_string());
+        "stop"
+    } else if checklist.blocked || runbook_bundle.blocked {
+        blocking_condition = checklist
+            .gates
+            .iter()
+            .find(|gate| !gate.pass)
+            .map(|gate| gate.gate_id.clone())
+            .or_else(|| {
+                runbook_bundle
+                    .sections
+                    .iter()
+                    .find(|section| section.blocks_signoff)
+                    .map(|section| section.failure_class.clone())
+            });
+        "iterate"
+    } else if kpi_failed {
+        blocking_condition = Some("kpi_target_miss".to_string());
+        "iterate"
+    } else {
+        "go"
+    }
+    .to_string();
+
+    let mut rationale = Vec::new();
+    rationale.extend(
+        checklist
+            .gates
+            .iter()
+            .filter(|gate| !gate.pass)
+            .map(|gate| {
+                format!(
+                    "{} failed: {}",
+                    gate.gate_name,
+                    gate.blocking_reason
+                        .clone()
+                        .unwrap_or_else(|| "blocking condition detected".to_string())
+                )
+            }),
+    );
+    rationale.extend(
+        runbook_bundle
+            .sections
+            .iter()
+            .filter(|section| section.blocks_signoff)
+            .map(|section| {
+                format!(
+                    "runbook class {} requires escalation ({})",
+                    section.failure_class, section.severity
+                )
+            }),
+    );
+    if let Some(kpi) = &evidence.report.kpi {
+        rationale.extend(
+            kpi.checks
+                .iter()
+                .filter(|check| !check.pass)
+                .map(|check| format!("kpi target miss: {} ({})", check.name, check.target)),
+        );
+    }
+    rationale.sort();
+    rationale.dedup();
+
+    let top_failure_classes = summarize_failure_classes(&evidence.report, runbook_bundle);
+
+    DecisionPacket {
+        schema_version: "v1".to_string(),
+        generated_ts: checklist.generated_ts.clone(),
+        recommendation,
+        blocking_condition,
+        rationale,
+        gate_outcomes: checklist.gates.clone(),
+        kpi_summary: evidence.report.kpi.clone(),
+        risk_status_deltas,
+        top_failure_classes,
+        checklist_path: "artifacts/batch/readiness.checklist.json".to_string(),
+        runbook_path: "artifacts/batch/runbook.bundle.json".to_string(),
+        report_path: "artifacts/batch/report.json".to_string(),
+    }
+}
+
+fn summarize_failure_classes(
+    report: &BatchReport,
+    runbook_bundle: &RunbookBundle,
+) -> Vec<FailureClassSummary> {
+    let mut counts = BTreeMap::new();
+    for diag in &report.diagnostics {
+        if let Some(class) = &diag.error_class {
+            *counts.entry(class.clone()).or_insert(0usize) += 1;
+        }
+    }
+
+    let mut summaries = runbook_bundle
+        .sections
+        .iter()
+        .filter(|section| section.failure_class != "no_active_failures")
+        .filter_map(|section| {
+            let count = counts.get(&section.failure_class).copied().unwrap_or(0);
+            if count > 0 || section.blocks_signoff {
+                Some(FailureClassSummary {
+                    failure_class: section.failure_class.clone(),
+                    severity: section.severity.clone(),
+                    count,
+                })
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    for (failure_class, count) in counts {
+        if summaries
+            .iter()
+            .any(|summary| summary.failure_class == failure_class)
+        {
+            continue;
+        }
+        summaries.push(FailureClassSummary {
+            failure_class,
+            severity: "medium".to_string(),
+            count,
+        });
+    }
+
+    summaries.sort_by(|left, right| {
+        right
+            .count
+            .cmp(&left.count)
+            .then_with(|| left.failure_class.cmp(&right.failure_class))
+    });
+    summaries
+}
+
+fn persist_readiness_outputs(
+    artifacts_dir: &Path,
+    outputs: &ReadinessOutputs,
+) -> Result<(), DynError> {
+    let batch_dir = artifacts_dir.join("artifacts").join("batch");
+    fs::create_dir_all(&batch_dir)?;
+    fs::write(
+        batch_dir.join("readiness.checklist.json"),
+        serde_json::to_string_pretty(&outputs.checklist)?,
+    )?;
+    fs::write(
+        batch_dir.join("runbook.bundle.json"),
+        serde_json::to_string_pretty(&outputs.runbook_bundle)?,
+    )?;
+    fs::write(
+        batch_dir.join("decision.packet.json"),
+        serde_json::to_string_pretty(&outputs.decision_packet)?,
+    )?;
+    Ok(())
+}
+
+fn rebuild_decision_packet_from_artifacts(
+    artifacts_dir: &Path,
+) -> Result<DecisionPacket, DynError> {
+    let evidence = load_readiness_evidence(artifacts_dir)?;
+    let checklist_path = artifacts_dir
+        .join("artifacts")
+        .join("batch")
+        .join("readiness.checklist.json");
+    let runbook_path = artifacts_dir
+        .join("artifacts")
+        .join("batch")
+        .join("runbook.bundle.json");
+
+    let checklist: ReadinessChecklist = load_required_json(&checklist_path)?;
+    let runbook_bundle: RunbookBundle = load_required_json(&runbook_path)?;
+    let risk_status_deltas = build_risk_status_deltas(&evidence.report);
+
+    Ok(assemble_decision_packet(
+        &evidence,
+        &checklist,
+        &runbook_bundle,
+        risk_status_deltas,
+    ))
+}
+
+fn verify_decision_packet_replay(artifacts_dir: &Path) -> Result<(), DynError> {
+    let stored_path = artifacts_dir
+        .join("artifacts")
+        .join("batch")
+        .join("decision.packet.json");
+    let stored: DecisionPacket = load_required_json(&stored_path)?;
+    let rebuilt = rebuild_decision_packet_from_artifacts(artifacts_dir)?;
+    if stored != rebuilt {
+        return Err(
+            "readiness replay mismatch: rebuilt decision packet diverges from stored output"
+                .to_string()
+                .into(),
+        );
+    }
+    Ok(())
+}
+
+fn ensure_readiness_unblocked(decision_packet: &DecisionPacket) -> Result<(), DynError> {
+    if decision_packet.recommendation == "go" {
+        return Ok(());
+    }
+
+    let condition = decision_packet
+        .blocking_condition
+        .clone()
+        .unwrap_or_else(|| "unspecified blocking condition".to_string());
+    Err(format!(
+        "readiness blocked: recommendation={} due to {}",
+        decision_packet.recommendation, condition
+    )
+    .into())
+}
+
+fn deterministic_generated_ts(manifest: &RunManifest) -> String {
+    manifest
+        .runs
+        .iter()
+        .map(|run| run.timestamp.as_str())
+        .max()
+        .unwrap_or("1970-01-01T00:00:00Z")
+        .to_string()
 }
 
 fn rebuild_batch_report_from_artifacts(
@@ -1551,5 +2528,250 @@ mod tests {
 
         assert_eq!(report, rebuilt);
         assert_eq!(stored, rebuilt);
+    }
+
+    #[test]
+    fn readiness_checklist_is_deterministic_and_blocks_on_mandatory_failures() {
+        let temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_complete_manifest.json"),
+            temp.path(),
+        )
+        .expect("batch run should complete");
+
+        let readiness = generate_readiness_outputs_from_artifacts(temp.path())
+            .expect("readiness outputs should be generated");
+
+        let gate_ids = readiness
+            .checklist
+            .gates
+            .iter()
+            .map(|gate| gate.gate_id.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            gate_ids,
+            vec![
+                "gate_1_design_and_contract_freeze",
+                "gate_2_environment_and_access",
+                "gate_3_pipeline_integrity",
+                "gate_4_test_and_fixture_coverage",
+                "gate_5_metrics_and_reporting",
+                "gate_6_risk_control_activation",
+            ]
+        );
+        assert!(readiness.checklist.gates.iter().all(|gate| gate.mandatory));
+        assert!(!readiness.checklist.blocked);
+        assert!(
+            temp.path()
+                .join("artifacts")
+                .join("batch")
+                .join("readiness.checklist.json")
+                .exists()
+        );
+
+        let blocked_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_coverage_failure_manifest.json"),
+            blocked_temp.path(),
+        )
+        .expect("batch run should complete");
+        let blocked = generate_readiness_outputs_from_artifacts(blocked_temp.path())
+            .expect("readiness outputs should be generated");
+        assert!(blocked.checklist.blocked);
+        assert!(
+            blocked
+                .checklist
+                .gates
+                .iter()
+                .any(|gate| { gate.gate_id == "gate_4_test_and_fixture_coverage" && !gate.pass })
+        );
+    }
+
+    #[test]
+    fn runbook_generation_includes_metadata_and_unknown_fallback() {
+        let temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_retry_breach_manifest.json"),
+            temp.path(),
+        )
+        .expect("batch run should complete");
+
+        let readiness = generate_readiness_outputs_from_artifacts(temp.path())
+            .expect("readiness outputs should be generated");
+        let retry_section = readiness
+            .runbook_bundle
+            .sections
+            .iter()
+            .find(|section| section.failure_class == "retry_exhaustion")
+            .expect("retry runbook section should exist");
+        assert_eq!(retry_section.severity, "high");
+        assert!(!retry_section.primary_owner_role.is_empty());
+        assert!(!retry_section.escalation_owner_role.is_empty());
+        assert!(!retry_section.escalation_trigger.is_empty());
+
+        let unknown_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_complete_manifest.json"),
+            unknown_temp.path(),
+        )
+        .expect("batch run should complete");
+
+        let report_path = unknown_temp
+            .path()
+            .join("artifacts")
+            .join("batch")
+            .join("report.json");
+        let report_text = fs::read_to_string(&report_path).expect("report should exist");
+        let mut report_json: serde_json::Value =
+            serde_json::from_str(&report_text).expect("report should deserialize");
+        report_json
+            .get_mut("diagnostics")
+            .and_then(|value| value.as_array_mut())
+            .expect("diagnostics array should exist")
+            .push(serde_json::json!({
+                "run_id": "run-a-baseline",
+                "page_id": "18841604",
+                "pattern": "A",
+                "flow": "baseline",
+                "status": "failed",
+                "error_class": "mystery_class",
+                "error_code": "ERR_MYSTERY",
+                "message": "unexpected class"
+            }));
+        fs::write(
+            &report_path,
+            serde_json::to_string_pretty(&report_json)
+                .expect("report serialization should succeed"),
+        )
+        .expect("report should be written");
+
+        let unknown_readiness = generate_readiness_outputs_from_artifacts(unknown_temp.path())
+            .expect("readiness outputs should be generated");
+        assert!(
+            unknown_readiness
+                .runbook_bundle
+                .sections
+                .iter()
+                .any(|section| {
+                    section.fallback && section.failure_class == "unknown:mystery_class"
+                })
+        );
+        assert!(unknown_readiness.runbook_bundle.blocked);
+    }
+
+    #[test]
+    fn decision_packet_contains_required_sections_and_precedence() {
+        let drift_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_drift_failure_manifest.json"),
+            drift_temp.path(),
+        )
+        .expect("batch run should complete");
+        let drift_readiness = generate_readiness_outputs_from_artifacts(drift_temp.path())
+            .expect("readiness outputs should be generated");
+
+        assert_eq!(drift_readiness.decision_packet.recommendation, "stop");
+        assert_eq!(
+            drift_readiness
+                .decision_packet
+                .blocking_condition
+                .as_deref(),
+            Some("unresolved_material_drift")
+        );
+        assert!(!drift_readiness.decision_packet.gate_outcomes.is_empty());
+        assert!(
+            !drift_readiness
+                .decision_packet
+                .risk_status_deltas
+                .is_empty()
+        );
+        assert!(
+            !drift_readiness
+                .decision_packet
+                .top_failure_classes
+                .is_empty()
+        );
+
+        let coverage_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_coverage_failure_manifest.json"),
+            coverage_temp.path(),
+        )
+        .expect("batch run should complete");
+        let coverage_readiness = generate_readiness_outputs_from_artifacts(coverage_temp.path())
+            .expect("readiness outputs should be generated");
+        assert_eq!(coverage_readiness.decision_packet.recommendation, "iterate");
+        assert_eq!(
+            coverage_readiness
+                .decision_packet
+                .blocking_condition
+                .as_deref(),
+            Some("gate_4_test_and_fixture_coverage")
+        );
+    }
+
+    #[test]
+    fn readiness_replay_verification_detects_mismatch() {
+        let temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_complete_manifest.json"),
+            temp.path(),
+        )
+        .expect("batch run should complete");
+        let _ = generate_readiness_outputs_from_artifacts(temp.path())
+            .expect("readiness outputs should be generated");
+
+        verify_decision_packet_replay(temp.path()).expect("replay should match before mutation");
+
+        let packet_path = temp
+            .path()
+            .join("artifacts")
+            .join("batch")
+            .join("decision.packet.json");
+        let packet_text = fs::read_to_string(&packet_path).expect("packet should exist");
+        let mut packet_json: serde_json::Value =
+            serde_json::from_str(&packet_text).expect("packet should deserialize");
+        packet_json["recommendation"] = serde_json::json!("stop");
+        fs::write(
+            &packet_path,
+            serde_json::to_string_pretty(&packet_json)
+                .expect("packet serialization should succeed"),
+        )
+        .expect("packet should be written");
+
+        let err = verify_decision_packet_replay(temp.path())
+            .expect_err("replay mismatch should fail verification");
+        assert!(
+            err.to_string().contains("readiness replay mismatch"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn readiness_errors_are_operator_facing() {
+        let empty = tempfile::tempdir().expect("tempdir should be created");
+        let missing_err = generate_readiness_outputs_from_artifacts(empty.path())
+            .expect_err("missing evidence should fail");
+        assert!(
+            missing_err
+                .to_string()
+                .contains("missing readiness evidence"),
+            "unexpected error: {missing_err}"
+        );
+
+        let blocked_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_coverage_failure_manifest.json"),
+            blocked_temp.path(),
+        )
+        .expect("batch run should complete");
+        let blocked = generate_readiness_outputs_from_artifacts(blocked_temp.path())
+            .expect("readiness outputs should be generated");
+        let blocked_err = ensure_readiness_unblocked(&blocked.decision_packet)
+            .expect_err("blocked readiness should return operator-facing error");
+        assert!(
+            blocked_err.to_string().contains("readiness blocked"),
+            "unexpected error: {blocked_err}"
+        );
     }
 }
