@@ -13,6 +13,8 @@ pub const ERR_OUT_OF_SCOPE_MUTATION: &str = "ERR_OUT_OF_SCOPE_MUTATION";
 pub const ERR_LOCKED_NODE_MUTATION: &str = "ERR_LOCKED_NODE_MUTATION";
 pub const ERR_TABLE_SHAPE_CHANGE: &str = "ERR_TABLE_SHAPE_CHANGE";
 pub const ERR_CONFLICT_RETRY_EXHAUSTED: &str = "ERR_CONFLICT_RETRY_EXHAUSTED";
+pub const ERR_RUNTIME_BACKEND: &str = "ERR_RUNTIME_BACKEND";
+pub const ERR_RUNTIME_UNMAPPED_HARD: &str = "ERR_RUNTIME_UNMAPPED_HARD";
 
 pub const FLOW_BASELINE: &str = "baseline";
 pub const FLOW_OPTIMIZED: &str = "optimized";
@@ -20,6 +22,17 @@ pub const FLOW_OPTIMIZED: &str = "optimized";
 pub const PATTERN_A: &str = "A";
 pub const PATTERN_B: &str = "B";
 pub const PATTERN_C: &str = "C";
+
+pub const RUNTIME_STUB: &str = "stub";
+pub const RUNTIME_LIVE: &str = "live";
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ProvenanceStamp {
+    pub git_commit_sha: String,
+    pub git_dirty: bool,
+    pub pipeline_version: String,
+    pub runtime_mode: String,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
@@ -344,6 +357,9 @@ pub struct RunSummary {
     pub scope_resolution_failed: bool,
     pub full_page_fetch: bool,
     pub pipeline_version: String,
+    pub git_commit_sha: String,
+    pub git_dirty: bool,
+    pub runtime_mode: String,
     pub state_token_usage: BTreeMap<String, u64>,
     pub total_tokens: u64,
     pub retry_count: u32,
@@ -566,12 +582,50 @@ pub fn validate_run_summary_telemetry(summary: &RunSummary) -> Result<(), Contra
             "publish_result".to_string(),
         ));
     }
+    if summary.pipeline_version.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete(
+            "pipeline_version".to_string(),
+        ));
+    }
+    if !is_valid_git_sha(&summary.git_commit_sha) {
+        return Err(ContractError::TelemetryIncomplete(
+            "git_commit_sha".to_string(),
+        ));
+    }
+    if !matches!(summary.runtime_mode.as_str(), RUNTIME_STUB | RUNTIME_LIVE) {
+        return Err(ContractError::TelemetryIncomplete(
+            "runtime_mode".to_string(),
+        ));
+    }
     if summary.state_token_usage.is_empty() {
         return Err(ContractError::TelemetryIncomplete(
             "state_token_usage".to_string(),
         ));
     }
     Ok(())
+}
+
+pub fn validate_provenance_stamp(stamp: &ProvenanceStamp) -> Result<(), ContractError> {
+    if !is_valid_git_sha(&stamp.git_commit_sha) {
+        return Err(ContractError::TelemetryIncomplete(
+            "git_commit_sha".to_string(),
+        ));
+    }
+    if stamp.pipeline_version.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete(
+            "pipeline_version".to_string(),
+        ));
+    }
+    if !matches!(stamp.runtime_mode.as_str(), RUNTIME_STUB | RUNTIME_LIVE) {
+        return Err(ContractError::TelemetryIncomplete(
+            "runtime_mode".to_string(),
+        ));
+    }
+    Ok(())
+}
+
+fn is_valid_git_sha(value: &str) -> bool {
+    value.len() == 40 && value.chars().all(|ch| ch.is_ascii_hexdigit())
 }
 
 fn is_within_scope(path: &str, allowed_scope_paths: &[String]) -> bool {
@@ -847,6 +901,9 @@ mod tests {
             scope_resolution_failed: false,
             full_page_fetch: false,
             pipeline_version: PIPELINE_VERSION.to_string(),
+            git_commit_sha: "0123456789abcdef0123456789abcdef01234567".to_string(),
+            git_dirty: false,
+            runtime_mode: RUNTIME_STUB.to_string(),
             state_token_usage: BTreeMap::from([
                 ("fetch".to_string(), 0_u64),
                 ("verify".to_string(), 0_u64),
@@ -879,6 +936,35 @@ mod tests {
         assert_eq!(
             validate_run_summary_telemetry(&summary),
             Err(ContractError::TelemetryIncomplete("flow".to_string()))
+        );
+    }
+
+    #[test]
+    fn provenance_stamp_validation_requires_sha_and_runtime_mode() {
+        let mut stamp = ProvenanceStamp {
+            git_commit_sha: "0123456789abcdef0123456789abcdef01234567".to_string(),
+            git_dirty: false,
+            pipeline_version: PIPELINE_VERSION.to_string(),
+            runtime_mode: RUNTIME_STUB.to_string(),
+        };
+
+        assert!(validate_provenance_stamp(&stamp).is_ok());
+
+        stamp.git_commit_sha = "short".to_string();
+        assert_eq!(
+            validate_provenance_stamp(&stamp),
+            Err(ContractError::TelemetryIncomplete(
+                "git_commit_sha".to_string()
+            ))
+        );
+
+        stamp.git_commit_sha = "0123456789abcdef0123456789abcdef01234567".to_string();
+        stamp.runtime_mode = "invalid".to_string();
+        assert_eq!(
+            validate_provenance_stamp(&stamp),
+            Err(ContractError::TelemetryIncomplete(
+                "runtime_mode".to_string()
+            ))
         );
     }
 }

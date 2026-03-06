@@ -132,6 +132,26 @@ pub fn build_patch_ops(
     Ok(ops)
 }
 
+pub fn apply_patch_ops(base: &Value, patch_ops: &[PatchOperation]) -> Result<Value, AdfError> {
+    let mut candidate = base.clone();
+    for op in patch_ops {
+        if op.op != "replace" {
+            return Err(AdfError::MappingIntegrity(format!(
+                "unsupported patch operation `{}`",
+                op.op
+            )));
+        }
+        if op.path == "/" || op.path.is_empty() {
+            return Err(AdfError::WholeBodyRewriteDisallowed);
+        }
+        let target = candidate.pointer_mut(&op.path).ok_or_else(|| {
+            AdfError::MappingIntegrity(format!("path `{}` does not resolve", op.path))
+        })?;
+        *target = op.value.clone();
+    }
+    Ok(candidate)
+}
+
 pub fn ensure_paths_in_scope(
     paths: &[String],
     allowed_scope_paths: &[String],
@@ -487,5 +507,29 @@ mod tests {
             &index
         ));
         assert!(is_table_shape_or_attr_path("/content/0/content/0", &index));
+    }
+
+    #[test]
+    fn applies_patch_ops_to_candidate_payload() {
+        let base = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "before"}]}
+            ]
+        });
+
+        let ops = vec![PatchOperation {
+            op: "replace".to_string(),
+            path: "/content/0/content/0/text".to_string(),
+            value: serde_json::Value::String("after".to_string()),
+        }];
+
+        let patched = apply_patch_ops(&base, &ops).unwrap();
+        assert_eq!(
+            patched
+                .pointer("/content/0/content/0/text")
+                .and_then(Value::as_str),
+            Some("after")
+        );
     }
 }

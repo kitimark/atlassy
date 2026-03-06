@@ -3,21 +3,23 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use atlassy_adf::{
-    AdfError, PatchCandidate, build_patch_ops, canonicalize_mapped_path, ensure_paths_in_scope,
-    is_path_within_or_descendant, is_table_cell_text_path, is_table_shape_or_attr_path,
-    markdown_for_path, normalize_changed_paths, path_has_ancestor_type, resolve_scope,
+    AdfError, PatchCandidate, apply_patch_ops, build_patch_ops, canonicalize_mapped_path,
+    ensure_paths_in_scope, is_path_within_or_descendant, is_table_cell_text_path,
+    is_table_shape_or_attr_path, markdown_for_path, normalize_changed_paths,
+    path_has_ancestor_type, resolve_scope,
 };
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
     AdfTableEditInput, AdfTableEditOutput, ClassifyInput, ClassifyOutput, ContractError,
     Diagnostics, ERR_CONFLICT_RETRY_EXHAUSTED, ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION,
-    ERR_ROUTE_VIOLATION, ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo,
-    ExtractProseInput, ExtractProseOutput, FetchInput, FetchOutput, MarkdownBlock,
-    MarkdownMapEntry, MdAssistEditInput, MdAssistEditOutput, MergeCandidatesInput,
-    MergeCandidatesOutput, PatchInput, PatchOp, PatchOutput, PipelineState, ProseChangeCandidate,
-    PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope, TableChangeCandidate,
-    TableOperation, VerifyInput, VerifyOutput, VerifyResult, validate_markdown_mapping,
-    validate_prose_changed_paths, validate_run_summary_telemetry, validate_table_candidates,
+    ERR_ROUTE_VIOLATION, ERR_RUNTIME_BACKEND, ERR_RUNTIME_UNMAPPED_HARD, ERR_SCHEMA_INVALID,
+    ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo, ExtractProseInput, ExtractProseOutput,
+    FetchInput, FetchOutput, MarkdownBlock, MarkdownMapEntry, MdAssistEditInput,
+    MdAssistEditOutput, MergeCandidatesInput, MergeCandidatesOutput, PatchInput, PatchOp,
+    PatchOutput, PipelineState, ProseChangeCandidate, ProvenanceStamp, PublishInput, PublishOutput,
+    PublishResult, RunSummary, StateEnvelope, TableChangeCandidate, TableOperation, VerifyInput,
+    VerifyOutput, VerifyResult, validate_markdown_mapping, validate_prose_changed_paths,
+    validate_run_summary_telemetry, validate_table_candidates,
 };
 use thiserror::Error;
 
@@ -59,6 +61,7 @@ pub struct RunRequest {
     pub pattern: String,
     pub scope_selectors: Vec<String>,
     pub timestamp: String,
+    pub provenance: ProvenanceStamp,
     pub run_mode: RunMode,
     pub force_verify_fail: bool,
 }
@@ -179,6 +182,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
     }
 
     pub fn run(&mut self, request: RunRequest) -> Result<RunSummary, PipelineError> {
+        let run_started = std::time::Instant::now();
         let mut tracker = StateTracker::new();
         let mut run_summary = RunSummary {
             success: false,
@@ -191,7 +195,10 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             scope_selectors: request.scope_selectors.clone(),
             scope_resolution_failed: false,
             full_page_fetch: false,
-            pipeline_version: atlassy_contracts::PIPELINE_VERSION.to_string(),
+            pipeline_version: request.provenance.pipeline_version.clone(),
+            git_commit_sha: request.provenance.git_commit_sha.clone(),
+            git_dirty: request.provenance.git_dirty,
+            runtime_mode: request.provenance.runtime_mode.clone(),
             state_token_usage: BTreeMap::new(),
             total_tokens: 0,
             retry_count: 0,
@@ -214,9 +221,20 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             failure_state: None,
         };
 
-        let result = self.run_internal(&request, &mut tracker, &mut run_summary);
+        let result = self.run_internal(&request, &mut tracker, &mut run_summary, &run_started);
         if result.is_ok() {
             run_summary.success = true;
+        }
+
+        run_summary.total_tokens = run_summary.state_token_usage.values().copied().sum();
+        run_summary.latency_ms = run_started.elapsed().as_millis() as u64;
+        if run_summary.verify_end_ts.is_empty() {
+            run_summary.verify_end_ts =
+                add_duration_suffix(&request.timestamp, run_summary.latency_ms);
+        }
+        if run_summary.publish_end_ts.is_empty() {
+            run_summary.publish_end_ts =
+                add_duration_suffix(&request.timestamp, run_summary.latency_ms);
         }
 
         run_summary.locked_node_mutation = run_summary
@@ -239,38 +257,71 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         request: &RunRequest,
         tracker: &mut StateTracker,
         summary: &mut RunSummary,
+        run_started: &std::time::Instant,
     ) -> Result<(), PipelineError> {
         let fetch = self
             .run_fetch_state(request, tracker)
             .map_err(|error| self.hard_fail(summary, PipelineState::Fetch, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::Fetch.as_str().to_string(),
+            estimate_tokens(&fetch)?,
+        );
 
         let classify = self
             .run_classify_state(request, tracker, &fetch)
             .map_err(|error| self.hard_fail(summary, PipelineState::Classify, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::Classify.as_str().to_string(),
+            estimate_tokens(&classify)?,
+        );
 
         let extract = self
             .run_extract_prose_state(request, tracker, &fetch, &classify)
             .map_err(|error| self.hard_fail(summary, PipelineState::ExtractProse, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::ExtractProse.as_str().to_string(),
+            estimate_tokens(&extract)?,
+        );
 
         let md_edit = self
             .run_md_assist_edit_state(request, tracker, &fetch, &extract)
             .map_err(|error| self.hard_fail(summary, PipelineState::MdAssistEdit, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::MdAssistEdit.as_str().to_string(),
+            estimate_tokens(&md_edit)?,
+        );
 
         let table_edit = self
             .run_adf_table_edit_state(request, tracker, &fetch, &classify)
             .map_err(|error| self.hard_fail(summary, PipelineState::AdfTableEdit, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::AdfTableEdit.as_str().to_string(),
+            estimate_tokens(&table_edit)?,
+        );
 
         let merged = self
             .run_merge_candidates_state(request, tracker, &classify, &md_edit, &table_edit)
             .map_err(|error| self.hard_fail(summary, PipelineState::MergeCandidates, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::MergeCandidates.as_str().to_string(),
+            estimate_tokens(&merged)?,
+        );
 
         let patch = self
             .run_patch_state(request, tracker, &fetch, &merged, &md_edit, &table_edit)
             .map_err(|error| self.hard_fail(summary, PipelineState::Patch, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::Patch.as_str().to_string(),
+            estimate_tokens(&patch)?,
+        );
 
         let verify = self
             .run_verify_state(request, tracker, &fetch, &patch, &merged)
             .map_err(|error| self.hard_fail(summary, PipelineState::Verify, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::Verify.as_str().to_string(),
+            estimate_tokens(&verify)?,
+        );
 
         summary.scope_resolution_failed = fetch.payload.scope_resolution_failed;
         summary.full_page_fetch = fetch.payload.full_page_fetch;
@@ -285,7 +336,8 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .iter()
             .map(|error| error.code.clone())
             .collect();
-        summary.verify_end_ts = request.timestamp.clone();
+        summary.verify_end_ts =
+            add_duration_suffix(&request.timestamp, run_started.elapsed().as_millis() as u64);
 
         if verify.payload.verify_result == VerifyResult::Fail {
             summary.failure_state = Some(PipelineState::Verify);
@@ -309,6 +361,10 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         let publish = self
             .run_publish_state(request, tracker, &fetch, &patch)
             .map_err(|error| self.hard_fail(summary, PipelineState::Publish, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::Publish.as_str().to_string(),
+            estimate_tokens(&publish)?,
+        );
 
         summary.publish_result = match publish.payload.publish_result {
             PublishResult::Published => "published".to_string(),
@@ -322,7 +378,8 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .map(|error| error.code.clone());
         summary.new_version = publish.payload.new_version;
         summary.retry_count = publish.payload.retry_count;
-        summary.publish_end_ts = request.timestamp.clone();
+        summary.publish_end_ts =
+            add_duration_suffix(&request.timestamp, run_started.elapsed().as_millis() as u64);
 
         if publish.payload.publish_result == PublishResult::Failed {
             summary.failure_state = Some(PipelineState::Publish);
@@ -337,12 +394,17 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         }
 
         summary.applied_paths = merged.payload.changed_paths;
-        summary.state_token_usage.insert("fetch".to_string(), 0);
-        summary.state_token_usage.insert("verify".to_string(), 0);
-        summary.state_token_usage.insert("publish".to_string(), 0);
-        summary.token_metrics.insert("fetch".to_string(), 0);
-        summary.token_metrics.insert("verify".to_string(), 0);
-        summary.token_metrics.insert("publish".to_string(), 0);
+        summary.token_metrics = summary.state_token_usage.clone();
+        summary.retry_tokens = if summary.retry_count > 0 {
+            summary
+                .state_token_usage
+                .get(PipelineState::Publish.as_str())
+                .copied()
+                .unwrap_or(0)
+                * u64::from(summary.retry_count)
+        } else {
+            0
+        };
         Ok(())
     }
 
@@ -366,7 +428,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         let page = self
             .client
             .fetch_page(&request.page_id)
-            .map_err(|error| to_hard_error(PipelineState::Fetch, error))?;
+            .map_err(|error| confluence_error_to_hard_error(PipelineState::Fetch, error))?;
 
         let scope = resolve_scope(&page.adf, &request.scope_selectors)
             .map_err(|error| to_hard_error(PipelineState::Fetch, error))?;
@@ -879,8 +941,12 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     }),
             )
             .collect::<Vec<_>>();
-        let patch_ops = build_patch_ops(&candidates, &fetch.payload.allowed_scope_paths)
-            .map_err(|error| to_hard_error(PipelineState::Patch, error))?
+        let raw_patch_ops = build_patch_ops(&candidates, &fetch.payload.allowed_scope_paths)
+            .map_err(|error| to_hard_error(PipelineState::Patch, error))?;
+        let candidate_page_adf = apply_patch_ops(&fetch.payload.scoped_adf, &raw_patch_ops)
+            .map_err(|error| to_hard_error(PipelineState::Patch, error))?;
+
+        let patch_ops = raw_patch_ops
             .into_iter()
             .map(|op| PatchOp {
                 op: op.op,
@@ -893,7 +959,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             meta: meta(request, PipelineState::Patch),
             payload: PatchOutput {
                 patch_ops,
-                candidate_page_adf: fetch.payload.scoped_adf.clone(),
+                candidate_page_adf,
             },
         };
 
@@ -1012,10 +1078,9 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 Diagnostics::default(),
             ),
             Err(ConfluenceError::Conflict(_)) => {
-                let latest = self
-                    .client
-                    .fetch_page(&request.page_id)
-                    .map_err(|error| to_hard_error(PipelineState::Publish, error))?;
+                let latest = self.client.fetch_page(&request.page_id).map_err(|error| {
+                    confluence_error_to_hard_error(PipelineState::Publish, error)
+                })?;
 
                 match self.client.publish_page(
                     &request.page_id,
@@ -1037,10 +1102,20 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                         });
                         (PublishResult::Failed, None, 2, diagnostics)
                     }
-                    Err(other) => return Err(to_hard_error(PipelineState::Publish, other)),
+                    Err(other) => {
+                        return Err(confluence_error_to_hard_error(
+                            PipelineState::Publish,
+                            other,
+                        ));
+                    }
                 }
             }
-            Err(other) => return Err(to_hard_error(PipelineState::Publish, other)),
+            Err(other) => {
+                return Err(confluence_error_to_hard_error(
+                    PipelineState::Publish,
+                    other,
+                ));
+            }
         };
 
         let output = StateEnvelope {
@@ -1231,6 +1306,44 @@ fn parent_path(path: &str) -> Option<String> {
     Some(parent.to_string())
 }
 
+fn estimate_tokens<T: serde::Serialize>(value: &T) -> Result<u64, PipelineError> {
+    let bytes = serde_json::to_vec(value)?.len();
+    let tokens = bytes.div_ceil(4) as u64;
+    Ok(tokens.max(1))
+}
+
+fn add_duration_suffix(timestamp: &str, elapsed_ms: u64) -> String {
+    format!("{timestamp}+{elapsed_ms}ms")
+}
+
+fn confluence_error_to_hard_error(
+    source_state: PipelineState,
+    error: ConfluenceError,
+) -> PipelineError {
+    match error {
+        ConfluenceError::Conflict(page_id) => PipelineError::Hard {
+            state: source_state,
+            code: ERR_CONFLICT_RETRY_EXHAUSTED.to_string(),
+            message: format!("version conflict on page: {page_id}"),
+        },
+        ConfluenceError::NotFound(page_id) => PipelineError::Hard {
+            state: source_state,
+            code: ERR_RUNTIME_BACKEND.to_string(),
+            message: format!("page not found in runtime backend: {page_id}"),
+        },
+        ConfluenceError::Transport(message) => PipelineError::Hard {
+            state: source_state,
+            code: ERR_RUNTIME_BACKEND.to_string(),
+            message,
+        },
+        ConfluenceError::NotImplemented => PipelineError::Hard {
+            state: source_state,
+            code: ERR_RUNTIME_UNMAPPED_HARD.to_string(),
+            message: "runtime backend operation is not implemented".to_string(),
+        },
+    }
+}
+
 fn to_hard_error(source_state: PipelineState, error: impl std::fmt::Display) -> PipelineError {
     let message = error.to_string();
     let code = if message.contains("out of scope") {
@@ -1260,7 +1373,7 @@ impl From<AdfError> for PipelineError {
 
 impl From<ConfluenceError> for PipelineError {
     fn from(error: ConfluenceError) -> Self {
-        to_hard_error(PipelineState::Fetch, error)
+        confluence_error_to_hard_error(PipelineState::Fetch, error)
     }
 }
 

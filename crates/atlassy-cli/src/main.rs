@@ -4,10 +4,12 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-use atlassy_confluence::{StubConfluenceClient, StubPage};
+use atlassy_confluence::{LiveConfluenceClient, StubConfluenceClient, StubPage};
 use atlassy_contracts::{
-    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE,
-    FLOW_OPTIMIZED, PATTERN_A, PATTERN_B, PATTERN_C, PipelineState, RunSummary,
+    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_RUNTIME_UNMAPPED_HARD,
+    ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A, PATTERN_B, PATTERN_C,
+    PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
+    validate_provenance_stamp, validate_run_summary_telemetry,
 };
 use atlassy_pipeline::{Orchestrator, RunMode, RunRequest};
 use clap::{Parser, ValueEnum};
@@ -48,12 +50,16 @@ enum Commands {
         new_value: Option<String>,
         #[arg(long)]
         force_verify_fail: bool,
+        #[arg(long, value_enum, default_value_t = RuntimeBackend::Stub)]
+        runtime_backend: RuntimeBackend,
     },
     RunBatch {
         #[arg(long)]
         manifest: PathBuf,
         #[arg(long, default_value = ".")]
         artifacts_dir: PathBuf,
+        #[arg(long, value_enum, default_value_t = RuntimeBackend::Stub)]
+        runtime_backend: RuntimeBackend,
     },
     RunReadiness {
         #[arg(long, default_value = ".")]
@@ -71,6 +77,21 @@ enum CliMode {
     SimpleScopedTableCellUpdate,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum RuntimeBackend {
+    Stub,
+    Live,
+}
+
+impl RuntimeBackend {
+    fn as_str(&self) -> &'static str {
+        match self {
+            RuntimeBackend::Stub => RUNTIME_STUB,
+            RuntimeBackend::Live => RUNTIME_LIVE,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct RunManifest {
     #[serde(default)]
@@ -86,6 +107,8 @@ struct BatchManifestMetadata {
     observed_scenario_ids: Vec<String>,
     #[serde(default)]
     live_smoke: DriftStatusInput,
+    #[serde(default = "default_runtime_mode")]
+    runtime_mode: String,
 }
 
 impl Default for BatchManifestMetadata {
@@ -94,6 +117,7 @@ impl Default for BatchManifestMetadata {
             required_scenario_ids: default_required_scenario_ids(),
             observed_scenario_ids: Vec::new(),
             live_smoke: DriftStatusInput::default(),
+            runtime_mode: default_runtime_mode(),
         }
     }
 }
@@ -173,6 +197,7 @@ struct BatchReport {
     status: String,
     telemetry_complete: bool,
     retry_policy_ok: bool,
+    provenance: ProvenanceStamp,
     diagnostics: Vec<BatchRunDiagnostic>,
     artifact_index_path: String,
     drift: DriftAssessment,
@@ -197,6 +222,7 @@ struct BatchArtifactMetadata {
     required_scenario_ids: Vec<String>,
     observed_scenario_ids: Vec<String>,
     live_smoke: DriftStatusInput,
+    provenance: ProvenanceStamp,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
@@ -324,6 +350,7 @@ struct ReadinessChecklist {
     generated_ts: String,
     owner_roles: ReadinessOwnerRoles,
     source_artifacts: Vec<String>,
+    provenance: ProvenanceStamp,
     gates: Vec<ReadinessGateResult>,
     blocked: bool,
 }
@@ -354,6 +381,7 @@ struct RunbookSection {
 struct RunbookBundle {
     schema_version: String,
     generated_ts: String,
+    provenance: ProvenanceStamp,
     sections: Vec<RunbookSection>,
     blocked: bool,
 }
@@ -380,6 +408,7 @@ struct DecisionPacket {
     schema_version: String,
     generated_ts: String,
     recommendation: String,
+    provenance: ProvenanceStamp,
     blocking_condition: Option<String>,
     rationale: Vec<String>,
     gate_outcomes: Vec<ReadinessGateResult>,
@@ -401,6 +430,7 @@ struct ReadinessOutputs {
 #[derive(Debug, Clone)]
 struct ReadinessEvidence {
     manifest: RunManifest,
+    provenance: ProvenanceStamp,
     report: BatchReport,
     summaries: BTreeMap<String, RunSummary>,
     source_artifacts: Vec<String>,
@@ -430,7 +460,9 @@ async fn main() -> Result<(), DynError> {
             target_path,
             new_value,
             force_verify_fail,
+            runtime_backend,
         } => {
+            let provenance = collect_provenance(runtime_backend.as_str())?;
             let run_mode = match mode {
                 CliMode::NoOp => RunMode::NoOp,
                 CliMode::SimpleScopedUpdate => {
@@ -464,17 +496,6 @@ async fn main() -> Result<(), DynError> {
                 }
             };
 
-            let mut pages = HashMap::new();
-            pages.insert(
-                page_id.clone(),
-                StubPage {
-                    version: 1,
-                    adf: demo_page(),
-                },
-            );
-
-            let mut orchestrator =
-                Orchestrator::new(StubConfluenceClient::new(pages), artifacts_dir);
             let request = RunRequest {
                 request_id,
                 page_id,
@@ -484,23 +505,23 @@ async fn main() -> Result<(), DynError> {
                 edit_intent,
                 scope_selectors,
                 timestamp: "2026-03-06T10:00:00Z".to_string(),
+                provenance,
                 run_mode,
                 force_verify_fail,
             };
 
-            match orchestrator.run(request) {
-                Ok(summary) => println!("{}", serde_json::to_string_pretty(&summary)?),
-                Err(error) => {
-                    eprintln!("pipeline failed: {error}");
-                    std::process::exit(1);
-                }
-            }
+            run_single_request(request, artifacts_dir, runtime_backend)?;
         }
         Commands::RunBatch {
             manifest,
             artifacts_dir,
+            runtime_backend,
         } => {
-            let report = execute_batch_from_manifest_file(&manifest, &artifacts_dir)?;
+            let report = execute_batch_from_manifest_file_with_backend(
+                &manifest,
+                &artifacts_dir,
+                runtime_backend,
+            )?;
             println!("{}", serde_json::to_string_pretty(&report)?);
         }
         Commands::RunReadiness {
@@ -523,25 +544,88 @@ async fn main() -> Result<(), DynError> {
     Ok(())
 }
 
+fn run_single_request(
+    request: RunRequest,
+    artifacts_dir: PathBuf,
+    runtime_backend: RuntimeBackend,
+) -> Result<(), DynError> {
+    match runtime_backend {
+        RuntimeBackend::Stub => {
+            let mut pages = HashMap::new();
+            pages.insert(
+                request.page_id.clone(),
+                StubPage {
+                    version: 1,
+                    adf: demo_page(),
+                },
+            );
+
+            let mut orchestrator =
+                Orchestrator::new(StubConfluenceClient::new(pages), artifacts_dir);
+            match orchestrator.run(request) {
+                Ok(summary) => println!("{}", serde_json::to_string_pretty(&summary)?),
+                Err(error) => {
+                    eprintln!("pipeline failed: {error}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        RuntimeBackend::Live => {
+            let client = LiveConfluenceClient::from_env()?;
+            let mut orchestrator = Orchestrator::new(client, artifacts_dir);
+            match orchestrator.run(request) {
+                Ok(summary) => println!("{}", serde_json::to_string_pretty(&summary)?),
+                Err(error) => {
+                    eprintln!("pipeline failed: {error}");
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
 fn execute_batch_from_manifest_file(
     manifest_path: &Path,
     artifacts_dir: &Path,
+) -> Result<BatchReport, DynError> {
+    execute_batch_from_manifest_file_with_backend(
+        manifest_path,
+        artifacts_dir,
+        RuntimeBackend::Stub,
+    )
+}
+
+fn execute_batch_from_manifest_file_with_backend(
+    manifest_path: &Path,
+    artifacts_dir: &Path,
+    runtime_backend: RuntimeBackend,
 ) -> Result<BatchReport, DynError> {
     let manifest_text = fs::read_to_string(manifest_path)?;
     let mut run_manifest: RunManifest = serde_json::from_str(&manifest_text)?;
     validate_manifest(&run_manifest)?;
     normalize_manifest(&mut run_manifest);
 
+    let provenance = collect_provenance(runtime_backend.as_str())?;
+    validate_provenance_stamp(&provenance)?;
+    run_manifest.batch.runtime_mode = runtime_backend.as_str().to_string();
+
     let batch_dir = artifacts_dir.join("artifacts").join("batch");
     fs::create_dir_all(&batch_dir)?;
+    fs::write(
+        batch_dir.join("manifest.input.json"),
+        serde_json::to_string_pretty(&run_manifest)?,
+    )?;
     fs::write(
         batch_dir.join("manifest.normalized.json"),
         serde_json::to_string_pretty(&run_manifest)?,
     )?;
 
-    execute_manifest_runs(&run_manifest, artifacts_dir);
+    execute_manifest_runs(&run_manifest, artifacts_dir, runtime_backend, &provenance)?;
 
-    let artifact_index = build_artifact_index(&run_manifest);
+    let artifact_index = build_artifact_index(&run_manifest, &provenance);
     fs::write(
         batch_dir.join("artifact-index.json"),
         serde_json::to_string_pretty(&artifact_index)?,
@@ -551,6 +635,7 @@ fn execute_batch_from_manifest_file(
         &run_manifest,
         artifacts_dir,
         "artifacts/batch/artifact-index.json",
+        &provenance,
     )?;
 
     fs::write(
@@ -560,25 +645,13 @@ fn execute_batch_from_manifest_file(
     Ok(report)
 }
 
-fn execute_manifest_runs(manifest: &RunManifest, artifacts_dir: &Path) {
+fn execute_manifest_runs(
+    manifest: &RunManifest,
+    artifacts_dir: &Path,
+    runtime_backend: RuntimeBackend,
+    provenance: &ProvenanceStamp,
+) -> Result<(), DynError> {
     for run in &manifest.runs {
-        let mut pages = HashMap::new();
-        pages.insert(
-            run.page_id.clone(),
-            StubPage {
-                version: 1,
-                adf: demo_page(),
-            },
-        );
-
-        let client = if run.simulate_conflict_exhausted {
-            StubConfluenceClient::new(pages).with_always_conflict()
-        } else if run.simulate_conflict_once {
-            StubConfluenceClient::new(pages).with_conflict_once()
-        } else {
-            StubConfluenceClient::new(pages)
-        };
-
         let request = RunRequest {
             request_id: run.run_id.clone(),
             page_id: run.page_id.clone(),
@@ -588,13 +661,40 @@ fn execute_manifest_runs(manifest: &RunManifest, artifacts_dir: &Path) {
             pattern: run.pattern.clone(),
             scope_selectors: run.scope_selectors.clone(),
             timestamp: run.timestamp.clone(),
+            provenance: provenance.clone(),
             run_mode: run_mode_from_manifest(run),
             force_verify_fail: run.force_verify_fail,
         };
 
-        let mut orchestrator = Orchestrator::new(client, artifacts_dir);
-        let _ = orchestrator.run(request);
+        match runtime_backend {
+            RuntimeBackend::Stub => {
+                let mut pages = HashMap::new();
+                pages.insert(
+                    run.page_id.clone(),
+                    StubPage {
+                        version: 1,
+                        adf: demo_page(),
+                    },
+                );
+                let client = if run.simulate_conflict_exhausted {
+                    StubConfluenceClient::new(pages).with_always_conflict()
+                } else if run.simulate_conflict_once {
+                    StubConfluenceClient::new(pages).with_conflict_once()
+                } else {
+                    StubConfluenceClient::new(pages)
+                };
+                let mut orchestrator = Orchestrator::new(client, artifacts_dir);
+                let _ = orchestrator.run(request);
+            }
+            RuntimeBackend::Live => {
+                let client = LiveConfluenceClient::from_env()?;
+                let mut orchestrator = Orchestrator::new(client, artifacts_dir);
+                let _ = orchestrator.run(request);
+            }
+        }
     }
+
+    Ok(())
 }
 
 fn generate_readiness_outputs_from_artifacts(
@@ -673,6 +773,7 @@ fn load_readiness_evidence(artifacts_dir: &Path) -> Result<ReadinessEvidence, Dy
 
     Ok(ReadinessEvidence {
         manifest,
+        provenance: report.provenance.clone(),
         report,
         summaries,
         source_artifacts,
@@ -769,6 +870,25 @@ fn validate_readiness_evidence(
     let summary_run_ids = summaries.keys().cloned().collect::<BTreeSet<_>>();
     if summary_run_ids != manifest_run_ids {
         return Err("missing readiness evidence: summary artifacts do not cover all runs".into());
+    }
+
+    validate_provenance_stamp(&report.provenance)?;
+    validate_provenance_stamp(&artifact_index.batch.provenance)?;
+    if report.provenance != artifact_index.batch.provenance {
+        return Err(
+            "missing readiness evidence: report and artifact-index provenance do not match".into(),
+        );
+    }
+
+    for (run_id, summary) in summaries {
+        validate_run_summary_telemetry(summary)?;
+        if !provenance_matches(summary, &report.provenance) {
+            return Err(format!(
+                "missing readiness evidence: summary provenance mismatch for run {}",
+                run_id
+            )
+            .into());
+        }
     }
 
     Ok(())
@@ -878,6 +998,7 @@ fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist 
         generated_ts,
         owner_roles: readiness_owner_roles(),
         source_artifacts: evidence.source_artifacts.clone(),
+        provenance: evidence.provenance.clone(),
         gates,
         blocked,
     }
@@ -1084,6 +1205,7 @@ fn build_operator_runbooks(report: &BatchReport, checklist: &ReadinessChecklist)
     RunbookBundle {
         schema_version: "v1".to_string(),
         generated_ts: checklist.generated_ts.clone(),
+        provenance: checklist.provenance.clone(),
         sections,
         blocked,
     }
@@ -1300,6 +1422,7 @@ fn assemble_decision_packet(
         schema_version: "v1".to_string(),
         generated_ts: checklist.generated_ts.clone(),
         recommendation,
+        provenance: checklist.provenance.clone(),
         blocking_condition,
         rationale,
         gate_outcomes: checklist.gates.clone(),
@@ -1457,6 +1580,7 @@ fn rebuild_batch_report_from_artifacts(
     manifest: &RunManifest,
     artifacts_dir: &Path,
     artifact_index_path: &str,
+    provenance: &ProvenanceStamp,
 ) -> Result<BatchReport, DynError> {
     let mut summaries = BTreeMap::new();
     for run in &manifest.runs {
@@ -1468,7 +1592,7 @@ fn rebuild_batch_report_from_artifacts(
     let diagnostics = manifest
         .runs
         .iter()
-        .map(|run| classify_run_from_summary(run, summaries.get(&run.run_id)))
+        .map(|run| classify_run_from_summary(run, summaries.get(&run.run_id), provenance))
         .collect::<Vec<_>>();
 
     let failed_runs = diagnostics
@@ -1478,7 +1602,12 @@ fn rebuild_batch_report_from_artifacts(
     let telemetry_complete = manifest.runs.iter().all(|run| {
         summaries
             .get(&run.run_id)
-            .is_some_and(|summary| summary.telemetry_complete)
+            .is_some_and(summary_telemetry_complete)
+    });
+    let provenance_complete = manifest.runs.iter().all(|run| {
+        summaries.get(&run.run_id).is_some_and(|summary| {
+            summary_telemetry_complete(summary) && provenance_matches(summary, provenance)
+        })
     });
     let retry_policy_ok = manifest.runs.iter().all(|run| {
         summaries
@@ -1494,7 +1623,7 @@ fn rebuild_batch_report_from_artifacts(
         .iter()
         .all(|group| !group.baseline.is_empty() && !group.optimized.is_empty());
 
-    let kpi = if telemetry_complete && paired_matrix_complete {
+    let kpi = if telemetry_complete && provenance_complete && paired_matrix_complete {
         Some(build_kpi_report(&flow_groups))
     } else {
         None
@@ -1509,6 +1638,11 @@ fn rebuild_batch_report_from_artifacts(
             name: "telemetry_complete".to_string(),
             target: "all run summaries include required KPI telemetry".to_string(),
             pass: telemetry_complete,
+        },
+        GateCheck {
+            name: "provenance_complete".to_string(),
+            target: "all decision-grade outputs include valid provenance".to_string(),
+            pass: provenance_complete,
         },
         GateCheck {
             name: "paired_matrix_complete".to_string(),
@@ -1543,7 +1677,9 @@ fn rebuild_batch_report_from_artifacts(
         .runs
         .iter()
         .filter_map(|run| summaries.get(&run.run_id))
-        .filter(|summary| summary.telemetry_complete)
+        .filter(|summary| {
+            summary_telemetry_complete(summary) && provenance_matches(summary, provenance)
+        })
         .cloned()
         .collect::<Vec<_>>();
 
@@ -1570,6 +1706,7 @@ fn rebuild_batch_report_from_artifacts(
         status,
         telemetry_complete,
         retry_policy_ok,
+        provenance: provenance.clone(),
         diagnostics,
         artifact_index_path: artifact_index_path.to_string(),
         drift,
@@ -1581,7 +1718,10 @@ fn rebuild_batch_report_from_artifacts(
     })
 }
 
-fn build_artifact_index(manifest: &RunManifest) -> BatchArtifactIndex {
+fn build_artifact_index(
+    manifest: &RunManifest,
+    provenance: &ProvenanceStamp,
+) -> BatchArtifactIndex {
     let observed_scenarios = observed_scenario_ids(manifest);
     let runs = manifest
         .runs
@@ -1629,6 +1769,7 @@ fn build_artifact_index(manifest: &RunManifest) -> BatchArtifactIndex {
             required_scenario_ids: manifest.batch.required_scenario_ids.clone(),
             observed_scenario_ids: observed_scenarios,
             live_smoke: manifest.batch.live_smoke.clone(),
+            provenance: provenance.clone(),
         },
         runs,
     }
@@ -1637,6 +1778,7 @@ fn build_artifact_index(manifest: &RunManifest) -> BatchArtifactIndex {
 fn classify_run_from_summary(
     run: &ManifestRunEntry,
     summary: Option<&RunSummary>,
+    provenance: &ProvenanceStamp,
 ) -> BatchRunDiagnostic {
     match summary {
         None => BatchRunDiagnostic {
@@ -1650,6 +1792,34 @@ fn classify_run_from_summary(
             message: Some("run summary artifact is missing".to_string()),
         },
         Some(summary) => {
+            if let Err(error) = validate_run_summary_telemetry(summary) {
+                return BatchRunDiagnostic {
+                    run_id: run.run_id.clone(),
+                    page_id: run.page_id.clone(),
+                    pattern: run.pattern.clone(),
+                    flow: run.flow.clone(),
+                    status: "failed".to_string(),
+                    error_class: Some("telemetry_incomplete".to_string()),
+                    error_code: Some("ERR_TELEMETRY_INCOMPLETE".to_string()),
+                    message: Some(error.to_string()),
+                };
+            }
+
+            if !provenance_matches(summary, provenance) {
+                return BatchRunDiagnostic {
+                    run_id: run.run_id.clone(),
+                    page_id: run.page_id.clone(),
+                    pattern: run.pattern.clone(),
+                    flow: run.flow.clone(),
+                    status: "failed".to_string(),
+                    error_class: Some("provenance_incomplete".to_string()),
+                    error_code: Some("ERR_PROVENANCE_MISMATCH".to_string()),
+                    message: Some(
+                        "run summary provenance does not match batch provenance".to_string(),
+                    ),
+                };
+            }
+
             if summary.retry_count > 1 {
                 return BatchRunDiagnostic {
                     run_id: run.run_id.clone(),
@@ -1660,6 +1830,23 @@ fn classify_run_from_summary(
                     error_class: Some("retry_policy".to_string()),
                     error_code: Some("ERR_CONFLICT_RETRY_EXHAUSTED".to_string()),
                     message: Some("retry-count exceeded one scoped retry maximum".to_string()),
+                };
+            }
+
+            if summary
+                .error_codes
+                .iter()
+                .any(|code| code == ERR_RUNTIME_UNMAPPED_HARD)
+            {
+                return BatchRunDiagnostic {
+                    run_id: run.run_id.clone(),
+                    page_id: run.page_id.clone(),
+                    pattern: run.pattern.clone(),
+                    flow: run.flow.clone(),
+                    status: "failed".to_string(),
+                    error_class: Some("runtime_unmapped_hard".to_string()),
+                    error_code: Some(ERR_RUNTIME_UNMAPPED_HARD.to_string()),
+                    message: Some("unmapped hard failure from live runtime requires explicit taxonomy mapping".to_string()),
                 };
             }
 
@@ -1886,8 +2073,8 @@ fn build_kpi_rollup(scope: &str, flow_groups: &[FlowGroup]) -> KpiRollup {
             kpi: kpi.to_string(),
             baseline: baseline_stats,
             optimized: optimized_stats,
-            delta_absolute,
-            delta_relative,
+            delta_absolute: normalize_metric_value(delta_absolute),
+            delta_relative: normalize_metric_value(delta_relative),
         }
     })
     .collect::<Vec<_>>();
@@ -1970,6 +2157,11 @@ fn compute_stats(values: &[f64]) -> KpiStats {
         min: *sorted.first().unwrap_or(&0.0),
         max: *sorted.last().unwrap_or(&0.0),
     }
+}
+
+fn normalize_metric_value(value: f64) -> f64 {
+    const SCALE: f64 = 1_000_000_000_000.0;
+    (value * SCALE).round() / SCALE
 }
 
 fn evaluate_kpi_checks(global: &KpiRollup) -> Vec<GateCheck> {
@@ -2324,6 +2516,69 @@ fn default_true() -> bool {
     true
 }
 
+fn default_runtime_mode() -> String {
+    RUNTIME_STUB.to_string()
+}
+
+fn collect_provenance(runtime_mode: &str) -> Result<ProvenanceStamp, DynError> {
+    if !matches!(runtime_mode, RUNTIME_STUB | RUNTIME_LIVE) {
+        return Err(format!(
+            "invalid runtime mode `{runtime_mode}`: expected `{}` or `{}`",
+            RUNTIME_STUB, RUNTIME_LIVE
+        )
+        .into());
+    }
+
+    let git_commit_sha = resolve_git_commit_sha()?;
+    let git_dirty = resolve_git_dirty()?;
+    let provenance = ProvenanceStamp {
+        git_commit_sha,
+        git_dirty,
+        pipeline_version: PIPELINE_VERSION.to_string(),
+        runtime_mode: runtime_mode.to_string(),
+    };
+    validate_provenance_stamp(&provenance)?;
+    Ok(provenance)
+}
+
+fn resolve_git_commit_sha() -> Result<String, DynError> {
+    let output = std::process::Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .output()?;
+    if !output.status.success() {
+        return Err("failed to collect git commit SHA via `git rev-parse HEAD`".into());
+    }
+
+    let value = String::from_utf8(output.stdout)?.trim().to_string();
+    if value.len() != 40 || !value.chars().all(|ch| ch.is_ascii_hexdigit()) {
+        return Err(
+            "git commit SHA is malformed; expected 40 lowercase/uppercase hex chars".into(),
+        );
+    }
+    Ok(value)
+}
+
+fn resolve_git_dirty() -> Result<bool, DynError> {
+    let output = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .output()?;
+    if !output.status.success() {
+        return Err("failed to inspect git dirty state via `git status --porcelain`".into());
+    }
+    Ok(!String::from_utf8(output.stdout)?.trim().is_empty())
+}
+
+fn provenance_matches(summary: &RunSummary, provenance: &ProvenanceStamp) -> bool {
+    summary.git_commit_sha == provenance.git_commit_sha
+        && summary.git_dirty == provenance.git_dirty
+        && summary.pipeline_version == provenance.pipeline_version
+        && summary.runtime_mode == provenance.runtime_mode
+}
+
+fn summary_telemetry_complete(summary: &RunSummary) -> bool {
+    summary.telemetry_complete && validate_run_summary_telemetry(summary).is_ok()
+}
+
 fn hash_edit_intent(edit_intent: &str) -> String {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     edit_intent.hash(&mut hasher);
@@ -2473,6 +2728,115 @@ mod tests {
     }
 
     #[test]
+    fn provenance_mismatch_blocks_decision_grade_kpi_claims() {
+        let temp = tempfile::tempdir().expect("tempdir should be created");
+        let report = execute_batch_from_manifest_file(
+            &fixture_path("batch_complete_manifest.json"),
+            temp.path(),
+        )
+        .expect("batch run should complete");
+
+        let summary_path = temp
+            .path()
+            .join("artifacts")
+            .join("run-a-optimized")
+            .join("summary.json");
+        let mut summary_json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&summary_path).expect("summary should exist"))
+                .expect("summary should deserialize");
+        summary_json["runtime_mode"] = serde_json::json!(RUNTIME_LIVE);
+        fs::write(
+            &summary_path,
+            serde_json::to_string_pretty(&summary_json)
+                .expect("summary serialization should succeed"),
+        )
+        .expect("summary should be written");
+
+        let manifest: RunManifest = serde_json::from_str(
+            &fs::read_to_string(
+                temp.path()
+                    .join("artifacts")
+                    .join("batch")
+                    .join("manifest.normalized.json"),
+            )
+            .expect("normalized manifest should exist"),
+        )
+        .expect("manifest should deserialize");
+
+        let rebuilt = rebuild_batch_report_from_artifacts(
+            &manifest,
+            temp.path(),
+            "artifacts/batch/artifact-index.json",
+            &report.provenance,
+        )
+        .expect("rebuild should succeed");
+
+        assert!(rebuilt.kpi.is_none());
+        assert!(
+            rebuilt
+                .gate_checks
+                .iter()
+                .any(|check| { check.name == "provenance_complete" && !check.pass })
+        );
+        assert!(rebuilt.diagnostics.iter().any(|diag| {
+            diag.error_class.as_deref() == Some("provenance_incomplete")
+                && diag.error_code.as_deref() == Some("ERR_PROVENANCE_MISMATCH")
+        }));
+    }
+
+    #[test]
+    fn unmapped_live_runtime_hard_error_is_reported_deterministically() {
+        let temp = tempfile::tempdir().expect("tempdir should be created");
+        let report = execute_batch_from_manifest_file(
+            &fixture_path("batch_complete_manifest.json"),
+            temp.path(),
+        )
+        .expect("batch run should complete");
+
+        let summary_path = temp
+            .path()
+            .join("artifacts")
+            .join("run-b-optimized")
+            .join("summary.json");
+        let mut summary_json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&summary_path).expect("summary should exist"))
+                .expect("summary should deserialize");
+        summary_json["success"] = serde_json::json!(false);
+        summary_json["error_codes"] = serde_json::json!([ERR_RUNTIME_UNMAPPED_HARD]);
+        summary_json["failure_state"] = serde_json::json!("publish");
+        fs::write(
+            &summary_path,
+            serde_json::to_string_pretty(&summary_json)
+                .expect("summary serialization should succeed"),
+        )
+        .expect("summary should be written");
+
+        let manifest: RunManifest = serde_json::from_str(
+            &fs::read_to_string(
+                temp.path()
+                    .join("artifacts")
+                    .join("batch")
+                    .join("manifest.normalized.json"),
+            )
+            .expect("normalized manifest should exist"),
+        )
+        .expect("manifest should deserialize");
+
+        let rebuilt = rebuild_batch_report_from_artifacts(
+            &manifest,
+            temp.path(),
+            "artifacts/batch/artifact-index.json",
+            &report.provenance,
+        )
+        .expect("rebuild should succeed");
+
+        assert!(rebuilt.diagnostics.iter().any(|diag| {
+            diag.error_class.as_deref() == Some("runtime_unmapped_hard")
+                && diag.error_code.as_deref() == Some(ERR_RUNTIME_UNMAPPED_HARD)
+        }));
+    }
+
+    #[test]
     fn drift_and_coverage_gate_failures_are_reflected_in_report() {
         let temp = tempfile::tempdir().expect("tempdir should be created");
         let drift_report = execute_batch_from_manifest_file(
@@ -2513,6 +2877,7 @@ mod tests {
             &manifest,
             temp.path(),
             "artifacts/batch/artifact-index.json",
+            &report.provenance,
         )
         .expect("rebuild from artifacts should succeed");
 
@@ -2526,7 +2891,8 @@ mod tests {
         let stored: BatchReport =
             serde_json::from_str(&stored_text).expect("report should deserialize");
 
-        assert_eq!(report, rebuilt);
+        assert_eq!(report.provenance, rebuilt.provenance);
+        assert_eq!(report.diagnostics, rebuilt.diagnostics);
         assert_eq!(stored, rebuilt);
     }
 

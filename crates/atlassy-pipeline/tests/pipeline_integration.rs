@@ -4,7 +4,8 @@ use std::path::{Path, PathBuf};
 
 use atlassy_confluence::{ConfluenceClient, StubConfluenceClient, StubPage};
 use atlassy_contracts::{
-    ContractError, ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A, PipelineState, TableOperation,
+    ContractError, ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION,
+    PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
@@ -30,6 +31,12 @@ fn sample_request(run_id: &str) -> RunRequest {
         pattern: PATTERN_A.to_string(),
         scope_selectors: vec!["heading:Overview".to_string()],
         timestamp: "2026-03-06T10:00:00Z".to_string(),
+        provenance: ProvenanceStamp {
+            git_commit_sha: "0123456789abcdef0123456789abcdef01234567".to_string(),
+            git_dirty: false,
+            pipeline_version: PIPELINE_VERSION.to_string(),
+            runtime_mode: RUNTIME_STUB.to_string(),
+        },
         run_mode: RunMode::NoOp,
         force_verify_fail: false,
     }
