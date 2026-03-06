@@ -1,0 +1,45 @@
+{
+  "batch": {
+    "observed_scenario_ids": [
+      "S-001",
+      "S-002",
+      "S-003",
+      "S-004",
+      "S-005",
+      "S-006",
+      "S-007",
+      "S-008",
+      "S-009",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": false,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-drift-baseline",
+      "page_id": "18841604",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Drift baseline",
+      "edit_intent_hash": "hash-drift",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:30:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-drift-optimized",
+      "page_id": "18841604",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Drift optimized",
+      "edit_intent_hash": "hash-drift",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:31:00Z",
+      "mode": "no_op"
+    }
+  ]
+}

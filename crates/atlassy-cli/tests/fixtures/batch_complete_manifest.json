@@ -1,0 +1,107 @@
+{
+  "batch": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-002",
+      "S-003",
+      "S-004",
+      "S-005",
+      "S-006",
+      "S-007",
+      "S-008",
+      "S-009",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-002",
+      "S-003",
+      "S-004",
+      "S-005",
+      "S-006",
+      "S-007",
+      "S-008",
+      "S-009",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-a-baseline",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A baseline",
+      "edit_intent_hash": "hash-a",
+      "scenario_ids": ["S-001", "S-008"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:00:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-a-optimized",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A optimized",
+      "edit_intent_hash": "hash-a",
+      "scenario_ids": ["S-002", "S-010"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:01:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-b-baseline",
+      "page_id": "18841604",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B baseline",
+      "edit_intent_hash": "hash-b",
+      "scenario_ids": ["S-003", "S-004"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:02:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-b-optimized",
+      "page_id": "18841604",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B optimized",
+      "edit_intent_hash": "hash-b",
+      "scenario_ids": ["S-005"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:03:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-c-baseline",
+      "page_id": "18841604",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C baseline",
+      "edit_intent_hash": "hash-c",
+      "scenario_ids": ["S-006", "S-007"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:04:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-c-optimized",
+      "page_id": "18841604",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C optimized",
+      "edit_intent_hash": "hash-c",
+      "scenario_ids": ["S-009"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:05:00Z",
+      "mode": "no_op"
+    }
+  ]
+}

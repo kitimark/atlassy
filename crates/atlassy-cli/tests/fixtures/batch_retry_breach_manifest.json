@@ -1,0 +1,41 @@
+{
+  "batch": {
+    "observed_scenario_ids": [
+      "S-001",
+      "S-002",
+      "S-003",
+      "S-004",
+      "S-005",
+      "S-006",
+      "S-007",
+      "S-008",
+      "S-009",
+      "S-010"
+    ]
+  },
+  "runs": [
+    {
+      "run_id": "run-retry-baseline",
+      "page_id": "18841604",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Conflict exhausted baseline",
+      "edit_intent_hash": "hash-retry",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:20:00Z",
+      "mode": "no_op",
+      "simulate_conflict_exhausted": true
+    },
+    {
+      "run_id": "run-retry-optimized",
+      "page_id": "18841604",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Optimized control run",
+      "edit_intent_hash": "hash-retry",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:21:00Z",
+      "mode": "no_op"
+    }
+  ]
+}

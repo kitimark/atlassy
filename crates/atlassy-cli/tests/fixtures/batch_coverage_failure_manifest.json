@@ -1,0 +1,48 @@
+{
+  "batch": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-002",
+      "S-003",
+      "S-004",
+      "S-005",
+      "S-006",
+      "S-007",
+      "S-008",
+      "S-009",
+      "S-010"
+    ],
+    "observed_scenario_ids": ["S-001"],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-coverage-baseline",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Coverage baseline",
+      "edit_intent_hash": "hash-coverage",
+      "scenario_ids": ["S-001"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:40:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-coverage-optimized",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Coverage optimized",
+      "edit_intent_hash": "hash-coverage",
+      "scenario_ids": ["S-001"],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:41:00Z",
+      "mode": "no_op"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "runs": [
+    {
+      "run_id": "run-only-optimized",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Unmatched run",
+      "edit_intent_hash": "hash-unmatched",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:00:00Z",
+      "mode": "no_op"
+    }
+  ]
+}

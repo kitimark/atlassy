@@ -3,7 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use atlassy_confluence::{ConfluenceClient, StubConfluenceClient, StubPage};
-use atlassy_contracts::{ContractError, ERR_TABLE_SHAPE_CHANGE, PipelineState, TableOperation};
+use atlassy_contracts::{
+    ContractError, ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A, PipelineState, TableOperation,
+};
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
 fn fixture_path(name: &str) -> PathBuf {
@@ -23,6 +25,9 @@ fn sample_request(run_id: &str) -> RunRequest {
         request_id: run_id.to_string(),
         page_id: "18841604".to_string(),
         edit_intent: "Update one section".to_string(),
+        edit_intent_hash: format!("hash-{run_id}"),
+        flow: FLOW_OPTIMIZED.to_string(),
+        pattern: PATTERN_A.to_string(),
         scope_selectors: vec!["heading:Overview".to_string()],
         timestamp: "2026-03-06T10:00:00Z".to_string(),
         run_mode: RunMode::NoOp,

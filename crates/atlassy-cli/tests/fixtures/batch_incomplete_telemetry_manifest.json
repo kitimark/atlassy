@@ -1,0 +1,41 @@
+{
+  "batch": {
+    "observed_scenario_ids": [
+      "S-001",
+      "S-002",
+      "S-003",
+      "S-004",
+      "S-005",
+      "S-006",
+      "S-007",
+      "S-008",
+      "S-009",
+      "S-010"
+    ]
+  },
+  "runs": [
+    {
+      "run_id": "run-telemetry-baseline",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Force verify failure",
+      "edit_intent_hash": "hash-telemetry",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:10:00Z",
+      "mode": "no_op",
+      "force_verify_fail": true
+    },
+    {
+      "run_id": "run-telemetry-optimized",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Normal optimized run",
+      "edit_intent_hash": "hash-telemetry",
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T11:11:00Z",
+      "mode": "no_op"
+    }
+  ]
+}

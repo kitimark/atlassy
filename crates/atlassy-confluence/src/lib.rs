@@ -50,6 +50,7 @@ pub struct StubPage {
 pub struct StubConfluenceClient {
     pages: HashMap<String, StubPage>,
     conflict_once: bool,
+    always_conflict: bool,
     publish_attempts: usize,
 }
 
@@ -58,12 +59,18 @@ impl StubConfluenceClient {
         Self {
             pages,
             conflict_once: false,
+            always_conflict: false,
             publish_attempts: 0,
         }
     }
 
     pub fn with_conflict_once(mut self) -> Self {
         self.conflict_once = true;
+        self
+    }
+
+    pub fn with_always_conflict(mut self) -> Self {
+        self.always_conflict = true;
         self
     }
 }
@@ -91,6 +98,10 @@ impl ConfluenceClient for StubConfluenceClient {
             .pages
             .get_mut(page_id)
             .ok_or_else(|| ConfluenceError::NotFound(page_id.to_string()))?;
+
+        if self.always_conflict {
+            return Err(ConfluenceError::Conflict(page_id.to_string()));
+        }
 
         if self.conflict_once {
             self.conflict_once = false;

@@ -10,14 +10,14 @@ use atlassy_adf::{
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
     AdfTableEditInput, AdfTableEditOutput, ClassifyInput, ClassifyOutput, ContractError,
-    Diagnostics, ERR_CONFLICT_RETRY_EXHAUSTED, ERR_OUT_OF_SCOPE_MUTATION, ERR_ROUTE_VIOLATION,
-    ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo, ExtractProseInput,
-    ExtractProseOutput, FetchInput, FetchOutput, MarkdownBlock, MarkdownMapEntry,
-    MdAssistEditInput, MdAssistEditOutput, MergeCandidatesInput, MergeCandidatesOutput, PatchInput,
-    PatchOp, PatchOutput, PipelineState, ProseChangeCandidate, PublishInput, PublishOutput,
-    PublishResult, RunSummary, StateEnvelope, TableChangeCandidate, TableOperation, VerifyInput,
-    VerifyOutput, VerifyResult, validate_markdown_mapping, validate_prose_changed_paths,
-    validate_table_candidates,
+    Diagnostics, ERR_CONFLICT_RETRY_EXHAUSTED, ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION,
+    ERR_ROUTE_VIOLATION, ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo,
+    ExtractProseInput, ExtractProseOutput, FetchInput, FetchOutput, MarkdownBlock,
+    MarkdownMapEntry, MdAssistEditInput, MdAssistEditOutput, MergeCandidatesInput,
+    MergeCandidatesOutput, PatchInput, PatchOp, PatchOutput, PipelineState, ProseChangeCandidate,
+    PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope, TableChangeCandidate,
+    TableOperation, VerifyInput, VerifyOutput, VerifyResult, validate_markdown_mapping,
+    validate_prose_changed_paths, validate_run_summary_telemetry, validate_table_candidates,
 };
 use thiserror::Error;
 
@@ -54,6 +54,9 @@ pub struct RunRequest {
     pub request_id: String,
     pub page_id: String,
     pub edit_intent: String,
+    pub edit_intent_hash: String,
+    pub flow: String,
+    pub pattern: String,
     pub scope_selectors: Vec<String>,
     pub timestamp: String,
     pub run_mode: RunMode,
@@ -179,9 +182,31 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         let mut tracker = StateTracker::new();
         let mut run_summary = RunSummary {
             success: false,
+            run_id: request.request_id.clone(),
             request_id: request.request_id.clone(),
             page_id: request.page_id.clone(),
+            flow: request.flow.clone(),
+            pattern: request.pattern.clone(),
+            edit_intent_hash: request.edit_intent_hash.clone(),
+            scope_selectors: request.scope_selectors.clone(),
+            scope_resolution_failed: false,
+            full_page_fetch: false,
             pipeline_version: atlassy_contracts::PIPELINE_VERSION.to_string(),
+            state_token_usage: BTreeMap::new(),
+            total_tokens: 0,
+            retry_count: 0,
+            retry_tokens: 0,
+            verify_result: String::new(),
+            verify_error_codes: Vec::new(),
+            publish_result: String::new(),
+            publish_error_code: None,
+            new_version: None,
+            start_ts: request.timestamp.clone(),
+            verify_end_ts: String::new(),
+            publish_end_ts: String::new(),
+            latency_ms: 0,
+            locked_node_mutation: false,
+            telemetry_complete: false,
             applied_paths: Vec::new(),
             blocked_paths: Vec::new(),
             error_codes: Vec::new(),
@@ -193,6 +218,13 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         if result.is_ok() {
             run_summary.success = true;
         }
+
+        run_summary.locked_node_mutation = run_summary
+            .error_codes
+            .iter()
+            .any(|code| code == ERR_LOCKED_NODE_MUTATION);
+        run_summary.telemetry_complete = validate_run_summary_telemetry(&run_summary).is_ok();
+
         self.artifact_store
             .persist_summary(&request.request_id, &run_summary)?;
 
@@ -240,16 +272,26 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .run_verify_state(request, tracker, &fetch, &patch, &merged)
             .map_err(|error| self.hard_fail(summary, PipelineState::Verify, error))?;
 
+        summary.scope_resolution_failed = fetch.payload.scope_resolution_failed;
+        summary.full_page_fetch = fetch.payload.full_page_fetch;
+        summary.verify_result = match verify.payload.verify_result {
+            VerifyResult::Pass => "pass".to_string(),
+            VerifyResult::Fail => "fail".to_string(),
+        };
+        summary.verify_error_codes = verify
+            .payload
+            .diagnostics
+            .errors
+            .iter()
+            .map(|error| error.code.clone())
+            .collect();
+        summary.verify_end_ts = request.timestamp.clone();
+
         if verify.payload.verify_result == VerifyResult::Fail {
             summary.failure_state = Some(PipelineState::Verify);
-            let codes = verify
-                .payload
-                .diagnostics
-                .errors
-                .iter()
-                .map(|error| error.code.clone())
-                .collect::<Vec<_>>();
-            summary.error_codes.extend(codes);
+            summary
+                .error_codes
+                .extend(summary.verify_error_codes.clone());
             let primary_code = verify
                 .payload
                 .diagnostics
@@ -268,6 +310,20 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .run_publish_state(request, tracker, &fetch, &patch)
             .map_err(|error| self.hard_fail(summary, PipelineState::Publish, error))?;
 
+        summary.publish_result = match publish.payload.publish_result {
+            PublishResult::Published => "published".to_string(),
+            PublishResult::Failed => "failed".to_string(),
+        };
+        summary.publish_error_code = publish
+            .payload
+            .diagnostics
+            .errors
+            .first()
+            .map(|error| error.code.clone());
+        summary.new_version = publish.payload.new_version;
+        summary.retry_count = publish.payload.retry_count;
+        summary.publish_end_ts = request.timestamp.clone();
+
         if publish.payload.publish_result == PublishResult::Failed {
             summary.failure_state = Some(PipelineState::Publish);
             summary
@@ -281,6 +337,9 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         }
 
         summary.applied_paths = merged.payload.changed_paths;
+        summary.state_token_usage.insert("fetch".to_string(), 0);
+        summary.state_token_usage.insert("verify".to_string(), 0);
+        summary.state_token_usage.insert("publish".to_string(), 0);
         summary.token_metrics.insert("fetch".to_string(), 0);
         summary.token_metrics.insert("verify".to_string(), 0);
         summary.token_metrics.insert("publish".to_string(), 0);
@@ -945,10 +1004,11 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             &patch.payload.candidate_page_adf,
         );
 
-        let (publish_result, new_version, diagnostics) = match first_attempt {
+        let (publish_result, new_version, retry_count, diagnostics) = match first_attempt {
             Ok(response) => (
                 PublishResult::Published,
                 Some(response.new_version),
+                0,
                 Diagnostics::default(),
             ),
             Err(ConfluenceError::Conflict(_)) => {
@@ -965,6 +1025,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     Ok(response) => (
                         PublishResult::Published,
                         Some(response.new_version),
+                        1,
                         Diagnostics::default(),
                     ),
                     Err(ConfluenceError::Conflict(_)) => {
@@ -974,7 +1035,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                             message: "conflict after scoped retry".to_string(),
                             recovery: "return reviewer artifact".to_string(),
                         });
-                        (PublishResult::Failed, None, diagnostics)
+                        (PublishResult::Failed, None, 2, diagnostics)
                     }
                     Err(other) => return Err(to_hard_error(PipelineState::Publish, other)),
                 }
@@ -987,6 +1048,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             payload: PublishOutput {
                 publish_result,
                 new_version,
+                retry_count,
                 diagnostics: diagnostics.clone(),
             },
         };

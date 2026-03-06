@@ -72,9 +72,12 @@ name = "atlassy-cli"
 version = "0.1.0"
 dependencies = [
  "atlassy-confluence",
+ "atlassy-contracts",
  "atlassy-pipeline",
  "clap",
+ "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "tracing",
 ]

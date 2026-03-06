@@ -14,6 +14,13 @@ pub const ERR_LOCKED_NODE_MUTATION: &str = "ERR_LOCKED_NODE_MUTATION";
 pub const ERR_TABLE_SHAPE_CHANGE: &str = "ERR_TABLE_SHAPE_CHANGE";
 pub const ERR_CONFLICT_RETRY_EXHAUSTED: &str = "ERR_CONFLICT_RETRY_EXHAUSTED";
 
+pub const FLOW_BASELINE: &str = "baseline";
+pub const FLOW_OPTIMIZED: &str = "optimized";
+
+pub const PATTERN_A: &str = "A";
+pub const PATTERN_B: &str = "B";
+pub const PATTERN_C: &str = "C";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
 pub enum PipelineState {
@@ -320,15 +327,38 @@ pub struct PublishInput {
 pub struct PublishOutput {
     pub publish_result: PublishResult,
     pub new_version: Option<u64>,
+    pub retry_count: u32,
     pub diagnostics: Diagnostics,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RunSummary {
     pub success: bool,
+    pub run_id: String,
     pub request_id: String,
     pub page_id: String,
+    pub flow: String,
+    pub pattern: String,
+    pub edit_intent_hash: String,
+    pub scope_selectors: Vec<String>,
+    pub scope_resolution_failed: bool,
+    pub full_page_fetch: bool,
     pub pipeline_version: String,
+    pub state_token_usage: BTreeMap<String, u64>,
+    pub total_tokens: u64,
+    pub retry_count: u32,
+    pub retry_tokens: u64,
+    pub verify_result: String,
+    pub verify_error_codes: Vec<String>,
+    pub publish_result: String,
+    pub publish_error_code: Option<String>,
+    pub new_version: Option<u64>,
+    pub start_ts: String,
+    pub verify_end_ts: String,
+    pub publish_end_ts: String,
+    pub latency_ms: u64,
+    pub locked_node_mutation: bool,
+    pub telemetry_complete: bool,
     pub applied_paths: Vec<String>,
     pub blocked_paths: Vec<String>,
     pub error_codes: Vec<String>,
@@ -356,6 +386,8 @@ pub enum ContractError {
     TableOperationNotAllowed(String),
     #[error("table candidate paths must be deterministic and sorted")]
     TableCandidateOrder,
+    #[error("telemetry incomplete: {0}")]
+    TelemetryIncomplete(String),
 }
 
 pub fn validate_changed_paths(paths: &[String]) -> Result<(), ContractError> {
@@ -496,6 +528,48 @@ pub fn validate_table_candidates(
             return Err(ContractError::TableCandidateOrder);
         }
         previous = Some(candidate.path.as_str());
+    }
+    Ok(())
+}
+
+pub fn validate_run_summary_telemetry(summary: &RunSummary) -> Result<(), ContractError> {
+    if summary.run_id.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete("run_id".to_string()));
+    }
+    if summary.page_id.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete("page_id".to_string()));
+    }
+    if !matches!(summary.flow.as_str(), FLOW_BASELINE | FLOW_OPTIMIZED) {
+        return Err(ContractError::TelemetryIncomplete("flow".to_string()));
+    }
+    if !matches!(summary.pattern.as_str(), PATTERN_A | PATTERN_B | PATTERN_C) {
+        return Err(ContractError::TelemetryIncomplete("pattern".to_string()));
+    }
+    if summary.edit_intent_hash.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete(
+            "edit_intent_hash".to_string(),
+        ));
+    }
+    if summary.start_ts.trim().is_empty()
+        || summary.verify_end_ts.trim().is_empty()
+        || summary.publish_end_ts.trim().is_empty()
+    {
+        return Err(ContractError::TelemetryIncomplete("timestamps".to_string()));
+    }
+    if summary.verify_result.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete(
+            "verify_result".to_string(),
+        ));
+    }
+    if summary.publish_result.trim().is_empty() {
+        return Err(ContractError::TelemetryIncomplete(
+            "publish_result".to_string(),
+        ));
+    }
+    if summary.state_token_usage.is_empty() {
+        return Err(ContractError::TelemetryIncomplete(
+            "state_token_usage".to_string(),
+        ));
     }
     Ok(())
 }
@@ -757,5 +831,54 @@ mod tests {
         let second = serde_json::to_string(&payload).unwrap();
         assert_eq!(first, second);
         assert!(first.contains("\"cell_text_update\""));
+    }
+
+    #[test]
+    fn run_summary_telemetry_validation_requires_kpi_fields() {
+        let mut summary = RunSummary {
+            success: true,
+            run_id: "run-1".to_string(),
+            request_id: "req-1".to_string(),
+            page_id: "18841604".to_string(),
+            flow: FLOW_OPTIMIZED.to_string(),
+            pattern: PATTERN_A.to_string(),
+            edit_intent_hash: "hash-1".to_string(),
+            scope_selectors: vec!["heading:Overview".to_string()],
+            scope_resolution_failed: false,
+            full_page_fetch: false,
+            pipeline_version: PIPELINE_VERSION.to_string(),
+            state_token_usage: BTreeMap::from([
+                ("fetch".to_string(), 0_u64),
+                ("verify".to_string(), 0_u64),
+                ("publish".to_string(), 0_u64),
+            ]),
+            total_tokens: 0,
+            retry_count: 0,
+            retry_tokens: 0,
+            verify_result: "pass".to_string(),
+            verify_error_codes: Vec::new(),
+            publish_result: "published".to_string(),
+            publish_error_code: None,
+            new_version: Some(2),
+            start_ts: "2026-03-06T10:00:00Z".to_string(),
+            verify_end_ts: "2026-03-06T10:00:01Z".to_string(),
+            publish_end_ts: "2026-03-06T10:00:02Z".to_string(),
+            latency_ms: 200,
+            locked_node_mutation: false,
+            telemetry_complete: true,
+            applied_paths: Vec::new(),
+            blocked_paths: Vec::new(),
+            error_codes: Vec::new(),
+            token_metrics: BTreeMap::new(),
+            failure_state: None,
+        };
+
+        assert!(validate_run_summary_telemetry(&summary).is_ok());
+
+        summary.flow = "unknown".to_string();
+        assert_eq!(
+            validate_run_summary_telemetry(&summary),
+            Err(ContractError::TelemetryIncomplete("flow".to_string()))
+        );
     }
 }
