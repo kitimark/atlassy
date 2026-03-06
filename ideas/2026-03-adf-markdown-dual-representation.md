@@ -2,7 +2,15 @@
 
 ## Status
 
-Incubating (not scheduled)
+Promoted to roadmap (v1 baseline)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/02-solution-architecture.md`
+- `roadmap/03-phased-roadmap.md`
+- `roadmap/06-decisions-and-defaults.md`
+- `roadmap/08-poc-scope.md`
+- `roadmap/10-testing-strategy-and-simulation.md`
 
 ## Plain Problem Points
 
@@ -20,7 +28,7 @@ Use an ADF-canonical dual-representation model with block routing:
 - `locked_structural`: keep unsupported Confluence-native blocks locked in ADF.
 - Use minimal path-targeted ADF patch updates and preserve all untouched locked blocks.
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - Current project phase is focused on foundation and roadmap definition.
 - This idea needs robust path mapping between Markdown assist blocks and ADF nodes.
@@ -40,11 +48,10 @@ Use an ADF-canonical dual-representation model with block routing:
 - Frequent manual rework for unsupported structural blocks.
 - Clear owner and capacity available for a dedicated PoC.
 
-## Promotion Path
+## Promotion Outcome
 
-Move this idea to `roadmap/` when all conditions are true:
+This idea has been promoted into the v1 roadmap baseline.
 
-- A v1 support matrix is approved (`editable_prose`, `table_adf`, `locked_structural`).
-- KPI targets are defined and accepted.
-- Test corpus for prose round-trip and table-cell patch fidelity is prepared.
-- Phase 0 implementation capacity is committed.
+- Route matrix is now defined in `roadmap/06-decisions-and-defaults.md`.
+- KPI targets are now defined in `roadmap/04-kpi-and-experiments.md`.
+- PoC and testing scope are now defined in `roadmap/08-poc-scope.md` and `roadmap/10-testing-strategy-and-simulation.md`.

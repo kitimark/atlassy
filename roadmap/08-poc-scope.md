@@ -8,6 +8,7 @@ Validate that ADF-canonical routing with prose Markdown assist and ADF table-cel
 
 - Baseline public seed: 5-page sample from `xilinx-wiki.atlassian.net` (space `A`).
 - Expand later with private pages only after baseline instrumentation is stable.
+- Evidence reference for baseline payload characteristics: `ideas/2026-03-confluence-adf-markdown-size-evidence.md`.
 
 ## Edit Patterns
 

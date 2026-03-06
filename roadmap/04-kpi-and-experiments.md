@@ -64,6 +64,7 @@ Define a reproducible measurement protocol that validates v1 goals for token eff
 
 - Patterns: A, B, C from `08-poc-scope.md`.
 - Pages: baseline 5-page sample from `xilinx-wiki.atlassian.net` space `A`.
+- Dataset provenance: baseline page profile and payload evidence are documented in `ideas/2026-03-confluence-adf-markdown-size-evidence.md`.
 - Minimum runs: 3 runs per `(page_id, pattern, flow)` pair.
 - Randomization: alternate A/B order per pair to reduce order bias.
 - Retry policy: enforce one scoped rebase retry max for both flows.

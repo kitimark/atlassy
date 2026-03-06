@@ -2,7 +2,16 @@
 
 ## Status
 
-Incubating (not scheduled)
+Promoted to roadmap (v1 baseline)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/02-solution-architecture.md`
+- `roadmap/03-phased-roadmap.md`
+- `roadmap/04-kpi-and-experiments.md`
+- `roadmap/06-decisions-and-defaults.md`
+- `roadmap/08-poc-scope.md`
+- `roadmap/10-testing-strategy-and-simulation.md`
 
 ## Plain Problem Points
 
@@ -30,14 +39,15 @@ Use an ADF-first, token-budgeted, section-first update workflow:
 
 ## V1 Defaults (Planning)
 
-- Start with read-only simulation (`fetch -> classify -> patch-plan -> verify`), no write publish in the first PoC step.
+- Use controlled live Confluence sandbox probes for behavior research (including write paths), and use deterministic stub simulation as the default mode for CI/regression.
 - Keep ADF as canonical source for fetch, patch, verify, and publish.
 - Allow table edits via ADF-native path, but v1 scope is cell text only.
 - Use conservative lock policy for unsupported fidelity-critical blocks: media, macros/extensions, layouts, mentions, panels, and status chips.
 - Use a public benchmark seed dataset first (for example, a 5-page sample from `xilinx-wiki.atlassian.net`), then add private datasets later if needed.
 - Track advanced table operations as deferred ideas (`2026-03-advanced-table-editing-modes.md`).
+- Historical note: an earlier draft used read-only simulation in the first PoC step; this was superseded by the live-sandbox-plus-stub policy.
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - Project focus is still on defining the baseline roadmap and architecture.
 - This idea needs instrumentation design first to prove token reduction objectively.
@@ -59,12 +69,10 @@ Use an ADF-first, token-budgeted, section-first update workflow:
 - Retry loops caused by version conflicts and repeated prompt regeneration.
 - Demand for row/column operations beyond cell text updates.
 
-## Promotion Path
+## Promotion Outcome
 
-Move this idea to `roadmap/` when all conditions are true:
+This idea has been promoted into the v1 roadmap baseline.
 
-- Token baseline is captured for current Confluence update flow.
-- KPI targets are approved (token reduction, retrieval reduction, retry reduction).
-- Section-level patch strategy and conflict policy are defined.
-- Block routing policy is defined (`editable_prose`, `table_adf`, `locked_structural`).
-- A small PoC scope is selected (one large page type + 2-3 edit patterns).
+- KPI targets are now defined in `roadmap/04-kpi-and-experiments.md`.
+- Patch strategy and conflict policy are now defined in `roadmap/06-decisions-and-defaults.md` and `roadmap/09-ai-contract-spec.md`.
+- Route policy and PoC scope are now defined in `roadmap/06-decisions-and-defaults.md` and `roadmap/08-poc-scope.md`.

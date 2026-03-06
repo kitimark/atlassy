@@ -7,6 +7,7 @@ This folder contains design and delivery planning for Atlassy.
 - Keep project decisions explicit and easy to review.
 - Break large planning content into small, reusable documents.
 - Reduce context bloat in AI conversations by referencing focused files.
+- Use `roadmap/` for active committed planning; use `ideas/` for incubating concepts and historical source notes.
 
 ## Roadmap Document Set (current)
 
