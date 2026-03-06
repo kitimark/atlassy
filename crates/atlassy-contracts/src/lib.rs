@@ -177,18 +177,29 @@ pub struct MarkdownMapEntry {
 pub struct ExtractProseOutput {
     pub markdown_blocks: Vec<MarkdownBlock>,
     pub md_to_adf_map: Vec<MarkdownMapEntry>,
+    pub editable_prose_paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MdAssistEditInput {
     pub markdown_blocks: Vec<MarkdownBlock>,
+    pub md_to_adf_map: Vec<MarkdownMapEntry>,
+    pub editable_prose_paths: Vec<String>,
+    pub allowed_scope_paths: Vec<String>,
     pub edit_intent: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProseChangeCandidate {
+    pub path: String,
+    pub markdown: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MdAssistEditOutput {
     pub edited_markdown_blocks: Vec<MarkdownBlock>,
     pub prose_changed_paths: Vec<String>,
+    pub prose_change_candidates: Vec<ProseChangeCandidate>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -298,6 +309,12 @@ pub enum ContractError {
     InvalidChangedPaths,
     #[error("invalid JSON pointer path: {0}")]
     InvalidPath(String),
+    #[error("invalid markdown mapping: {0}")]
+    InvalidMarkdownMapping(String),
+    #[error("prose path is not mapped: {0}")]
+    UnmappedProsePath(String),
+    #[error("prose boundary violation: {0}")]
+    ProseBoundaryViolation(String),
 }
 
 pub fn validate_changed_paths(paths: &[String]) -> Result<(), ContractError> {
@@ -326,6 +343,106 @@ pub fn normalize_changed_paths(paths: &[String]) -> Result<Vec<String>, Contract
 
 pub fn is_json_pointer(path: &str) -> bool {
     path.starts_with('/')
+}
+
+pub fn validate_markdown_mapping(
+    markdown_blocks: &[MarkdownBlock],
+    md_to_adf_map: &[MarkdownMapEntry],
+    editable_prose_paths: &[String],
+    allowed_scope_paths: &[String],
+) -> Result<(), ContractError> {
+    let mut block_seen: BTreeMap<&str, usize> = BTreeMap::new();
+    for block in markdown_blocks {
+        *block_seen.entry(block.md_block_id.as_str()).or_insert(0) += 1;
+    }
+    for (block_id, count) in block_seen {
+        if count != 1 {
+            return Err(ContractError::InvalidMarkdownMapping(format!(
+                "markdown block `{block_id}` appears {count} times"
+            )));
+        }
+    }
+
+    let mut map_seen: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut path_seen: BTreeMap<&str, usize> = BTreeMap::new();
+    for entry in md_to_adf_map {
+        if !is_json_pointer(&entry.adf_path) {
+            return Err(ContractError::InvalidPath(entry.adf_path.clone()));
+        }
+        if !is_within_scope(&entry.adf_path, allowed_scope_paths) {
+            return Err(ContractError::InvalidMarkdownMapping(format!(
+                "mapped path `{}` is outside allowed scope",
+                entry.adf_path
+            )));
+        }
+
+        *map_seen.entry(entry.md_block_id.as_str()).or_insert(0) += 1;
+        *path_seen.entry(entry.adf_path.as_str()).or_insert(0) += 1;
+    }
+
+    for block in markdown_blocks {
+        if !map_seen.contains_key(block.md_block_id.as_str()) {
+            return Err(ContractError::InvalidMarkdownMapping(format!(
+                "missing map entry for markdown block `{}`",
+                block.md_block_id
+            )));
+        }
+    }
+
+    for (block_id, count) in map_seen {
+        if count != 1 {
+            return Err(ContractError::InvalidMarkdownMapping(format!(
+                "mapping for markdown block `{block_id}` appears {count} times"
+            )));
+        }
+    }
+
+    for (path, count) in path_seen {
+        if count != 1 {
+            return Err(ContractError::InvalidMarkdownMapping(format!(
+                "mapped path `{path}` appears {count} times"
+            )));
+        }
+    }
+
+    for path in editable_prose_paths {
+        if !md_to_adf_map.iter().any(|entry| entry.adf_path == *path) {
+            return Err(ContractError::InvalidMarkdownMapping(format!(
+                "editable prose path `{path}` is missing from map"
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+pub fn validate_prose_changed_paths(
+    prose_changed_paths: &[String],
+    mapped_paths: &[String],
+) -> Result<(), ContractError> {
+    for path in prose_changed_paths {
+        if !mapped_paths.iter().any(|mapped| {
+            path == mapped
+                || path
+                    .strip_prefix(mapped)
+                    .is_some_and(|suffix| suffix.starts_with('/'))
+        }) {
+            return Err(ContractError::UnmappedProsePath(path.clone()));
+        }
+    }
+    Ok(())
+}
+
+fn is_within_scope(path: &str, allowed_scope_paths: &[String]) -> bool {
+    allowed_scope_paths.iter().any(|allowed| {
+        if allowed == "/" {
+            return true;
+        }
+        path == allowed
+            || path
+                .strip_prefix(allowed)
+                .is_some_and(|suffix| suffix.starts_with('/'))
+    })
 }
 
 #[cfg(test)]
@@ -410,5 +527,97 @@ mod tests {
             invalid.validate_meta(),
             Err(ContractError::MissingField("request_id"))
         );
+    }
+
+    #[test]
+    fn markdown_mapping_must_be_one_to_one_and_in_scope() {
+        let markdown_blocks = vec![
+            MarkdownBlock {
+                md_block_id: "/content/1".to_string(),
+                markdown: "Hello".to_string(),
+            },
+            MarkdownBlock {
+                md_block_id: "/content/2".to_string(),
+                markdown: "World".to_string(),
+            },
+        ];
+
+        let valid_map = vec![
+            MarkdownMapEntry {
+                md_block_id: "/content/1".to_string(),
+                adf_path: "/content/1".to_string(),
+            },
+            MarkdownMapEntry {
+                md_block_id: "/content/2".to_string(),
+                adf_path: "/content/2".to_string(),
+            },
+        ];
+
+        assert!(
+            validate_markdown_mapping(
+                &markdown_blocks,
+                &valid_map,
+                &["/content/1".to_string(), "/content/2".to_string()],
+                &["/content".to_string()]
+            )
+            .is_ok()
+        );
+
+        let duplicate_block_map = vec![
+            MarkdownMapEntry {
+                md_block_id: "/content/1".to_string(),
+                adf_path: "/content/1".to_string(),
+            },
+            MarkdownMapEntry {
+                md_block_id: "/content/1".to_string(),
+                adf_path: "/content/2".to_string(),
+            },
+        ];
+
+        assert!(matches!(
+            validate_markdown_mapping(
+                &markdown_blocks,
+                &duplicate_block_map,
+                &["/content/1".to_string(), "/content/2".to_string()],
+                &["/content".to_string()]
+            ),
+            Err(ContractError::InvalidMarkdownMapping(_))
+        ));
+    }
+
+    #[test]
+    fn prose_changed_paths_must_stay_within_mapped_paths() {
+        let mapped_paths = vec!["/content/1".to_string(), "/content/2".to_string()];
+
+        assert!(
+            validate_prose_changed_paths(&["/content/1/text".to_string()], &mapped_paths).is_ok()
+        );
+        assert_eq!(
+            validate_prose_changed_paths(&["/content/99".to_string()], &mapped_paths),
+            Err(ContractError::UnmappedProsePath("/content/99".to_string()))
+        );
+    }
+
+    #[test]
+    fn prose_route_payload_serialization_is_deterministic() {
+        let input = MdAssistEditInput {
+            markdown_blocks: vec![MarkdownBlock {
+                md_block_id: "/content/1".to_string(),
+                markdown: "Initial prose".to_string(),
+            }],
+            md_to_adf_map: vec![MarkdownMapEntry {
+                md_block_id: "/content/1".to_string(),
+                adf_path: "/content/1".to_string(),
+            }],
+            editable_prose_paths: vec!["/content/1".to_string()],
+            allowed_scope_paths: vec!["/content".to_string()],
+            edit_intent: "Update one section".to_string(),
+        };
+
+        let first = serde_json::to_string(&input).unwrap();
+        let second = serde_json::to_string(&input).unwrap();
+        assert_eq!(first, second);
+        assert!(first.contains("\"md_to_adf_map\""));
+        assert!(first.contains("\"allowed_scope_paths\""));
     }
 }

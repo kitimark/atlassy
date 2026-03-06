@@ -41,6 +41,7 @@ enum Commands {
 enum CliMode {
     NoOp,
     SimpleScopedUpdate,
+    SimpleScopedProseUpdate,
 }
 
 #[tokio::main]
@@ -69,6 +70,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     RunMode::SimpleScopedUpdate {
                         target_path: path,
                         new_value: value,
+                    }
+                }
+                CliMode::SimpleScopedProseUpdate => {
+                    let path =
+                        target_path.unwrap_or_else(|| "/content/1/content/0/text".to_string());
+                    let markdown = new_value.unwrap_or_else(|| "Updated prose body".to_string());
+                    RunMode::SimpleScopedProseUpdate {
+                        target_path: path,
+                        markdown,
                     }
                 }
             };

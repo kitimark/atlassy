@@ -41,6 +41,8 @@ pub enum AdfError {
     WholeBodyRewriteDisallowed,
     #[error("path `{0}` is outside allowed scope")]
     OutOfScope(String),
+    #[error("mapping integrity failure: {0}")]
+    MappingIntegrity(String),
 }
 
 pub fn resolve_scope(adf: &Value, selectors: &[String]) -> Result<ScopeResolution, AdfError> {
@@ -140,6 +142,59 @@ pub fn ensure_paths_in_scope(
         }
     }
     Ok(())
+}
+
+pub fn canonicalize_mapped_path(
+    path: &str,
+    allowed_scope_paths: &[String],
+) -> Result<String, AdfError> {
+    if !is_json_pointer(path) {
+        return Err(AdfError::InvalidPath(path.to_string()));
+    }
+
+    if allowed_scope_paths.iter().any(|allowed| allowed == "/") {
+        return Ok(path.to_string());
+    }
+
+    if is_within_allowed_scope(path, allowed_scope_paths) {
+        return Ok(path.to_string());
+    }
+
+    if allowed_scope_paths.len() == 1 {
+        let root = allowed_scope_paths[0].trim_end_matches('/');
+        if path == "/" {
+            return Ok(root.to_string());
+        }
+        let tail = path.trim_start_matches('/');
+        let canonical = format!("{root}/{tail}");
+        if is_within_allowed_scope(&canonical, allowed_scope_paths) {
+            return Ok(canonical);
+        }
+    }
+
+    Err(AdfError::OutOfScope(path.to_string()))
+}
+
+pub fn is_path_within_or_descendant(path: &str, mapped_path: &str) -> bool {
+    path == mapped_path
+        || path
+            .strip_prefix(mapped_path)
+            .is_some_and(|suffix| suffix.starts_with('/'))
+}
+
+pub fn markdown_for_path(adf: &Value, path: &str) -> Result<String, AdfError> {
+    if !is_json_pointer(path) {
+        return Err(AdfError::InvalidPath(path.to_string()));
+    }
+
+    let node = if path == "/" {
+        adf
+    } else {
+        adf.pointer(path)
+            .ok_or_else(|| AdfError::MappingIntegrity(format!("path `{path}` does not resolve")))?
+    };
+
+    Ok(collect_text(node))
 }
 
 fn full_page_resolution(adf: &Value, reason: Option<String>) -> Result<ScopeResolution, AdfError> {
@@ -323,5 +378,40 @@ mod tests {
 
         let error = build_patch_ops(&candidates, &["/content/0".to_string()]).unwrap_err();
         assert_eq!(error, AdfError::WholeBodyRewriteDisallowed);
+    }
+
+    #[test]
+    fn canonicalizes_relative_path_to_scope_root() {
+        let canonical = canonicalize_mapped_path("/content/0", &["/body/1".to_string()]).unwrap();
+        assert_eq!(canonical, "/body/1/content/0");
+
+        let root = canonicalize_mapped_path("/", &["/body/1".to_string()]).unwrap();
+        assert_eq!(root, "/body/1");
+    }
+
+    #[test]
+    fn extracts_markdown_for_resolved_path() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "Hello prose"}]}
+            ]
+        });
+
+        let markdown = markdown_for_path(&adf, "/content/0").unwrap();
+        assert_eq!(markdown, "Hello prose");
+    }
+
+    #[test]
+    fn detects_out_of_scope_paths() {
+        let error = ensure_paths_in_scope(
+            &["/content/2/content/0/text".to_string()],
+            &["/content/0".to_string(), "/content/1".to_string()],
+        )
+        .unwrap_err();
+        assert_eq!(
+            error,
+            AdfError::OutOfScope("/content/2/content/0/text".to_string())
+        );
     }
 }

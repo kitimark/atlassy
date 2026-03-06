@@ -3,8 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use atlassy_adf::{
-    AdfError, PatchCandidate, build_patch_ops, ensure_paths_in_scope, normalize_changed_paths,
-    resolve_scope,
+    AdfError, PatchCandidate, build_patch_ops, canonicalize_mapped_path, ensure_paths_in_scope,
+    is_path_within_or_descendant, markdown_for_path, normalize_changed_paths, resolve_scope,
 };
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
@@ -13,8 +13,9 @@ use atlassy_contracts::{
     ERR_SCHEMA_INVALID, EnvelopeMeta, ErrorInfo, ExtractProseInput, ExtractProseOutput, FetchInput,
     FetchOutput, MarkdownBlock, MarkdownMapEntry, MdAssistEditInput, MdAssistEditOutput,
     MergeCandidatesInput, MergeCandidatesOutput, PatchInput, PatchOp, PatchOutput, PipelineState,
-    PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope, VerifyInput,
-    VerifyOutput, VerifyResult,
+    ProseChangeCandidate, PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope,
+    VerifyInput, VerifyOutput, VerifyResult, validate_markdown_mapping,
+    validate_prose_changed_paths,
 };
 use thiserror::Error;
 
@@ -24,6 +25,10 @@ pub enum RunMode {
     SimpleScopedUpdate {
         target_path: String,
         new_value: serde_json::Value,
+    },
+    SimpleScopedProseUpdate {
+        target_path: String,
+        markdown: String,
     },
 }
 
@@ -199,7 +204,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .map_err(|error| self.hard_fail(summary, PipelineState::ExtractProse, error))?;
 
         let md_edit = self
-            .run_md_assist_edit_state(request, tracker, &extract)
+            .run_md_assist_edit_state(request, tracker, &fetch, &extract)
             .map_err(|error| self.hard_fail(summary, PipelineState::MdAssistEdit, error))?;
 
         let table_edit = self
@@ -211,7 +216,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .map_err(|error| self.hard_fail(summary, PipelineState::MergeCandidates, error))?;
 
         let patch = self
-            .run_patch_state(request, tracker, &fetch, &merged)
+            .run_patch_state(request, tracker, &fetch, &merged, &md_edit)
             .map_err(|error| self.hard_fail(summary, PipelineState::Patch, error))?;
 
         let verify = self
@@ -328,7 +333,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .map(|(path, node_type)| atlassy_contracts::NodeRef {
                 path: path.clone(),
                 node_type: node_type.clone(),
-                route: route_for_node(node_type).to_string(),
+                route: route_for_node(path, node_type, &fetch.payload.node_path_index).to_string(),
             })
             .collect();
 
@@ -365,30 +370,52 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             },
         };
 
-        let prose_nodes = classify
+        let mut prose_nodes = Vec::new();
+        let mut map_entries = Vec::new();
+
+        for node in classify
             .payload
             .node_manifest
             .iter()
             .filter(|node| node.route == "editable_prose")
-            .map(|node| MarkdownBlock {
-                md_block_id: node.path.clone(),
-                markdown: format!("Path: {}", node.path),
-            })
+        {
+            let canonical_path =
+                canonicalize_mapped_path(&node.path, &fetch.payload.allowed_scope_paths)
+                    .map_err(|error| to_hard_error(PipelineState::ExtractProse, error))?;
+            let markdown = markdown_for_path(&fetch.payload.scoped_adf, &node.path)
+                .map_err(|error| to_hard_error(PipelineState::ExtractProse, error))?;
+
+            prose_nodes.push(MarkdownBlock {
+                md_block_id: canonical_path.clone(),
+                markdown,
+            });
+
+            map_entries.push(MarkdownMapEntry {
+                md_block_id: canonical_path.clone(),
+                adf_path: canonical_path,
+            });
+        }
+
+        prose_nodes.sort_by(|left, right| left.md_block_id.cmp(&right.md_block_id));
+        map_entries.sort_by(|left, right| left.md_block_id.cmp(&right.md_block_id));
+        let editable_prose_paths = map_entries
+            .iter()
+            .map(|entry| entry.adf_path.clone())
             .collect::<Vec<_>>();
 
-        let map_entries = prose_nodes
-            .iter()
-            .map(|block| MarkdownMapEntry {
-                md_block_id: block.md_block_id.clone(),
-                adf_path: block.md_block_id.clone(),
-            })
-            .collect();
+        validate_markdown_mapping(
+            &prose_nodes,
+            &map_entries,
+            &editable_prose_paths,
+            &fetch.payload.allowed_scope_paths,
+        )?;
 
         let output = StateEnvelope {
             meta: meta(request, PipelineState::ExtractProse),
             payload: ExtractProseOutput {
                 markdown_blocks: prose_nodes,
                 md_to_adf_map: map_entries,
+                editable_prose_paths,
             },
         };
 
@@ -406,6 +433,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         &mut self,
         request: &RunRequest,
         tracker: &mut StateTracker,
+        fetch: &StateEnvelope<FetchOutput>,
         extract: &StateEnvelope<ExtractProseOutput>,
     ) -> Result<StateEnvelope<MdAssistEditOutput>, PipelineError> {
         tracker.transition_to(PipelineState::MdAssistEdit)?;
@@ -413,20 +441,77 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             meta: meta(request, PipelineState::MdAssistEdit),
             payload: MdAssistEditInput {
                 markdown_blocks: extract.payload.markdown_blocks.clone(),
+                md_to_adf_map: extract.payload.md_to_adf_map.clone(),
+                editable_prose_paths: extract.payload.editable_prose_paths.clone(),
+                allowed_scope_paths: fetch.payload.allowed_scope_paths.clone(),
                 edit_intent: request.edit_intent.clone(),
             },
         };
 
-        let prose_changed_paths = match &request.run_mode {
-            RunMode::NoOp => Vec::new(),
-            RunMode::SimpleScopedUpdate { target_path, .. } => vec![target_path.clone()],
-        };
+        validate_markdown_mapping(
+            &input.payload.markdown_blocks,
+            &input.payload.md_to_adf_map,
+            &input.payload.editable_prose_paths,
+            &input.payload.allowed_scope_paths,
+        )?;
+
+        let mut edited_markdown_blocks = input.payload.markdown_blocks.clone();
+        let mut prose_changed_paths = Vec::new();
+        let mut prose_change_candidates = Vec::new();
+
+        match &request.run_mode {
+            RunMode::NoOp => {}
+            RunMode::SimpleScopedUpdate {
+                target_path,
+                new_value,
+            } => {
+                let markdown = new_value
+                    .as_str()
+                    .map(ToString::to_string)
+                    .unwrap_or_else(|| new_value.to_string());
+                project_prose_candidate(
+                    target_path,
+                    &markdown,
+                    &input.payload.editable_prose_paths,
+                    &input.payload.allowed_scope_paths,
+                    &mut prose_changed_paths,
+                    &mut prose_change_candidates,
+                )?;
+            }
+            RunMode::SimpleScopedProseUpdate {
+                target_path,
+                markdown,
+            } => {
+                project_prose_candidate(
+                    target_path,
+                    markdown,
+                    &input.payload.editable_prose_paths,
+                    &input.payload.allowed_scope_paths,
+                    &mut prose_changed_paths,
+                    &mut prose_change_candidates,
+                )?;
+            }
+        }
+
+        prose_changed_paths = normalize_changed_paths(&prose_changed_paths)
+            .map_err(|error| to_hard_error(PipelineState::MdAssistEdit, error))?;
+        validate_prose_changed_paths(&prose_changed_paths, &input.payload.editable_prose_paths)?;
+
+        for candidate in &prose_change_candidates {
+            if let Some(block) = edited_markdown_blocks
+                .iter_mut()
+                .find(|block| is_path_within_or_descendant(&candidate.path, &block.md_block_id))
+            {
+                block.markdown = candidate.markdown.clone();
+            }
+        }
 
         let output = StateEnvelope {
             meta: meta(request, PipelineState::MdAssistEdit),
             payload: MdAssistEditOutput {
-                edited_markdown_blocks: input.payload.markdown_blocks.clone(),
+                edited_markdown_blocks,
                 prose_changed_paths,
+                prose_change_candidates,
             },
         };
 
@@ -516,6 +601,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         tracker: &mut StateTracker,
         fetch: &StateEnvelope<FetchOutput>,
         merged: &StateEnvelope<MergeCandidatesOutput>,
+        md_edit: &StateEnvelope<MdAssistEditOutput>,
     ) -> Result<StateEnvelope<PatchOutput>, PipelineError> {
         tracker.transition_to(PipelineState::Patch)?;
 
@@ -527,16 +613,15 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             },
         };
 
-        let candidates = match &request.run_mode {
-            RunMode::NoOp => Vec::new(),
-            RunMode::SimpleScopedUpdate {
-                target_path,
-                new_value,
-            } => vec![PatchCandidate {
-                path: target_path.clone(),
-                value: new_value.clone(),
-            }],
-        };
+        let candidates = md_edit
+            .payload
+            .prose_change_candidates
+            .iter()
+            .map(|candidate| PatchCandidate {
+                path: candidate.path.clone(),
+                value: serde_json::Value::String(candidate.markdown.clone()),
+            })
+            .collect::<Vec<_>>();
         let patch_ops = build_patch_ops(&candidates, &fetch.payload.allowed_scope_paths)
             .map_err(|error| to_hard_error(PipelineState::Patch, error))?
             .into_iter()
@@ -727,13 +812,85 @@ fn meta(request: &RunRequest, state: PipelineState) -> EnvelopeMeta {
     }
 }
 
-fn route_for_node(node_type: &str) -> &'static str {
+fn project_prose_candidate(
+    target_path: &str,
+    markdown: &str,
+    editable_prose_paths: &[String],
+    allowed_scope_paths: &[String],
+    prose_changed_paths: &mut Vec<String>,
+    prose_change_candidates: &mut Vec<ProseChangeCandidate>,
+) -> Result<(), PipelineError> {
+    let canonical_path = canonicalize_mapped_path(target_path, allowed_scope_paths)
+        .map_err(|error| to_hard_error(PipelineState::MdAssistEdit, error))?;
+
+    let mapped_root = editable_prose_paths
+        .iter()
+        .find(|path| is_path_within_or_descendant(&canonical_path, path))
+        .cloned()
+        .ok_or_else(|| PipelineError::Hard {
+            state: PipelineState::MdAssistEdit,
+            code: ERR_ROUTE_VIOLATION.to_string(),
+            message: format!("target path `{canonical_path}` is not mapped to editable prose"),
+        })?;
+
+    if canonical_path == mapped_root || canonical_path.ends_with("/type") {
+        return Err(PipelineError::Hard {
+            state: PipelineState::MdAssistEdit,
+            code: ERR_SCHEMA_INVALID.to_string(),
+            message: format!(
+                "target path `{canonical_path}` violates prose boundary or top-level type constraints"
+            ),
+        });
+    }
+
+    prose_changed_paths.push(canonical_path.clone());
+    prose_change_candidates.push(ProseChangeCandidate {
+        path: canonical_path,
+        markdown: markdown.to_string(),
+    });
+    Ok(())
+}
+
+fn route_for_node(
+    path: &str,
+    node_type: &str,
+    node_path_index: &BTreeMap<String, String>,
+) -> &'static str {
+    if matches!(node_type, "table" | "tableRow" | "tableCell")
+        || has_table_ancestor(path, node_path_index)
+    {
+        return "table_adf";
+    }
+
     match node_type {
         "paragraph" | "heading" | "bulletList" | "orderedList" | "listItem" | "blockquote"
-        | "codeBlock" | "rule" => "editable_prose",
-        "table" | "tableRow" | "tableCell" => "table_adf",
+        | "codeBlock" => "editable_prose",
         _ => "locked_structural",
     }
+}
+
+fn has_table_ancestor(path: &str, node_path_index: &BTreeMap<String, String>) -> bool {
+    let mut current = path.to_string();
+    while let Some(parent) = parent_path(&current) {
+        if let Some(node_type) = node_path_index.get(&parent)
+            && matches!(node_type.as_str(), "table" | "tableRow" | "tableCell")
+        {
+            return true;
+        }
+        current = parent;
+    }
+    false
+}
+
+fn parent_path(path: &str) -> Option<String> {
+    if path == "/" {
+        return None;
+    }
+    let (parent, _) = path.rsplit_once('/')?;
+    if parent.is_empty() {
+        return Some("/".to_string());
+    }
+    Some(parent.to_string())
 }
 
 fn to_hard_error(source_state: PipelineState, error: impl std::fmt::Display) -> PipelineError {
