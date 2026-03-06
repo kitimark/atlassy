@@ -30,3 +30,5 @@ This folder contains design and delivery planning for Atlassy.
 - Prefer short sections with concrete acceptance criteria.
 - Add measurable targets where possible.
 - Update decision docs when defaults change.
+- Treat `artifacts/` outputs as temporary execution data; keep durable policy in docs, not generated JSON.
+- Include commit provenance (`git_commit_sha`, `git_dirty`, `pipeline_version`) when recording KPI or readiness outcomes.

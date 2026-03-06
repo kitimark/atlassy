@@ -68,9 +68,45 @@ Incubating concepts that are not scheduled yet are stored under `ideas/`.
 
 Start here: `ideas/README.md`.
 
+## OpenSpec
+
+Executable specs and change archives are under `openspec/`.
+
+Start here: `openspec/README.md`.
+
 ## Current Status
 
-Phase 0 (design baseline): in planning.
+- Implementation checkpoint: phases 1-5 are implemented for stub and fixture-backed execution.
+- Current readiness decision: `iterate` (KPI target misses for token reduction and full-page retrieval reduction).
+- Real Confluence runtime is not enabled yet (`LiveConfluenceClient` remains pending).
+
+## Project Structure
+
+- `crates/`: Rust workspace implementation (`atlassy-cli`, `atlassy-pipeline`, `atlassy-adf`, `atlassy-confluence`, `atlassy-contracts`).
+- `roadmap/`: strategy, defaults, KPI protocol, risks, and readiness policy.
+- `openspec/specs/`: active behavior specs for implemented capabilities.
+- `openspec/changes/archive/`: completed phase execution records.
+- `ideas/`: incubating or deferred scope beyond v1.
+- `artifacts/`: temporary CLI outputs (`run`, `run-batch`, `run-readiness`), intentionally non-versioned.
+
+## Reproducibility Metadata
+
+`artifacts/` is temporary and may be deleted at any time. Any result referenced in docs or decisions must include provenance:
+
+- `git_commit_sha` (full 40-character SHA)
+- `git_dirty` (whether the working tree had local changes)
+- `pipeline_version`
+- command set used to regenerate outputs
+
+Suggested capture sequence before running experiments:
+
+```bash
+git rev-parse HEAD
+git status --porcelain
+cargo run -p atlassy-cli -- run ...
+cargo run -p atlassy-cli -- run-batch ...
+cargo run -p atlassy-cli -- run-readiness --verify-replay ...
+```
 
 ## Success Metrics
 

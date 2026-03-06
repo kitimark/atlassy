@@ -55,7 +55,7 @@ Define the minimum operational, quality, and governance conditions required to r
 
 - Confluence test dataset is reachable and stable.
 - Credentials/secrets are provisioned in approved runtime paths.
-- Artifact storage path is writable and retained for replay.
+- Artifact storage path is writable for temporary execution output (`artifacts/`) and replay generation.
 - Clock synchronization and timestamps are reliable for latency metrics.
 - Rust toolchain (`rustc`, `cargo`) is installed and pinned for the repository runtime.
 - Dedicated sandbox write access is available for controlled live research probes.
@@ -79,9 +79,20 @@ Define the minimum operational, quality, and governance conditions required to r
 ### Gate 5: Metrics and Reporting
 
 - Required per-run telemetry fields are complete.
+- Per-run provenance fields are complete (`git_commit_sha`, `git_dirty`, `pipeline_version`).
 - Baseline and optimized runs are paired by page and edit intent hash.
 - Aggregate report computes median and p90 for all KPIs.
 - Outlier handling includes primary and incident-filtered secondary views.
+
+## Evidence Provenance Requirements
+
+- Any KPI or readiness claim must be traceable to a specific commit SHA.
+- Evidence packets must include:
+  - `git_commit_sha` (full 40-character SHA)
+  - `git_dirty` (working tree cleanliness marker)
+  - `pipeline_version`
+  - command set used to regenerate outputs
+- Reports without commit provenance are non-authoritative for decision sign-off.
 
 ### Gate 6: Risk Control Activation
 
@@ -117,6 +128,7 @@ Decision uses KPI and safety gates together:
 ## Decision Meeting Inputs
 
 - Latest aggregate KPI report.
+- Provenance stamp for evidence build (`git_commit_sha`, `git_dirty`, `pipeline_version`).
 - Risk register delta from `05-risks-and-mitigations.md`.
 - Top failure classes with root-cause summaries.
 - Recommendation memo with explicit `go | iterate | stop`.

@@ -54,6 +54,18 @@
 - Stub scope: scenario-driven simulation for happy path, retry exhaustion, schema errors, route/scope violations, and transient service failures.
 - Rationale: preserve realism for behavior discovery while keeping automated test runs stable, fast, and reproducible.
 
+### D-010: Runtime artifact retention policy
+
+- Decision: `artifacts/` is a temporary execution output directory and is not versioned in git.
+- Scope: applies to `run`, `run-batch`, and `run-readiness` outputs.
+- Rationale: avoid repository noise and stale generated evidence.
+
+### D-011: Evidence provenance policy
+
+- Decision: decision-grade KPI/readiness evidence must include commit provenance.
+- Required metadata: `git_commit_sha` (full 40-character SHA), `git_dirty`, and `pipeline_version`.
+- Rationale: regenerated outputs can change across implementation revisions; provenance is required for defensible comparisons.
+
 ## Default Route Matrix
 
 - `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock, rule.

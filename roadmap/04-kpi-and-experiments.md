@@ -81,6 +81,8 @@ Define a reproducible measurement protocol that validates v1 goals for token eff
 Each run must emit one record with at least:
 
 - `request_id`, `run_id`, `flow` (`baseline|optimized`), `pipeline_version`.
+- `git_commit_sha` (full 40-character SHA for the build under test).
+- `git_dirty` (boolean working-tree cleanliness marker at run start).
 - `page_id`, `pattern` (`A|B|C`), `edit_intent_hash`.
 - `scope_selectors`, `scope_resolution_failed`, `full_page_fetch`.
 - `state_token_usage` map keyed by pipeline state.
@@ -140,6 +142,13 @@ If any condition fails:
 - Pattern-level section (A/B/C) with notable regressions.
 - Top outlier runs and suspected root causes.
 - Recommendation: `go`, `iterate`, or `stop` with rationale.
+- Provenance stamp with `git_commit_sha`, `git_dirty`, and `pipeline_version`.
+
+## Current Checkpoint Snapshot (stub-backed)
+
+- Latest readiness recommendation: `iterate`.
+- Primary blockers: `tokens_per_successful_update` and `full_page_retrieval_rate` target misses.
+- Interpretation note: current KPI results come from stub-backed execution and should not be treated as live Confluence evidence.
 
 ## Exit and Decision Update Workflow
 

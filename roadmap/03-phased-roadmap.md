@@ -14,14 +14,21 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 
 ## Phase Overview
 
-- Phase 0: Design baseline (current)
+- Phase 0: Design baseline (complete)
 - Phase 1: Core pipeline skeleton
 - Phase 2: Prose assist route
 - Phase 3: Table cell edit route
 - Phase 4: PoC execution and metrics validation
 - Phase 5: Hardening and v1 readiness
 
-## Phase 0: Design Baseline (current)
+## Implementation Checkpoint (2026-03-07)
+
+- Phase containers for phases 1-5 are implemented and archived under `openspec/changes/archive/`.
+- Stub and fixture-backed execution is operational (`run`, `run-batch`, `run-readiness`).
+- Current recommendation remains `iterate`, driven by KPI misses in token reduction and full-page retrieval reduction.
+- Live Confluence runtime enablement remains pending and is required before production use.
+
+## Phase 0: Design Baseline
 
 ### Scope
 
