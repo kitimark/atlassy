@@ -42,6 +42,7 @@ enum CliMode {
     NoOp,
     SimpleScopedUpdate,
     SimpleScopedProseUpdate,
+    SimpleScopedTableCellUpdate,
 }
 
 #[tokio::main]
@@ -79,6 +80,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     RunMode::SimpleScopedProseUpdate {
                         target_path: path,
                         markdown,
+                    }
+                }
+                CliMode::SimpleScopedTableCellUpdate => {
+                    let path = target_path.unwrap_or_else(|| {
+                        "/content/2/content/0/content/0/content/0/content/0/text".to_string()
+                    });
+                    let text = new_value.unwrap_or_else(|| "Updated table cell".to_string());
+                    RunMode::SimpleScopedTableCellUpdate {
+                        target_path: path,
+                        text,
                     }
                 }
             };
@@ -131,6 +142,25 @@ fn demo_page() -> serde_json::Value {
           "type": "paragraph",
           "attrs": {"id": "intro-paragraph"},
           "content": [{"type": "text", "text": "Initial paragraph"}]
+        },
+        {
+          "type": "table",
+          "content": [
+            {
+              "type": "tableRow",
+              "content": [
+                {
+                  "type": "tableCell",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [{"type": "text", "text": "Initial table cell"}]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     })

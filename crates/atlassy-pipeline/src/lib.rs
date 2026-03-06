@@ -4,18 +4,20 @@ use std::path::{Path, PathBuf};
 
 use atlassy_adf::{
     AdfError, PatchCandidate, build_patch_ops, canonicalize_mapped_path, ensure_paths_in_scope,
-    is_path_within_or_descendant, markdown_for_path, normalize_changed_paths, resolve_scope,
+    is_path_within_or_descendant, is_table_cell_text_path, is_table_shape_or_attr_path,
+    markdown_for_path, normalize_changed_paths, path_has_ancestor_type, resolve_scope,
 };
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
     AdfTableEditInput, AdfTableEditOutput, ClassifyInput, ClassifyOutput, ContractError,
     Diagnostics, ERR_CONFLICT_RETRY_EXHAUSTED, ERR_OUT_OF_SCOPE_MUTATION, ERR_ROUTE_VIOLATION,
-    ERR_SCHEMA_INVALID, EnvelopeMeta, ErrorInfo, ExtractProseInput, ExtractProseOutput, FetchInput,
-    FetchOutput, MarkdownBlock, MarkdownMapEntry, MdAssistEditInput, MdAssistEditOutput,
-    MergeCandidatesInput, MergeCandidatesOutput, PatchInput, PatchOp, PatchOutput, PipelineState,
-    ProseChangeCandidate, PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope,
-    VerifyInput, VerifyOutput, VerifyResult, validate_markdown_mapping,
-    validate_prose_changed_paths,
+    ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo, ExtractProseInput,
+    ExtractProseOutput, FetchInput, FetchOutput, MarkdownBlock, MarkdownMapEntry,
+    MdAssistEditInput, MdAssistEditOutput, MergeCandidatesInput, MergeCandidatesOutput, PatchInput,
+    PatchOp, PatchOutput, PipelineState, ProseChangeCandidate, PublishInput, PublishOutput,
+    PublishResult, RunSummary, StateEnvelope, TableChangeCandidate, TableOperation, VerifyInput,
+    VerifyOutput, VerifyResult, validate_markdown_mapping, validate_prose_changed_paths,
+    validate_table_candidates,
 };
 use thiserror::Error;
 
@@ -29,6 +31,21 @@ pub enum RunMode {
     SimpleScopedProseUpdate {
         target_path: String,
         markdown: String,
+    },
+    SimpleScopedTableCellUpdate {
+        target_path: String,
+        text: String,
+    },
+    ForbiddenTableOperation {
+        target_path: String,
+        operation: TableOperation,
+    },
+    SyntheticRouteConflict {
+        prose_path: String,
+        table_path: String,
+    },
+    SyntheticTableShapeDrift {
+        path: String,
     },
 }
 
@@ -208,15 +225,15 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .map_err(|error| self.hard_fail(summary, PipelineState::MdAssistEdit, error))?;
 
         let table_edit = self
-            .run_adf_table_edit_state(request, tracker)
+            .run_adf_table_edit_state(request, tracker, &fetch, &classify)
             .map_err(|error| self.hard_fail(summary, PipelineState::AdfTableEdit, error))?;
 
         let merged = self
-            .run_merge_candidates_state(request, tracker, &md_edit, &table_edit)
+            .run_merge_candidates_state(request, tracker, &classify, &md_edit, &table_edit)
             .map_err(|error| self.hard_fail(summary, PipelineState::MergeCandidates, error))?;
 
         let patch = self
-            .run_patch_state(request, tracker, &fetch, &merged, &md_edit)
+            .run_patch_state(request, tracker, &fetch, &merged, &md_edit, &table_edit)
             .map_err(|error| self.hard_fail(summary, PipelineState::Patch, error))?;
 
         let verify = self
@@ -233,9 +250,16 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 .map(|error| error.code.clone())
                 .collect::<Vec<_>>();
             summary.error_codes.extend(codes);
+            let primary_code = verify
+                .payload
+                .diagnostics
+                .errors
+                .first()
+                .map(|error| error.code.clone())
+                .unwrap_or_else(|| ERR_SCHEMA_INVALID.to_string());
             return Err(PipelineError::Hard {
                 state: PipelineState::Verify,
-                code: ERR_SCHEMA_INVALID.to_string(),
+                code: primary_code,
                 message: "verification failed".to_string(),
             });
         }
@@ -491,11 +515,26 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     &mut prose_change_candidates,
                 )?;
             }
+            RunMode::SimpleScopedTableCellUpdate { .. } => {}
+            RunMode::ForbiddenTableOperation { .. } => {}
+            RunMode::SyntheticRouteConflict { table_path, .. } => {
+                prose_changed_paths.push(table_path.clone());
+                prose_change_candidates.push(ProseChangeCandidate {
+                    path: table_path.clone(),
+                    markdown: "Synthetic prose conflict candidate".to_string(),
+                });
+            }
+            RunMode::SyntheticTableShapeDrift { .. } => {}
         }
 
         prose_changed_paths = normalize_changed_paths(&prose_changed_paths)
             .map_err(|error| to_hard_error(PipelineState::MdAssistEdit, error))?;
-        validate_prose_changed_paths(&prose_changed_paths, &input.payload.editable_prose_paths)?;
+        if !matches!(request.run_mode, RunMode::SyntheticRouteConflict { .. }) {
+            validate_prose_changed_paths(
+                &prose_changed_paths,
+                &input.payload.editable_prose_paths,
+            )?;
+        }
 
         for candidate in &prose_change_candidates {
             if let Some(block) = edited_markdown_blocks
@@ -529,22 +568,119 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         &mut self,
         request: &RunRequest,
         tracker: &mut StateTracker,
+        fetch: &StateEnvelope<FetchOutput>,
+        classify: &StateEnvelope<ClassifyOutput>,
     ) -> Result<StateEnvelope<AdfTableEditOutput>, PipelineError> {
         tracker.transition_to(PipelineState::AdfTableEdit)?;
+        let table_nodes = classify
+            .payload
+            .node_manifest
+            .iter()
+            .filter(|node| node.route == "table_adf")
+            .cloned()
+            .collect::<Vec<_>>();
+
         let input = StateEnvelope {
             meta: meta(request, PipelineState::AdfTableEdit),
             payload: AdfTableEditInput {
-                table_nodes: Vec::new(),
+                table_nodes,
+                allowed_scope_paths: fetch.payload.allowed_scope_paths.clone(),
                 edit_intent: request.edit_intent.clone(),
             },
         };
 
+        let allowed_ops = vec![TableOperation::CellTextUpdate];
+        let mut table_candidates = Vec::new();
+
+        match &request.run_mode {
+            RunMode::NoOp | RunMode::SimpleScopedProseUpdate { .. } => {}
+            RunMode::SimpleScopedUpdate {
+                target_path,
+                new_value,
+            } => {
+                if let Some(text) = new_value.as_str() {
+                    project_table_candidate(
+                        target_path,
+                        text,
+                        &fetch.payload.allowed_scope_paths,
+                        &fetch.payload.node_path_index,
+                        &allowed_ops,
+                        &mut table_candidates,
+                    )?;
+                }
+            }
+            RunMode::SimpleScopedTableCellUpdate { target_path, text } => {
+                project_table_candidate(
+                    target_path,
+                    text,
+                    &fetch.payload.allowed_scope_paths,
+                    &fetch.payload.node_path_index,
+                    &allowed_ops,
+                    &mut table_candidates,
+                )?;
+            }
+            RunMode::ForbiddenTableOperation {
+                target_path,
+                operation,
+            } => {
+                if *operation != TableOperation::CellTextUpdate {
+                    return Err(PipelineError::Hard {
+                        state: PipelineState::AdfTableEdit,
+                        code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+                        message: format!(
+                            "forbidden table operation requested: {} at {}",
+                            operation.as_str(),
+                            target_path
+                        ),
+                    });
+                }
+
+                project_table_candidate(
+                    target_path,
+                    "Allowed table operation",
+                    &fetch.payload.allowed_scope_paths,
+                    &fetch.payload.node_path_index,
+                    &allowed_ops,
+                    &mut table_candidates,
+                )?;
+            }
+            RunMode::SyntheticRouteConflict { table_path, .. } => {
+                project_table_candidate(
+                    table_path,
+                    "Synthetic table conflict candidate",
+                    &fetch.payload.allowed_scope_paths,
+                    &fetch.payload.node_path_index,
+                    &allowed_ops,
+                    &mut table_candidates,
+                )?;
+            }
+            RunMode::SyntheticTableShapeDrift { path } => {
+                table_candidates.push(TableChangeCandidate {
+                    op: TableOperation::CellTextUpdate,
+                    path: path.clone(),
+                    value: serde_json::Value::String("Synthetic drift".to_string()),
+                    source_route: "table_adf".to_string(),
+                });
+            }
+        }
+
+        table_candidates.sort_by(|left, right| left.path.cmp(&right.path));
+        validate_table_candidates(&table_candidates, &allowed_ops)?;
+
+        let table_changed_paths = normalize_changed_paths(
+            &table_candidates
+                .iter()
+                .map(|candidate| candidate.path.clone())
+                .collect::<Vec<_>>(),
+        )
+        .map_err(|error| to_hard_error(PipelineState::AdfTableEdit, error))?;
+
         let output = StateEnvelope {
             meta: meta(request, PipelineState::AdfTableEdit),
             payload: AdfTableEditOutput {
-                table_candidate_nodes: Vec::new(),
-                table_changed_paths: Vec::new(),
-                allowed_ops: vec!["cell_text_update".to_string()],
+                table_candidates,
+                table_changed_paths,
+                allowed_ops,
             },
         };
 
@@ -562,6 +698,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         &mut self,
         request: &RunRequest,
         tracker: &mut StateTracker,
+        classify: &StateEnvelope<ClassifyOutput>,
         md_edit: &StateEnvelope<MdAssistEditOutput>,
         table_edit: &StateEnvelope<AdfTableEditOutput>,
     ) -> Result<StateEnvelope<MergeCandidatesOutput>, PipelineError> {
@@ -574,6 +711,56 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 table_changed_paths: table_edit.payload.table_changed_paths.clone(),
             },
         };
+
+        for prose_path in &input.payload.prose_changed_paths {
+            for table_path in &input.payload.table_changed_paths {
+                if prose_path == table_path {
+                    return Err(PipelineError::Hard {
+                        state: PipelineState::MergeCandidates,
+                        code: ERR_ROUTE_VIOLATION.to_string(),
+                        message: format!(
+                            "merge collision: duplicate changed path across routes `{prose_path}`"
+                        ),
+                    });
+                }
+                if paths_overlap(prose_path, table_path) {
+                    return Err(PipelineError::Hard {
+                        state: PipelineState::MergeCandidates,
+                        code: ERR_ROUTE_VIOLATION.to_string(),
+                        message: format!(
+                            "cross-route conflict: prose path `{prose_path}` overlaps table path `{table_path}`"
+                        ),
+                    });
+                }
+            }
+        }
+
+        let locked_paths = classify
+            .payload
+            .node_manifest
+            .iter()
+            .filter(|node| {
+                node.route == "locked_structural"
+                    && node.path != "/"
+                    && node.node_type.as_str() != "doc"
+            })
+            .map(|node| node.path.as_str())
+            .collect::<Vec<_>>();
+
+        for table_path in &input.payload.table_changed_paths {
+            if locked_paths
+                .iter()
+                .any(|locked_path| paths_overlap(table_path, locked_path))
+            {
+                return Err(PipelineError::Hard {
+                    state: PipelineState::MergeCandidates,
+                    code: ERR_ROUTE_VIOLATION.to_string(),
+                    message: format!(
+                        "table candidate path `{table_path}` overlaps locked structural boundary"
+                    ),
+                });
+            }
+        }
 
         let mut merged = input.payload.prose_changed_paths.clone();
         merged.extend(input.payload.table_changed_paths.clone());
@@ -602,6 +789,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         fetch: &StateEnvelope<FetchOutput>,
         merged: &StateEnvelope<MergeCandidatesOutput>,
         md_edit: &StateEnvelope<MdAssistEditOutput>,
+        table_edit: &StateEnvelope<AdfTableEditOutput>,
     ) -> Result<StateEnvelope<PatchOutput>, PipelineError> {
         tracker.transition_to(PipelineState::Patch)?;
 
@@ -621,6 +809,16 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 path: candidate.path.clone(),
                 value: serde_json::Value::String(candidate.markdown.clone()),
             })
+            .chain(
+                table_edit
+                    .payload
+                    .table_candidates
+                    .iter()
+                    .map(|candidate| PatchCandidate {
+                        path: candidate.path.clone(),
+                        value: candidate.value.clone(),
+                    }),
+            )
             .collect::<Vec<_>>();
         let patch_ops = build_patch_ops(&candidates, &fetch.payload.allowed_scope_paths)
             .map_err(|error| to_hard_error(PipelineState::Patch, error))?
@@ -676,6 +874,20 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 code: ERR_SCHEMA_INVALID.to_string(),
                 message: "forced verify failure".to_string(),
                 recovery: "fix candidate payload".to_string(),
+            });
+            VerifyResult::Fail
+        } else if let Some(path) = input.payload.changed_paths.iter().find(|path| {
+            is_table_shape_or_attr_path(path, &fetch.payload.node_path_index)
+                || (path_has_ancestor_type(
+                    path,
+                    &fetch.payload.node_path_index,
+                    &["table", "tableRow", "tableCell"],
+                ) && !is_table_cell_text_path(path, &fetch.payload.node_path_index))
+        }) {
+            diagnostics.errors.push(ErrorInfo {
+                code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+                message: format!("forbidden table shape or attribute mutation at `{path}`"),
+                recovery: "limit table updates to cell text paths only".to_string(),
             });
             VerifyResult::Fail
         } else if let Err(error) = ensure_paths_in_scope(
@@ -851,6 +1063,70 @@ fn project_prose_candidate(
     Ok(())
 }
 
+fn project_table_candidate(
+    target_path: &str,
+    text: &str,
+    allowed_scope_paths: &[String],
+    node_path_index: &BTreeMap<String, String>,
+    allowed_ops: &[TableOperation],
+    table_candidates: &mut Vec<TableChangeCandidate>,
+) -> Result<(), PipelineError> {
+    let canonical_path = canonicalize_mapped_path(target_path, allowed_scope_paths)
+        .map_err(|error| to_hard_error(PipelineState::AdfTableEdit, error))?;
+
+    if !path_has_ancestor_type(
+        &canonical_path,
+        node_path_index,
+        &["table", "tableRow", "tableCell"],
+    ) {
+        return Err(PipelineError::Hard {
+            state: PipelineState::AdfTableEdit,
+            code: ERR_ROUTE_VIOLATION.to_string(),
+            message: format!("target path `{canonical_path}` is not in table route"),
+        });
+    }
+
+    if !is_table_cell_text_path(&canonical_path, node_path_index)
+        || is_table_shape_or_attr_path(&canonical_path, node_path_index)
+    {
+        return Err(PipelineError::Hard {
+            state: PipelineState::AdfTableEdit,
+            code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+            message: format!(
+                "target path `{canonical_path}` is not an allowed table cell text update path"
+            ),
+        });
+    }
+
+    let candidate = TableChangeCandidate {
+        op: TableOperation::CellTextUpdate,
+        path: canonical_path,
+        value: serde_json::Value::String(text.to_string()),
+        source_route: "table_adf".to_string(),
+    };
+
+    validate_table_candidates(std::slice::from_ref(&candidate), allowed_ops).map_err(|error| {
+        PipelineError::Hard {
+            state: PipelineState::AdfTableEdit,
+            code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+            message: error.to_string(),
+        }
+    })?;
+
+    table_candidates.push(candidate);
+    Ok(())
+}
+
+fn paths_overlap(left: &str, right: &str) -> bool {
+    left == right
+        || left
+            .strip_prefix(right)
+            .is_some_and(|suffix| suffix.starts_with('/'))
+        || right
+            .strip_prefix(left)
+            .is_some_and(|suffix| suffix.starts_with('/'))
+}
+
 fn route_for_node(
     path: &str,
     node_type: &str,
@@ -897,6 +1173,8 @@ fn to_hard_error(source_state: PipelineState, error: impl std::fmt::Display) -> 
     let message = error.to_string();
     let code = if message.contains("out of scope") {
         ERR_OUT_OF_SCOPE_MUTATION
+    } else if message.contains("table") && message.contains("shape") {
+        ERR_TABLE_SHAPE_CHANGE
     } else if message.contains("whole-body rewrite") {
         ERR_ROUTE_VIOLATION
     } else if message.contains("scope") {

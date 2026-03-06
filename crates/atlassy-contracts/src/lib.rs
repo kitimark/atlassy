@@ -205,14 +205,51 @@ pub struct MdAssistEditOutput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdfTableEditInput {
     pub table_nodes: Vec<NodeRef>,
+    pub allowed_scope_paths: Vec<String>,
     pub edit_intent: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TableOperation {
+    CellTextUpdate,
+    RowAdd,
+    RowRemove,
+    ColumnAdd,
+    ColumnRemove,
+    MergeCells,
+    SplitCells,
+    TableAttrUpdate,
+}
+
+impl TableOperation {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            TableOperation::CellTextUpdate => "cell_text_update",
+            TableOperation::RowAdd => "row_add",
+            TableOperation::RowRemove => "row_remove",
+            TableOperation::ColumnAdd => "column_add",
+            TableOperation::ColumnRemove => "column_remove",
+            TableOperation::MergeCells => "merge_cells",
+            TableOperation::SplitCells => "split_cells",
+            TableOperation::TableAttrUpdate => "table_attr_update",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TableChangeCandidate {
+    pub op: TableOperation,
+    pub path: String,
+    pub value: serde_json::Value,
+    pub source_route: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdfTableEditOutput {
-    pub table_candidate_nodes: Vec<NodeRef>,
+    pub table_candidates: Vec<TableChangeCandidate>,
     pub table_changed_paths: Vec<String>,
-    pub allowed_ops: Vec<String>,
+    pub allowed_ops: Vec<TableOperation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -315,6 +352,10 @@ pub enum ContractError {
     UnmappedProsePath(String),
     #[error("prose boundary violation: {0}")]
     ProseBoundaryViolation(String),
+    #[error("table operation is not allowed: {0}")]
+    TableOperationNotAllowed(String),
+    #[error("table candidate paths must be deterministic and sorted")]
+    TableCandidateOrder,
 }
 
 pub fn validate_changed_paths(paths: &[String]) -> Result<(), ContractError> {
@@ -429,6 +470,32 @@ pub fn validate_prose_changed_paths(
         }) {
             return Err(ContractError::UnmappedProsePath(path.clone()));
         }
+    }
+    Ok(())
+}
+
+pub fn validate_table_candidates(
+    candidates: &[TableChangeCandidate],
+    allowed_ops: &[TableOperation],
+) -> Result<(), ContractError> {
+    let allowed = allowed_ops.iter().map(|op| op.as_str()).collect::<Vec<_>>();
+
+    let mut previous: Option<&str> = None;
+    for candidate in candidates {
+        if !allowed.iter().any(|op| *op == candidate.op.as_str()) {
+            return Err(ContractError::TableOperationNotAllowed(
+                candidate.op.as_str().to_string(),
+            ));
+        }
+        if !is_json_pointer(&candidate.path) {
+            return Err(ContractError::InvalidPath(candidate.path.clone()));
+        }
+        if let Some(prev) = previous
+            && prev >= candidate.path.as_str()
+        {
+            return Err(ContractError::TableCandidateOrder);
+        }
+        previous = Some(candidate.path.as_str());
     }
     Ok(())
 }
@@ -619,5 +686,76 @@ mod tests {
         assert_eq!(first, second);
         assert!(first.contains("\"md_to_adf_map\""));
         assert!(first.contains("\"allowed_scope_paths\""));
+    }
+
+    #[test]
+    fn table_candidates_allowlist_and_order_are_enforced() {
+        let allowed = vec![TableOperation::CellTextUpdate];
+        let valid = vec![
+            TableChangeCandidate {
+                op: TableOperation::CellTextUpdate,
+                path: "/content/2/content/0/content/0/content/0/text".to_string(),
+                value: serde_json::json!("A"),
+                source_route: "table_adf".to_string(),
+            },
+            TableChangeCandidate {
+                op: TableOperation::CellTextUpdate,
+                path: "/content/2/content/0/content/0/content/1/text".to_string(),
+                value: serde_json::json!("B"),
+                source_route: "table_adf".to_string(),
+            },
+        ];
+        assert!(validate_table_candidates(&valid, &allowed).is_ok());
+
+        let forbidden = vec![TableChangeCandidate {
+            op: TableOperation::RowAdd,
+            path: "/content/2/content/0".to_string(),
+            value: serde_json::json!({}),
+            source_route: "table_adf".to_string(),
+        }];
+        assert_eq!(
+            validate_table_candidates(&forbidden, &allowed),
+            Err(ContractError::TableOperationNotAllowed(
+                "row_add".to_string()
+            ))
+        );
+
+        let unsorted = vec![
+            TableChangeCandidate {
+                op: TableOperation::CellTextUpdate,
+                path: "/content/2/content/0/content/0/content/1/text".to_string(),
+                value: serde_json::json!("B"),
+                source_route: "table_adf".to_string(),
+            },
+            TableChangeCandidate {
+                op: TableOperation::CellTextUpdate,
+                path: "/content/2/content/0/content/0/content/0/text".to_string(),
+                value: serde_json::json!("A"),
+                source_route: "table_adf".to_string(),
+            },
+        ];
+        assert_eq!(
+            validate_table_candidates(&unsorted, &allowed),
+            Err(ContractError::TableCandidateOrder)
+        );
+    }
+
+    #[test]
+    fn table_payload_serialization_is_deterministic() {
+        let payload = AdfTableEditOutput {
+            table_candidates: vec![TableChangeCandidate {
+                op: TableOperation::CellTextUpdate,
+                path: "/content/2/content/0/content/0/content/0/text".to_string(),
+                value: serde_json::json!("Updated"),
+                source_route: "table_adf".to_string(),
+            }],
+            table_changed_paths: vec!["/content/2/content/0/content/0/content/0/text".to_string()],
+            allowed_ops: vec![TableOperation::CellTextUpdate],
+        };
+
+        let first = serde_json::to_string(&payload).unwrap();
+        let second = serde_json::to_string(&payload).unwrap();
+        assert_eq!(first, second);
+        assert!(first.contains("\"cell_text_update\""));
     }
 }

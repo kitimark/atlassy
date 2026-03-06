@@ -3,7 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use atlassy_confluence::{ConfluenceClient, StubConfluenceClient, StubPage};
-use atlassy_contracts::{ContractError, PipelineState};
+use atlassy_contracts::{ContractError, ERR_TABLE_SHAPE_CHANGE, PipelineState, TableOperation};
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
 fn fixture_path(name: &str) -> PathBuf {
@@ -56,6 +56,20 @@ fn read_state_output(artifact_root: &Path, run_id: &str, state: &str) -> serde_j
     serde_json::from_str(&text).expect("state output should be valid JSON")
 }
 
+fn assert_hard_error(error: PipelineError, state: PipelineState, code: &str) {
+    match error {
+        PipelineError::Hard {
+            state: got_state,
+            code: got_code,
+            ..
+        } => {
+            assert_eq!(got_state, state);
+            assert_eq!(got_code, code);
+        }
+        other => panic!("unexpected error: {other:?}"),
+    }
+}
+
 #[test]
 fn happy_path_run_succeeds() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
@@ -73,6 +87,30 @@ fn happy_path_run_succeeds() {
     assert_eq!(
         summary.applied_paths,
         vec!["/content/1/content/0/text".to_string()]
+    );
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+}
+
+#[test]
+fn table_cell_update_run_succeeds() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
+
+    let mut request = sample_request("run-table-update");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        text: "Updated table cell".to_string(),
+    };
+
+    let summary = orchestrator
+        .run(request)
+        .expect("table update should succeed");
+    assert!(summary.success);
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/1/content/0/content/0/content/0/content/0/text".to_string()]
     );
     assert_eq!(orchestrator.client().publish_attempts(), 1);
 }
@@ -136,12 +174,13 @@ fn state_tracker_rejects_out_of_order_execution() {
 #[test]
 fn replay_artifacts_exist_for_successful_run() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
-    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
     let mut request = sample_request("run-success-artifacts");
     request.scope_selectors = vec![];
-    request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
-        markdown: "Updated prose body".to_string(),
+    request.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        text: "Updated table cell".to_string(),
     };
 
     orchestrator.run(request).expect("run should succeed");
@@ -180,13 +219,14 @@ fn replay_artifacts_exist_for_successful_run() {
 #[test]
 fn replay_artifacts_exist_for_failed_run_until_failure_state() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
-    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
 
     let mut request = sample_request("run-failed-artifacts");
     request.scope_selectors = vec![];
-    request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
-        markdown: "Updated prose body".to_string(),
+    request.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        text: "Updated table cell".to_string(),
     };
     request.force_verify_fail = true;
     let _ = orchestrator.run(request);
@@ -280,10 +320,7 @@ fn unmapped_prose_path_fails_before_publish() {
     let error = orchestrator
         .run(request)
         .expect_err("unmapped prose path should fail");
-    match error {
-        PipelineError::Hard { state, .. } => assert_eq!(state, PipelineState::MdAssistEdit),
-        other => panic!("unexpected error: {other:?}"),
-    }
+    assert_hard_error(error, PipelineState::MdAssistEdit, "ERR_ROUTE_VIOLATION");
     assert_eq!(orchestrator.client().publish_attempts(), 0);
 }
 
@@ -302,10 +339,7 @@ fn top_level_boundary_violation_fails_before_publish() {
     let error = orchestrator
         .run(request)
         .expect_err("boundary violation should fail");
-    match error {
-        PipelineError::Hard { state, .. } => assert_eq!(state, PipelineState::MdAssistEdit),
-        other => panic!("unexpected error: {other:?}"),
-    }
+    assert_hard_error(error, PipelineState::MdAssistEdit, "ERR_SCHEMA_INVALID");
     assert_eq!(orchestrator.client().publish_attempts(), 0);
 }
 
@@ -324,10 +358,7 @@ fn table_route_target_is_rejected_for_prose_assist() {
     let error = orchestrator
         .run(request)
         .expect_err("table path should be rejected");
-    match error {
-        PipelineError::Hard { state, .. } => assert_eq!(state, PipelineState::MdAssistEdit),
-        other => panic!("unexpected error: {other:?}"),
-    }
+    assert_hard_error(error, PipelineState::MdAssistEdit, "ERR_ROUTE_VIOLATION");
 }
 
 #[test]
@@ -352,5 +383,137 @@ fn prose_state_artifacts_include_mapping_and_candidates() {
     assert_eq!(
         md_output["payload"]["prose_changed_paths"],
         serde_json::json!(["/content/1/content/0/text"])
+    );
+}
+
+#[test]
+fn forbidden_row_operation_fails_with_table_shape_error() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_forbidden_ops_adf.json");
+
+    let mut request = sample_request("run-row-add-forbidden");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::ForbiddenTableOperation {
+        target_path: "/content/1/content/0".to_string(),
+        operation: TableOperation::RowAdd,
+    };
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("forbidden row add should fail");
+    assert_hard_error(error, PipelineState::AdfTableEdit, ERR_TABLE_SHAPE_CHANGE);
+    assert_eq!(orchestrator.client().publish_attempts(), 0);
+}
+
+#[test]
+fn forbidden_table_attr_operation_fails_with_table_shape_error() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_forbidden_ops_adf.json");
+
+    let mut request = sample_request("run-attr-op-forbidden");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::ForbiddenTableOperation {
+        target_path: "/content/1/attrs/layout".to_string(),
+        operation: TableOperation::TableAttrUpdate,
+    };
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("forbidden attr update should fail");
+    assert_hard_error(error, PipelineState::AdfTableEdit, ERR_TABLE_SHAPE_CHANGE);
+}
+
+#[test]
+fn verify_blocks_synthetic_table_shape_drift() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_forbidden_ops_adf.json");
+
+    let mut request = sample_request("run-shape-drift");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SyntheticTableShapeDrift {
+        path: "/content/1/content/0".to_string(),
+    };
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("shape drift should fail at verify");
+    assert_hard_error(error, PipelineState::Verify, ERR_TABLE_SHAPE_CHANGE);
+    assert_eq!(orchestrator.client().publish_attempts(), 0);
+}
+
+#[test]
+fn merge_collision_fails_fast() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
+
+    let mut request = sample_request("run-merge-collision");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SyntheticRouteConflict {
+        prose_path: "/content/0/content/0/text".to_string(),
+        table_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+    };
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("merge collision should fail");
+    assert_hard_error(error, PipelineState::MergeCandidates, "ERR_ROUTE_VIOLATION");
+}
+
+#[test]
+fn table_candidate_generation_is_deterministic() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
+
+    let mut first = sample_request("run-table-map-a");
+    first.scope_selectors = vec![];
+    first.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        text: "Updated table cell".to_string(),
+    };
+    orchestrator.run(first).expect("first run should succeed");
+
+    let mut second = sample_request("run-table-map-b");
+    second.scope_selectors = vec![];
+    second.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        text: "Updated table cell".to_string(),
+    };
+    orchestrator.run(second).expect("second run should succeed");
+
+    let candidates_a =
+        read_state_output(temp.path(), "run-table-map-a", "adf_table_edit")["payload"]
+            ["table_candidates"]
+            .clone();
+    let candidates_b =
+        read_state_output(temp.path(), "run-table-map-b", "adf_table_edit")["payload"]
+            ["table_candidates"]
+            .clone();
+    assert_eq!(candidates_a, candidates_b);
+}
+
+#[test]
+fn table_state_artifacts_include_candidates_and_allowed_ops() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
+
+    let mut request = sample_request("run-table-artifacts");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        text: "Updated table cell".to_string(),
+    };
+    orchestrator.run(request).expect("run should succeed");
+
+    let table_output = read_state_output(temp.path(), "run-table-artifacts", "adf_table_edit");
+    assert!(table_output["payload"]["table_candidates"].is_array());
+    assert_eq!(
+        table_output["payload"]["allowed_ops"],
+        serde_json::json!(["cell_text_update"])
     );
 }

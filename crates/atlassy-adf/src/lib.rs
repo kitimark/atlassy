@@ -197,6 +197,42 @@ pub fn markdown_for_path(adf: &Value, path: &str) -> Result<String, AdfError> {
     Ok(collect_text(node))
 }
 
+pub fn path_has_ancestor_type(
+    path: &str,
+    node_path_index: &BTreeMap<String, String>,
+    candidate_types: &[&str],
+) -> bool {
+    let mut current = path.to_string();
+    while let Some(parent) = parent_path(&current) {
+        if let Some(node_type) = node_path_index.get(&parent)
+            && candidate_types
+                .iter()
+                .any(|candidate| *candidate == node_type)
+        {
+            return true;
+        }
+        current = parent;
+    }
+    false
+}
+
+pub fn is_table_cell_text_path(path: &str, node_path_index: &BTreeMap<String, String>) -> bool {
+    path.ends_with("/text")
+        && path_has_ancestor_type(path, node_path_index, &["table", "tableRow", "tableCell"])
+}
+
+pub fn is_table_shape_or_attr_path(path: &str, node_path_index: &BTreeMap<String, String>) -> bool {
+    if !path_has_ancestor_type(path, node_path_index, &["table", "tableRow", "tableCell"]) {
+        return false;
+    }
+
+    if path.contains("/attrs") {
+        return true;
+    }
+
+    !path.ends_with("/text")
+}
+
 fn full_page_resolution(adf: &Value, reason: Option<String>) -> Result<ScopeResolution, AdfError> {
     let node_path_index = build_node_path_index(adf)?;
     Ok(ScopeResolution {
@@ -350,6 +386,17 @@ fn escape_pointer_segment(segment: &str) -> String {
     segment.replace('~', "~0").replace('/', "~1")
 }
 
+fn parent_path(path: &str) -> Option<String> {
+    if path == "/" {
+        return None;
+    }
+    let (parent, _) = path.rsplit_once('/')?;
+    if parent.is_empty() {
+        return Some("/".to_string());
+    }
+    Some(parent.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -413,5 +460,32 @@ mod tests {
             error,
             AdfError::OutOfScope("/content/2/content/0/text".to_string())
         );
+    }
+
+    #[test]
+    fn detects_table_cell_text_paths() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [{
+                "type": "table",
+                "content": [{
+                    "type": "tableRow",
+                    "content": [{
+                        "type": "tableCell",
+                        "content": [{
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "Cell"}]
+                        }]
+                    }]
+                }]
+            }]
+        });
+
+        let index = build_node_path_index(&adf).unwrap();
+        assert!(is_table_cell_text_path(
+            "/content/0/content/0/content/0/content/0/content/0/text",
+            &index
+        ));
+        assert!(is_table_shape_or_attr_path("/content/0/content/0", &index));
     }
 }
