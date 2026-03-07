@@ -144,11 +144,12 @@ If any condition fails:
 - Recommendation: `go`, `iterate`, or `stop` with rationale.
 - Provenance stamp with `git_commit_sha`, `git_dirty`, and `pipeline_version`.
 
-## Current Checkpoint Snapshot (stub-backed)
+## Current Checkpoint Snapshot
 
 - Latest readiness recommendation: `iterate`.
 - Primary blockers: `tokens_per_successful_update` and `full_page_retrieval_rate` target misses.
-- Interpretation note: current KPI results come from stub-backed execution and should not be treated as live Confluence evidence.
+- KPI baseline: stub-backed execution. Live sandbox validation confirms runtime correctness and lifecycle behavior but does not yet include paired KPI revalidation runs.
+- Live evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation, not KPI-focused).
 
 ## Exit and Decision Update Workflow
 

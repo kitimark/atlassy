@@ -45,6 +45,8 @@ Use a minimal-change pipeline:
 
 ## Planned Capabilities
 
+Pipeline states:
+
 - `fetch`
 - `classify`
 - `extract_prose`
@@ -55,6 +57,11 @@ Use a minimal-change pipeline:
 - `verify`
 - `publish`
 - `cache`
+
+Lifecycle commands:
+
+- `create-subpage` (blank child page creation under an explicit parent)
+- `--bootstrap-empty-page` (explicit first-edit scaffold injection for empty pages)
 
 ## Roadmap
 
@@ -76,9 +83,9 @@ Start here: `openspec/README.md`.
 
 ## Current Status
 
-- Implementation checkpoint: phases 1-5 are implemented for stub and fixture-backed execution.
-- Current readiness decision: `iterate` (KPI target misses for token reduction and full-page retrieval reduction).
-- Real Confluence runtime is not enabled yet (`LiveConfluenceClient` remains pending).
+- Implementation checkpoint: phases 1-5 are implemented. Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox.
+- Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented and validated with committed live evidence.
+- Current readiness decision: `iterate` (KPI target misses for token reduction and full-page retrieval reduction remain from stub-backed evaluation; live KPI revalidation is pending).
 
 ## Project Structure
 

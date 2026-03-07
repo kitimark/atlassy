@@ -32,6 +32,8 @@
 - `ERR_LOCKED_NODE_MUTATION`: locked node fingerprint changed.
 - `ERR_TABLE_SHAPE_CHANGE`: table row/column topology changed in v1.
 - `ERR_CONFLICT_RETRY_EXHAUSTED`: publish conflict after one scoped retry.
+- `ERR_BOOTSTRAP_REQUIRED`: page is effectively empty and `--bootstrap-empty-page` was not provided.
+- `ERR_BOOTSTRAP_INVALID_STATE`: `--bootstrap-empty-page` was provided but page is not empty.
 
 ## State Contracts
 
@@ -99,7 +101,7 @@
 
 - Halt on first hard error.
 - Persist replay artifacts per state: `state_input.json`, `state_output.json`, `diagnostics.json`.
-- Emit final summary: `success`, `applied_paths`, `blocked_paths`, `error_codes`, `token_metrics`.
+- Emit final summary: `success`, `applied_paths`, `blocked_paths`, `error_codes`, `token_metrics`, `empty_page_detected`, `bootstrap_applied`.
 
 ## Minimal Envelope Example
 

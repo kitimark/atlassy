@@ -25,8 +25,10 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 
 - Phase containers for phases 1-5 are implemented and archived under `openspec/changes/archive/`.
 - Stub and fixture-backed execution is operational (`run`, `run-batch`, `run-readiness`).
-- Current recommendation remains `iterate`, driven by KPI misses in token reduction and full-page retrieval reduction.
-- Live Confluence runtime enablement remains pending and is required before production use.
+- Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox with committed evidence.
+- Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented, tested, and validated against live Confluence.
+- Lifecycle matrix evidence is committed under `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.
+- Current recommendation remains `iterate`, driven by KPI misses in token reduction and full-page retrieval reduction (stub-backed evaluation; live KPI revalidation is pending).
 
 ## Phase 0: Design Baseline
 

@@ -6,8 +6,10 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 
 ## Current Baseline
 
-- Pipeline states and batch/readiness flows are implemented and runnable in stub mode.
-- Current readiness recommendation is `iterate` due to KPI misses.
+- Pipeline states and batch/readiness flows are implemented and runnable in both stub and live modes.
+- Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox.
+- Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented and validated with committed evidence.
+- Current readiness recommendation is `iterate` due to KPI misses (stub-backed evaluation; live KPI revalidation is pending).
 - `artifacts/` is temporary runtime output and is not versioned.
 - Decision-grade evidence must include:
   - `git_commit_sha` (40-char SHA)
