@@ -1,0 +1,50 @@
+{
+  "batch": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    }
+  },
+  "runs": [
+    {
+      "run_id": "live-smoke-baseline-001",
+      "page_id": "REPLACE_WITH_SANDBOX_PAGE_ID",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Sandbox baseline preflight (no publish)",
+      "edit_intent_hash": "live-sandbox-smoke-a",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T12:00:00Z",
+      "mode": "no_op",
+      "force_verify_fail": true
+    },
+    {
+      "run_id": "live-smoke-optimized-001",
+      "page_id": "REPLACE_WITH_SANDBOX_PAGE_ID",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Sandbox optimized scoped prose update",
+      "edit_intent_hash": "live-sandbox-smoke-a",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T12:01:00Z",
+      "mode": "simple_scoped_prose_update",
+      "target_path": "REPLACE_WITH_PROSE_TEXT_PATH",
+      "new_value": "Sandbox optimized update text"
+    }
+  ]
+}

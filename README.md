@@ -86,6 +86,7 @@ Start here: `openspec/README.md`.
 - `roadmap/`: strategy, defaults, KPI protocol, risks, and readiness policy.
 - `openspec/specs/`: active behavior specs for implemented capabilities.
 - `openspec/changes/archive/`: completed phase execution records.
+- `qa/`: sandbox QA playbooks and example manifests for live validation.
 - `ideas/`: incubating or deferred scope beyond v1.
 - `artifacts/`: temporary CLI outputs (`run`, `run-batch`, `run-readiness`), intentionally non-versioned.
 
