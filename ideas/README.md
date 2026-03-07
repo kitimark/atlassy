@@ -23,6 +23,8 @@ Use this structure for each idea:
 ## Incubating Ideas
 
 - `2026-03-advanced-table-editing-modes.md`
+- `2026-03-confluence-subpage-creation-support.md`
+- `2026-03-empty-page-bootstrap-editing.md`
 - `2026-03-structural-block-editing-support.md`
 - `2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`
 
