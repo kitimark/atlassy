@@ -1,0 +1,11 @@
+{
+  "request_id": "kpi-c-base-02",
+  "page_id": "131227",
+  "state": "fetch",
+  "timestamp": "2026-03-08T10:14:00Z",
+  "payload": {
+    "page_id": "131227",
+    "edit_intent": "Pattern C prose update pair 2",
+    "scope_selectors": []
+  }
+}

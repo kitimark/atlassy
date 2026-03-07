@@ -1,0 +1,27 @@
+{
+  "request_id": "kpi-c-opt-03",
+  "page_id": "131227",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-08T10:17:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/8",
+        "markdown": "References"
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/8",
+        "adf_path": "/content/8"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/8"
+    ],
+    "allowed_scope_paths": [
+      "/content/8"
+    ],
+    "edit_intent": "Pattern C prose update pair 3"
+  }
+}

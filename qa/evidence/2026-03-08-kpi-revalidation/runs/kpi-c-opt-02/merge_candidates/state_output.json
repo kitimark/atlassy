@@ -1,0 +1,11 @@
+{
+  "request_id": "kpi-c-opt-02",
+  "page_id": "131227",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-08T10:15:00Z",
+  "payload": {
+    "changed_paths": [
+      "/content/4/content/5/content/0/text"
+    ]
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "total_runs": 18,
+  "succeeded_runs": 9,
+  "failed_runs": 9,
+  "status": "failed",
+  "telemetry_complete": true,
+  "retry_policy_ok": true,
+  "provenance": {
+    "git_commit_sha": "0e690674fadad849aa0fe201704a31e49350f797",
+    "git_dirty": true,
+    "pipeline_version": "v1",
+    "runtime_mode": "live"
+  },
+  "diagnostics": [
+    {
+      "run_id": "kpi-c-base-01",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-c-opt-01",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-c-base-02",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-c-opt-02",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-c-base-03",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-c-opt-03",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-a-base-01",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-a-opt-01",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-a-base-02",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-a-opt-02",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-a-base-03",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-a-opt-03",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-b-base-01",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-b-opt-01",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-b-base-02",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-b-opt-02",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    },
+    {
+      "run_id": "kpi-b-base-03",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-b-opt-03",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "optimized",
+      "status": "failed",
+      "error_class": "telemetry_incomplete",
+      "error_code": "ERR_TELEMETRY_INCOMPLETE",
+      "message": "telemetry incomplete: verify_result"
+    }
+  ],
+  "artifact_index_path": "artifacts/batch/artifact-index.json",
+  "drift": {
+    "scoped_fetch_parity": true,
+    "publish_conflict_parity": true,
+    "error_payload_parity": true,
+    "unresolved_material_drift": false
+  },
+  "scenario_coverage": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "missing_scenario_ids": [],
+    "complete": true
+  },
+  "safety": {
+    "locked_node_violation_runs": [],
+    "out_of_scope_violation_runs": [],
+    "table_shape_violation_runs": [],
+    "safety_failed": false
+  },
+  "gate_checks": [
+    {
+      "name": "telemetry_complete",
+      "target": "all run summaries include required KPI telemetry",
+      "pass": true
+    },
+    {
+      "name": "provenance_complete",
+      "target": "all decision-grade outputs include valid provenance",
+      "pass": true
+    },
+    {
+      "name": "paired_matrix_complete",
+      "target": "all (page_id, pattern, edit_intent_hash) keys have baseline and optimized runs",
+      "pass": false
+    },
+    {
+      "name": "retry_policy",
+      "target": "no run exceeds one scoped retry",
+      "pass": true
+    },
+    {
+      "name": "drift_resolved",
+      "target": "live-vs-stub parity checks are resolved",
+      "pass": true
+    },
+    {
+      "name": "scenario_coverage",
+      "target": "required scenario IDs are covered",
+      "pass": true
+    },
+    {
+      "name": "safety_gates",
+      "target": "no locked-node, out-of-scope, or table-shape violations",
+      "pass": true
+    }
+  ],
+  "kpi": null,
+  "recommendation": {
+    "decision": "iterate",
+    "rationale": [
+      "gate failed: paired_matrix_complete (all (page_id, pattern, edit_intent_hash) keys have baseline and optimized runs)"
+    ],
+    "outliers": [
+      {
+        "run_id": "kpi-c-base-01",
+        "kpi": "publish_latency",
+        "value": 1876.0
+      },
+      {
+        "run_id": "kpi-a-base-02",
+        "kpi": "publish_latency",
+        "value": 1863.0
+      },
+      {
+        "run_id": "kpi-c-base-02",
+        "kpi": "publish_latency",
+        "value": 1840.0
+      },
+      {
+        "run_id": "kpi-a-base-01",
+        "kpi": "context_reduction_ratio",
+        "value": 0.0
+      },
+      {
+        "run_id": "kpi-a-base-02",
+        "kpi": "context_reduction_ratio",
+        "value": 0.0
+      },
+      {
+        "run_id": "kpi-a-base-03",
+        "kpi": "context_reduction_ratio",
+        "value": 0.0
+      }
+    ],
+    "regressions": []
+  }
+}

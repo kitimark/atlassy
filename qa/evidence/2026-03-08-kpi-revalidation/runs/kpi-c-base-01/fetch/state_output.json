@@ -1,0 +1,188 @@
+{
+  "request_id": "kpi-c-base-01",
+  "page_id": "131227",
+  "state": "fetch",
+  "timestamp": "2026-03-08T10:12:00Z",
+  "payload": {
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Context",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "This page tests Pattern C: constrained correction near locked structural blocks. Prose edits adjacent to locked nodes must preserve the locked structure without mutation.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "The expand macro and info panel below are locked_structural nodes. Headings and paragraphs around them are editable_prose.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "title": "Locked Expand Section"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "This content is inside an expand macro. The expand node itself is locked_structural, though this inner paragraph is classified as editable_prose.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "text": "The verifier must confirm that no locked-node mutation occurs when editing adjacent prose sections.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "expand"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Notes",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "This paragraph is adjacent to the locked expand block above. Editing this section tests that the structural preservation gate holds at 100 percent for locked nodes.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "The scope selector heading:Notes should isolate this section while leaving the expand macro and panel untouched.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "This info panel is a locked_structural wrapper. Its inner paragraph is editable_prose, but the panel node itself must not be mutated by adjacent edits.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "References",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "Final section for Pattern C experiments. This heading provides a third scope selector target on a page with mixed editable and locked structural adjacency.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "content": [
+            {
+              "text": "The horizontal rule above is classified as locked_structural in the current codebase, despite being listed as editable_prose in the spec. See ideas/2026-03-route-classification-drift.md.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 3,
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "node_path_index": {
+      "/": "doc",
+      "/content/0": "heading",
+      "/content/0/content/0": "text",
+      "/content/1": "paragraph",
+      "/content/1/content/0": "text",
+      "/content/10": "rule",
+      "/content/11": "paragraph",
+      "/content/11/content/0": "text",
+      "/content/2": "paragraph",
+      "/content/2/content/0": "text",
+      "/content/3": "expand",
+      "/content/3/content/0": "paragraph",
+      "/content/3/content/0/content/0": "text",
+      "/content/3/content/1": "paragraph",
+      "/content/3/content/1/content/0": "text",
+      "/content/4": "heading",
+      "/content/4/content/0": "text",
+      "/content/5": "paragraph",
+      "/content/5/content/0": "text",
+      "/content/6": "paragraph",
+      "/content/6/content/0": "text",
+      "/content/7": "panel",
+      "/content/7/content/0": "paragraph",
+      "/content/7/content/0/content/0": "text",
+      "/content/8": "heading",
+      "/content/8/content/0": "text",
+      "/content/9": "paragraph",
+      "/content/9/content/0": "text"
+    },
+    "scope_resolution_failed": true,
+    "full_page_fetch": true,
+    "fallback_reason": "no_scope_selectors",
+    "full_page_adf_bytes": 2272
+  }
+}

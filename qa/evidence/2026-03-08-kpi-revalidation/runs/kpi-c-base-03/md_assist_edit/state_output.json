@@ -1,0 +1,67 @@
+{
+  "request_id": "kpi-c-base-03",
+  "page_id": "131227",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-08T10:16:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI baseline C1 prose update"
+      },
+      {
+        "md_block_id": "/content/11",
+        "markdown": "The horizontal rule above is classified as locked_structural in the current codebase, despite being listed as editable_prose in the spec. See ideas/2026-03-route-classification-drift.md."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "The expand macro and info panel below are locked_structural nodes. Headings and paragraphs around them are editable_prose."
+      },
+      {
+        "md_block_id": "/content/3/content/0",
+        "markdown": "This content is inside an expand macro. The expand node itself is locked_structural, though this inner paragraph is classified as editable_prose."
+      },
+      {
+        "md_block_id": "/content/3/content/1",
+        "markdown": "The verifier must confirm that no locked-node mutation occurs when editing adjacent prose sections."
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "KPI baseline C2 prose update"
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "The scope selector heading:Notes should isolate this section while leaving the expand macro and panel untouched."
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "markdown": "This info panel is a locked_structural wrapper. Its inner paragraph is editable_prose, but the panel node itself must not be mutated by adjacent edits."
+      },
+      {
+        "md_block_id": "/content/8",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/9",
+        "markdown": "KPI baseline C3 prose update"
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/9/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/9/content/0/text",
+        "markdown": "KPI baseline C3 prose update"
+      }
+    ]
+  }
+}

@@ -1,0 +1,481 @@
+{
+  "request_id": "kpi-b-base-02",
+  "page_id": "98323",
+  "state": "extract_prose",
+  "timestamp": "2026-03-08T10:08:00Z",
+  "payload": {
+    "node_manifest": [
+      {
+        "path": "/",
+        "node_type": "doc",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/0",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/1",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/1/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/2",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/2/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/3",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/3/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/4",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/4/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/5",
+        "node_type": "table",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0",
+        "node_type": "tableRow",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/0",
+        "node_type": "tableHeader",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/1",
+        "node_type": "tableHeader",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/1/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/1/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/2",
+        "node_type": "tableHeader",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/0/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1",
+        "node_type": "tableRow",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/0",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/1",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/1/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/1/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/2",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/1/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2",
+        "node_type": "tableRow",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/0",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/1",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/1/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/1/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/2",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/5/content/2/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/6",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/6/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      }
+    ],
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Overview",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline B1 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Scoped retrieval by heading should demonstrate context reduction even with mixed node types present on the page.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Data",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "The following table provides structured data for table cell update testing:",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "layout": "default"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Metric",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableHeader"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Baseline",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableHeader"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Target",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableHeader"
+                }
+              ],
+              "type": "tableRow"
+            },
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Context Reduction",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "0 percent",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "70 to 90 percent",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            },
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Edit Success Rate",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Pending measurement",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Above 95 percent",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "content": [
+            {
+              "text": "Table cells above are targetable for scoped table cell text updates in Pattern B experiments. The table should classify as table_adf while surrounding prose classifies as editable_prose.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    }
+  }
+}

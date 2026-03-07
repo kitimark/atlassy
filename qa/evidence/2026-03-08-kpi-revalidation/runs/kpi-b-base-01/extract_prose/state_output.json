@@ -1,0 +1,68 @@
+{
+  "request_id": "kpi-b-base-01",
+  "page_id": "98323",
+  "state": "extract_prose",
+  "timestamp": "2026-03-08T10:06:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Overview"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "This page combines prose sections with a data table to test Pattern B mixed editing. The table contains simple text cells that can be targeted for cell text updates alongside prose modifications."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Scoped retrieval by heading should demonstrate context reduction even with mixed node types present on the page."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "The following table provides structured data for table cell update testing:"
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Table cells above are targetable for scoped table cell text updates in Pattern B experiments. The table should classify as table_adf while surrounding prose classifies as editable_prose."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3",
+      "/content/4",
+      "/content/6"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "request_id": "kpi-a-opt-02",
+  "page_id": "65934",
+  "state": "fetch",
+  "timestamp": "2026-03-08T10:03:00Z",
+  "payload": {
+    "scoped_adf": {
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "text": "Details",
+          "type": "text"
+        }
+      ],
+      "type": "heading"
+    },
+    "page_version": 5,
+    "allowed_scope_paths": [
+      "/content/4"
+    ],
+    "node_path_index": {
+      "/": "heading",
+      "/content/0": "text"
+    },
+    "scope_resolution_failed": false,
+    "full_page_fetch": false,
+    "fallback_reason": null,
+    "full_page_adf_bytes": 2239
+  }
+}

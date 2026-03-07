@@ -1,0 +1,27 @@
+{
+  "request_id": "kpi-b-opt-02",
+  "page_id": "98323",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-08T10:09:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Data"
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/3"
+    ],
+    "allowed_scope_paths": [
+      "/content/3"
+    ],
+    "edit_intent": "Pattern B table cell update pair 2"
+  }
+}

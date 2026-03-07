@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-a-opt-01",
+  "page_id": "65934",
+  "state": "fetch",
+  "timestamp": "2026-03-08T10:01:00Z",
+  "payload": {
+    "page_id": "65934",
+    "edit_intent": "Pattern A prose update pair 1",
+    "scope_selectors": [
+      "heading:Introduction"
+    ]
+  }
+}

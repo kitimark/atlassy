@@ -1,0 +1,11 @@
+{
+  "request_id": "kpi-b-base-01",
+  "page_id": "98323",
+  "state": "fetch",
+  "timestamp": "2026-03-08T10:06:00Z",
+  "payload": {
+    "page_id": "98323",
+    "edit_intent": "Pattern B prose update pair 1",
+    "scope_selectors": []
+  }
+}

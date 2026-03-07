@@ -1,0 +1,71 @@
+{
+  "request_id": "kpi-a-opt-01",
+  "page_id": "65934",
+  "state": "patch",
+  "timestamp": "2026-03-08T10:01:00Z",
+  "payload": {
+    "patch_ops": [
+      {
+        "op": "replace",
+        "path": "/content/1/content/0/text",
+        "value": "KPI optimized A1 scoped prose update"
+      }
+    ],
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "id": "intro-heading",
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Overview",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "attrs": {
+            "id": "intro-paragraph"
+          },
+          "content": [
+            {
+              "text": "KPI optimized A1 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Initial table cell",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "patch_ops_bytes": 100
+  }
+}

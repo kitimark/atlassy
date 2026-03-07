@@ -1,0 +1,14 @@
+{
+  "request_id": "kpi-c-opt-01",
+  "page_id": "131227",
+  "state": "verify",
+  "timestamp": "2026-03-08T10:13:00Z",
+  "payload": {
+    "verify_result": "pass",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

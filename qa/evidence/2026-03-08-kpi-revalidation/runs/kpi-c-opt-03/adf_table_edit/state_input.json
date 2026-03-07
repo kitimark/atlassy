@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-c-opt-03",
+  "page_id": "131227",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-08T10:17:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/content/8"
+    ],
+    "edit_intent": "Pattern C prose update pair 3"
+  }
+}

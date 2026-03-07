@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-b-opt-02",
+  "page_id": "98323",
+  "state": "fetch",
+  "timestamp": "2026-03-08T10:09:00Z",
+  "payload": {
+    "page_id": "98323",
+    "edit_intent": "Pattern B table cell update pair 2",
+    "scope_selectors": [
+      "heading:Data"
+    ]
+  }
+}

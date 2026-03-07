@@ -1,0 +1,22 @@
+{
+  "request_id": "kpi-b-base-02",
+  "page_id": "98323",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-08T10:08:00Z",
+  "payload": {
+    "table_candidates": [
+      {
+        "op": "cell_text_update",
+        "path": "/content/5/content/1/content/1/content/0/content/0/text",
+        "value": "KPI baseline B2 table cell update",
+        "source_route": "table_adf"
+      }
+    ],
+    "table_changed_paths": [
+      "/content/5/content/1/content/1/content/0/content/0/text"
+    ],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

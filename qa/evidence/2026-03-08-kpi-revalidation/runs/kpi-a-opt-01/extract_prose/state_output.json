@@ -1,0 +1,23 @@
+{
+  "request_id": "kpi-a-opt-01",
+  "page_id": "65934",
+  "state": "extract_prose",
+  "timestamp": "2026-03-08T10:01:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0"
+    ]
+  }
+}

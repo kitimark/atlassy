@@ -1,0 +1,16 @@
+{
+  "request_id": "kpi-c-base-01",
+  "page_id": "131227",
+  "state": "publish",
+  "timestamp": "2026-03-08T10:12:00Z",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 4,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

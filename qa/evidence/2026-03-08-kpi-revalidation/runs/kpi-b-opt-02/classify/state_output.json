@@ -1,0 +1,20 @@
+{
+  "request_id": "kpi-b-opt-02",
+  "page_id": "98323",
+  "state": "classify",
+  "timestamp": "2026-03-08T10:09:00Z",
+  "payload": {
+    "node_manifest": [
+      {
+        "path": "/",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      }
+    ]
+  }
+}

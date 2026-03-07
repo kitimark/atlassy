@@ -1,0 +1,23 @@
+{
+  "request_id": "kpi-a-opt-03",
+  "page_id": "65934",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-08T10:05:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/8",
+        "markdown": "KPI optimized A3 scoped prose update"
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/8/content/9/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/8/content/9/content/0/text",
+        "markdown": "KPI optimized A3 scoped prose update"
+      }
+    ]
+  }
+}

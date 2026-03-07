@@ -164,9 +164,12 @@ If any condition fails:
 ## Current Checkpoint Snapshot
 
 - Latest readiness recommendation: `iterate`.
-- Prior blocker assessment was based on legacy KPI framing and mostly empty `scope_selectors` in benchmark manifests.
-- Live sandbox validation confirms runtime correctness and lifecycle behavior, but revised KPI revalidation with scoped manifests is pending.
-- Live evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation, not revised KPI-focused).
+- **2026-03-08 KPI revalidation batch executed** (18 runs, 3 patterns, live runtime). Result: 9/9 baseline succeeded, 0/9 optimized succeeded.
+- Blocking defect: scope resolver returns heading node only, not heading section. All optimized runs fail at `patch` with `ERR_SCHEMA_INVALID` because `target_path` references nodes outside the scoped ADF. See `qa/investigations/2026-03-08-kpi-revalidation.md`.
+- Positive signals from batch: baseline pipeline fully validated (100% publish success, zero retries, median latency ~1716ms), scope resolution finds headings correctly (96% context reduction), safety gates held on all 18 runs.
+- Next step: fix section extraction in `resolve_scope()` (`crates/atlassy-adf/src/lib.rs`), re-seed pages, re-run batch. See `ideas/2026-03-scope-resolution-quality.md`.
+- Live evidence: `qa/evidence/2026-03-08-kpi-revalidation/` (KPI revalidation batch, blocking defect documented).
+- Prior evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation).
 
 ## Exit and Decision Update Workflow
 

@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-b-opt-03",
+  "page_id": "98323",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-08T10:11:00Z",
+  "payload": {
+    "table_candidates": [],
+    "table_changed_paths": [],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

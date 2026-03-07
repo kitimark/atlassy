@@ -50,13 +50,21 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 
 ## Target Paths
 
-Discovered during Phase 2 scoped fetch spike. Filled in after execution.
+Discovered during Phase 2 scoped fetch spike at commit `0e69067`.
 
 | Page | Prose Target Path | Table Cell Target Path | Notes |
 |------|-------------------|----------------------|-------|
-| P1 | PENDING | N/A | |
-| P2 | PENDING | PENDING | |
-| P3 | PENDING | N/A | |
+| P1 | `/content/1/content/0/text` (Introduction), `/content/5/content/0/text` (Details), `/content/9/content/0/text` (Summary) | N/A | All nodes editable_prose |
+| P2 | `/content/1/content/0/text` (Overview), `/content/4/content/0/text` (Data) | `/content/5/content/1/content/1/content/0/content/0/text` ("0 percent" cell) | Table at `/content/5` |
+| P3 | `/content/1/content/0/text` (Context), `/content/5/content/0/text` (Notes), `/content/9/content/0/text` (References) | N/A | Expand at `/content/3`, panel at `/content/7`, rule at `/content/10` |
+
+## Scoped Fetch Spike Results
+
+| Page | Full ADF Bytes | Scoped ADF Bytes | Context Reduction | Scope Resolution |
+|------|---------------|-----------------|-------------------|------------------|
+| P1 | 2406 | 88 (heading:Introduction) | 96.3% | OK |
+| P2 | 2416 | 80 (heading:Data) | 96.7% | OK |
+| P3 | 2272 | 81 (heading:Notes) | 96.4% | OK |
 
 ## Notes
 
