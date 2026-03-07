@@ -50,7 +50,7 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
   - No markdown conversion for non-prose routes.
 - Detection signals:
   - `ERR_LOCKED_NODE_MUTATION`.
-  - Drops in `formatting_fidelity_pass_rate`.
+  - Drops in `structural_preservation`.
 - Response:
   - Block publish and open defect with offending node path.
   - Extend route-classifier tests for the missed node type.
@@ -83,7 +83,7 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
   - Add selector validation before fetch execution.
   - Log fallback reason codes for every full-page fetch.
 - Detection signals:
-  - Rising `full_page_retrieval_rate`.
+  - `context_reduction_ratio` falling below target band (<70% median in optimized runs).
   - Increased `ERR_SCOPE_MISS` frequency.
 - Response:
   - Triage top fallback causes by selector type.
@@ -101,7 +101,7 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
   - Track retry-only token spend per run.
 - Detection signals:
   - `ERR_CONFLICT_RETRY_EXHAUSTED`.
-  - Rising `retry_conflict_token_waste`.
+  - Rising `conflict_rate`.
 - Response:
   - Stop at first exceeded retry condition.
   - Queue reviewer artifact with conflict diagnostics.
@@ -134,7 +134,7 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
   - Reject incomplete run summaries from aggregate reports.
   - Persist replay artifacts per state.
 - Detection signals:
-  - Missing `run_id` or state token fields.
+  - Missing `run_id`, `full_page_adf_bytes`, `scoped_adf_bytes`, or `context_reduction_ratio`.
   - Divergence between summary totals and per-state totals.
 - Response:
   - Mark run as non-evaluable and rerun paired case.

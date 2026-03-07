@@ -19,18 +19,19 @@ Atlassy is a token-efficient Confluence workflow toolkit for AI and MCP-driven e
 
 ## Problem
 
-Large Confluence pages increase token usage and make updates fragile.
+AI-assisted Confluence updates are expensive and fragile when they rely on full-page context and broad rewrites.
 
-- Context windows overflow when full pages are injected into prompts.
-- Large payload updates can fail or time out.
-- Full-body updates increase version drift and conflict retries.
-- Formatting fidelity can regress (tables, macros, media) after repeated edits.
+- Full-page payloads inflate context windows and token spend.
+- Large write payloads increase publish failures and timeout risk.
+- Full-body rewrites amplify version drift and conflict retries.
+- Repeated broad edits increase fidelity risk for tables, macros, and media.
 
 ## Goals
 
-- Reduce `tokens_per_successful_update` by 40-60%.
-- Reduce full-page retrievals by 60-80%.
-- Maintain or improve publish success and formatting fidelity.
+- Reach `context_reduction_ratio` of 70-90% for in-scope optimized runs.
+- Keep scoped payload size observable via `scoped_section_tokens` (median/p90 by pattern).
+- Achieve `edit_success_rate` >95% and `structural_preservation` at 100% for in-scope runs.
+- Keep `conflict_rate` below 10% with one scoped retry cap and maintain fast `publish_latency`.
 
 ## Non-goals (v1)
 
@@ -85,7 +86,7 @@ Start here: `openspec/README.md`.
 
 - Implementation checkpoint: phases 1-5 are implemented. Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox.
 - Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented and validated with committed live evidence.
-- Current readiness decision: `iterate` (KPI target misses for token reduction and full-page retrieval reduction remain from stub-backed evaluation; live KPI revalidation is pending).
+- Current readiness decision: `iterate` (legacy KPI framing from stub-backed evaluation is superseded; revised KPI revalidation with scoped-selector manifests is pending).
 
 ## Project Structure
 
@@ -118,10 +119,11 @@ cargo run -p atlassy-cli -- run-readiness --verify-replay ...
 
 ## Success Metrics
 
-- `tokens_per_successful_update`
-- `full_page_retrieval_rate`
-- `retry_conflict_token_waste`
-- `formatting_fidelity_pass_rate`
+- `context_reduction_ratio`
+- `scoped_section_tokens`
+- `edit_success_rate`
+- `structural_preservation`
+- `conflict_rate`
 - `publish_latency`
 
 ## Contributing

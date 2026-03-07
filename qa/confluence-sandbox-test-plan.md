@@ -8,6 +8,7 @@ Run Atlassy end-to-end against real Confluence sandbox pages with explicit safet
 
 - Covers `run`, `create-subpage`, optional `run-batch`, and optional `run-readiness` in `live` runtime mode.
 - Uses v1-safe operations only (scoped prose and table cell text updates, subpage creation, and empty-page bootstrap).
+- Includes scoped-selector validation for revised KPI experiments.
 - Focuses on sandbox validation, not production release sign-off.
 
 Latest investigation:
@@ -97,6 +98,43 @@ Pick:
 
 - One prose path (not under table ancestry).
 - Optional one table cell text path (for table smoke test).
+
+## Step 2b: Validate Scoped Selector Fetch Behavior (No Publish)
+
+Run a no-write check with an explicit scope selector. Keep `--force-verify-fail` so publish is intentionally blocked.
+
+```bash
+export RUN_ID_SCOPED_FETCH="live-scoped-fetch-001"
+export SCOPE_SELECTOR="heading:REPLACE_WITH_SECTION_HEADING"
+
+cargo run -p atlassy-cli -- run \
+  --request-id "$RUN_ID_SCOPED_FETCH" \
+  --page-id "$PAGE_ID" \
+  --edit-intent "sandbox scoped fetch validation" \
+  --scope "$SCOPE_SELECTOR" \
+  --mode no-op \
+  --runtime-backend live \
+  --force-verify-fail \
+  --artifacts-dir "$ARTIFACTS_DIR"
+```
+
+Expected outcome:
+
+- Command exits non-zero (expected, verify fail forced).
+- `scope_resolution_failed: false`.
+- `full_page_fetch: false`.
+
+Check:
+
+```bash
+jq '{success,failure_state,error_codes,scope_selectors,scope_resolution_failed,full_page_fetch,context_reduction_ratio}' \
+  "artifacts/$RUN_ID_SCOPED_FETCH/summary.json"
+```
+
+Notes:
+
+- If `context_reduction_ratio` is emitted by your current build, it should be >0 for valid scoped runs.
+- If this run falls back to full page fetch, fix selector quality before KPI batch execution.
 
 ## Step 3: Live Scoped Prose Update
 
@@ -326,14 +364,14 @@ Expected: `success: false`, `failure_state: "fetch"`, `error_codes: ["ERR_BOOTST
 1) Copy and edit manifest template:
 
 ```bash
-cp qa/manifests/live-sandbox-smoke.example.json /tmp/live-sandbox-smoke.json
+cp qa/manifests/scoped-poc-experiment.example.json /tmp/live-scoped-poc.json
 ```
 
 2) Run live batch:
 
 ```bash
 cargo run -p atlassy-cli -- run-batch \
-  --manifest /tmp/live-sandbox-smoke.json \
+  --manifest /tmp/live-scoped-poc.json \
   --runtime-backend live \
   --artifacts-dir "$ARTIFACTS_DIR"
 ```
@@ -360,6 +398,7 @@ jq '{recommendation,blocking_condition}' "artifacts/batch/decision.packet.json"
 ## Pass/Fail Checklist
 
 - Preflight fails at verify and does not publish.
+- Scoped-selector preflight run reports `scope_resolution_failed: false` and `full_page_fetch: false`.
 - Prose smoke run publishes successfully in `live` mode.
 - Optional table smoke run publishes successfully in `live` mode.
 - Negative safety run fails with deterministic safety error code.
@@ -368,6 +407,7 @@ jq '{recommendation,blocking_condition}' "artifacts/batch/decision.packet.json"
 - Bootstrap on empty page with flag succeeds with `bootstrap_applied: true` and publishes scaffold.
 - Bootstrap on non-empty page with flag fails with `ERR_BOOTSTRAP_INVALID_STATE` and `empty_page_detected: false`.
 - All run summaries include `empty_page_detected` and `bootstrap_applied` fields.
+- Revised KPI batches include scoped payload sizing fields and `context_reduction_ratio` where supported.
 - Artifacts exist for each run under `artifacts/<run_id>/`.
 
 ## Cleanup

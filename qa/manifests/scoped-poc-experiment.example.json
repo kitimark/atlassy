@@ -1,0 +1,53 @@
+{
+  "batch": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    }
+  },
+  "runs": [
+    {
+      "run_id": "scoped-poc-baseline-a-001",
+      "page_id": "REPLACE_WITH_SANDBOX_PAGE_ID",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Baseline prose update without scope selectors",
+      "edit_intent_hash": "scoped-poc-a",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-08T09:00:00Z",
+      "mode": "simple_scoped_prose_update",
+      "target_path": "REPLACE_WITH_PROSE_TEXT_PATH",
+      "new_value": "Baseline update text"
+    },
+    {
+      "run_id": "scoped-poc-optimized-a-001",
+      "page_id": "REPLACE_WITH_SANDBOX_PAGE_ID",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Optimized prose update with heading selector",
+      "edit_intent_hash": "scoped-poc-a",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:REPLACE_WITH_SECTION_HEADING"
+      ],
+      "timestamp": "2026-03-08T09:01:00Z",
+      "mode": "simple_scoped_prose_update",
+      "target_path": "REPLACE_WITH_PROSE_TEXT_PATH",
+      "new_value": "Optimized scoped update text"
+    }
+  ]
+}

@@ -80,10 +80,11 @@ Define the minimum operational, quality, and governance conditions required to r
 
 ### Gate 5: Metrics and Reporting
 
-- Required per-run telemetry fields are complete.
+- Required per-run telemetry fields are complete, including `full_page_adf_bytes`, `scoped_adf_bytes`, `context_reduction_ratio`, `patch_ops_bytes`, and `retry_count`.
 - Per-run provenance fields are complete (`git_commit_sha`, `git_dirty`, `pipeline_version`).
 - Baseline and optimized runs are paired by page and edit intent hash.
-- Aggregate report computes median and p90 for all KPIs.
+- Baseline runs use empty `scope_selectors`; optimized runs use explicit heading/block selectors.
+- Aggregate report computes median and p90 for all KPIs and includes per-page context-reduction distributions.
 - Outlier handling includes primary and incident-filtered secondary views.
 
 ## Evidence Provenance Requirements

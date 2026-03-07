@@ -6,6 +6,7 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 
 - `qa/confluence-sandbox-test-plan.md`: detailed, step-by-step Confluence sandbox testing flow.
 - `qa/manifests/live-sandbox-smoke.example.json`: example batch manifest for live smoke validation.
+- `qa/manifests/scoped-poc-experiment.example.json`: example paired baseline/optimized manifest for revised scoped KPI evaluation.
 - `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables.
 - `qa/investigations/`: timestamped investigation reports with evidence and provenance.
 
@@ -34,3 +35,4 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 - Never commit secrets, page tokens, or tenant-specific credentials.
 - `no-op` mode still reaches publish unless `--force-verify-fail` is set.
 - Treat `artifacts/` as temporary runtime output, even though it is git-ignored.
+- For revised KPI runs, validate selector quality first (`scope_resolution_failed=false`, `full_page_fetch=false`) before large batches.

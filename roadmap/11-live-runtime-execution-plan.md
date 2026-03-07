@@ -9,7 +9,7 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 - Pipeline states and batch/readiness flows are implemented and runnable in both stub and live modes.
 - Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox.
 - Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented and validated with committed evidence.
-- Current readiness recommendation is `iterate` due to KPI misses (stub-backed evaluation; live KPI revalidation is pending).
+- Current readiness recommendation is `iterate`; revised KPI revalidation with scoped-selector manifests is pending.
 - `artifacts/` is temporary runtime output and is not versioned.
 - Decision-grade evidence must include:
   - `git_commit_sha` (40-char SHA)
@@ -94,12 +94,15 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 **Required Outcomes**
 
 - Accurate timing and retry metrics in run outputs.
-- Token accounting and scope retrieval metrics are consistently populated.
+- Full and scoped payload sizing is captured per run (`full_page_adf_bytes`, `scoped_adf_bytes`).
+- `context_reduction_ratio` is computed and emitted for all evaluable runs.
+- Scope fallback reason codes and selector coverage are consistently populated.
 - Batch KPI aggregation remains deterministic.
 
 **Done Criteria**
 
 - KPI report fields are not static/placeholder unless expected by scenario.
+- Optimized scoped runs show non-zero `context_reduction_ratio` with per-page distribution output.
 - Telemetry completeness checks continue to pass.
 
 ### WP5: Lifecycle Release-Enablement Validation

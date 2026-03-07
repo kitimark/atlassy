@@ -64,8 +64,8 @@ Aggregate totals:
 ## PoC Measurement Checklist
 
 - Capture baseline and optimized runs for the same edit intent.
-- Measure `tokens_per_successful_update` and full-page retrieval rate.
-- Track retry/conflict token waste and fidelity risk flags.
+- Measure `context_reduction_ratio` and `scoped_section_tokens`.
+- Track `conflict_rate`, `edit_success_rate`, and structural preservation risk flags.
 - Report per-page outliers to drive block policy adjustments.
 
 ## Limitations

@@ -25,6 +25,8 @@ Use this structure for each idea:
 - `2026-03-advanced-table-editing-modes.md`
 - `2026-03-structural-block-editing-support.md`
 - `2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`
+- `2026-03-mcp-server-integration.md`
+- `2026-03-poc-test-dataset-design.md`
 
 ## Promoted Baseline Inputs
 

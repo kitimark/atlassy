@@ -28,7 +28,8 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 - Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox with committed evidence.
 - Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented, tested, and validated against live Confluence.
 - Lifecycle matrix evidence is committed under `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.
-- Current recommendation remains `iterate`, driven by KPI misses in token reduction and full-page retrieval reduction (stub-backed evaluation; live KPI revalidation is pending).
+- KPI framework is revised to emphasize context reduction and scoped reliability (`context_reduction_ratio`, `edit_success_rate`, `structural_preservation`), with scoped-selector live revalidation pending.
+- Current recommendation remains `iterate` until revised KPI reruns complete.
 
 ## Phase 0: Design Baseline
 
@@ -113,11 +114,12 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 
 ### Targets
 
-- `tokens_per_successful_update`: 40-60% reduction
-- `full_page_retrieval_rate`: 60-80% reduction
-- `formatting_fidelity_pass_rate`: non-regressive
-- `publish_latency`: non-regressive
-- `retry_conflict_token_waste`: bounded by one retry policy
+- `context_reduction_ratio`: 70-90% on optimized in-scope runs
+- `scoped_section_tokens`: report median and p90 by pattern (diagnostic target)
+- `edit_success_rate`: >95% for in-scope runs
+- `structural_preservation`: 100% non-target structure preserved
+- `conflict_rate`: <10%, bounded by one scoped retry policy
+- `publish_latency`: median <3000 ms for scoped optimized runs; p90 non-regressive vs baseline
 
 ### Exit Criteria
 

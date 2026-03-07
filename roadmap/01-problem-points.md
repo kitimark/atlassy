@@ -64,8 +64,9 @@ State the concrete operational problems Atlassy v1 addresses for AI-assisted Con
 
 ## Success Signals
 
-- Significant reduction in tokens per successful update.
-- Significant reduction in full-page retrieval rate.
+- `context_reduction_ratio` reaches target band on optimized scoped runs.
+- Scoped payload size (`scoped_section_tokens`) is materially lower than full-page context size.
+- High `edit_success_rate` with low `conflict_rate`.
 - Non-regressive fidelity and publish outcomes.
 - Deterministic failure diagnostics with bounded retries.
 

@@ -2,47 +2,56 @@
 
 ## Objective
 
-Define a reproducible measurement protocol that validates v1 goals for token efficiency, retrieval scope reduction, and formatting fidelity without relaxing safety gates.
+Define a reproducible measurement protocol for the CLI-first PoC that captures real-world value for AI-assisted editing, while preserving v1 safety defaults.
 
 ## Scope and Alignment
 
 - Dataset, edit patterns, and targets align with `08-poc-scope.md`.
 - Route and safety constraints align with `06-decisions-and-defaults.md` and `09-ai-contract-spec.md`.
-- Comparisons are baseline vs optimized for the same page and edit intent.
+- Comparisons are paired baseline vs optimized runs for the same page and edit intent.
+- v1 remains CLI-first; metrics are selected to predict future MCP usage value.
 
 ## KPI Definitions
 
-### `tokens_per_successful_update`
+### `context_reduction_ratio`
 
-- Definition: total model tokens consumed for runs that end with successful publish.
-- Formula: `sum(total_tokens for successful runs) / count(successful runs)`.
-- Unit: tokens per successful update.
+- Definition: relative reduction from full-page payload to scoped payload per run.
+- Formula: `1 - (scoped_adf_bytes / full_page_adf_bytes)`.
+- Unit: ratio (reported as percentage).
+- Success direction: higher is better.
+- Target (v1 PoC): 70-90% for in-scope optimized runs.
+
+### `scoped_section_tokens`
+
+- Definition: estimated token footprint of scoped payload delivered to edit logic.
+- Formula: `scoped_adf_bytes / 4` (byte-to-token estimator).
+- Unit: estimated tokens per run.
 - Success direction: lower is better.
-- Target (v1 PoC): 40-60% reduction vs baseline median.
+- Target (v1 PoC): report median and p90 by pattern; no fixed global threshold.
 
-### `full_page_retrieval_rate`
+### `edit_success_rate`
 
-- Definition: share of runs requiring full-page body retrieval.
-- Formula: `count(runs with scope_resolution_failed=true or full_page_fetch=true) / count(all runs)`.
-- Unit: percentage.
-- Success direction: lower is better.
-- Target (v1 PoC): 60-80% reduction vs baseline.
-
-### `retry_conflict_token_waste`
-
-- Definition: tokens spent on conflict retry paths only.
-- Formula: `sum(tokens consumed after first conflict detection and before final publish/fail)`.
-- Unit: tokens per run and aggregate tokens per experiment.
-- Success direction: lower is better.
-- Target (v1 PoC): bounded by one scoped retry policy; no unbounded retry loops.
-
-### `formatting_fidelity_pass_rate`
-
-- Definition: share of runs passing all verifier checks with no locked-node mutation.
-- Formula: `count(verify_result=pass and locked_node_mutation=false) / count(all runs)`.
+- Definition: share of runs that complete with successful publish.
+- Formula: `count(publish_result=published) / count(all runs)`.
 - Unit: percentage.
 - Success direction: higher is better.
-- Target (v1 PoC): non-regressive vs baseline.
+- Target (v1 PoC): >95% for in-scope patterns.
+
+### `structural_preservation`
+
+- Definition: share of runs passing verifier gates without locked-node or out-of-scope mutation.
+- Formula: `count(verify_result=pass and locked_node_mutation=false and out_of_scope_mutation=false) / count(all runs)`.
+- Unit: percentage.
+- Success direction: higher is better.
+- Target (v1 PoC): 100% on non-target structure for in-scope runs.
+
+### `conflict_rate`
+
+- Definition: share of runs that encounter at least one publish conflict.
+- Formula: `count(retry_count > 0) / count(all runs)`.
+- Unit: percentage.
+- Success direction: lower is better.
+- Target (v1 PoC): <10%, with hard cap of one scoped retry per run.
 
 ### `publish_latency`
 
@@ -50,21 +59,21 @@ Define a reproducible measurement protocol that validates v1 goals for token eff
 - Formula: `publish_end_timestamp - request_start_timestamp`.
 - Unit: milliseconds.
 - Success direction: lower is better.
-- Target (v1 PoC): non-regressive vs baseline at median and p90.
+- Target (v1 PoC): median <3000 ms for scoped optimized runs; p90 non-regressive vs paired baseline.
 
 ## Experiment Design
 
 ### Design Type
 
-- Paired A/B comparison with matched edit intent.
-- `A` = baseline flow.
-- `B` = optimized v1 flow (`fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> merge_candidates -> patch -> verify -> publish`).
+- Paired A/B comparison with matched edit intent and target section.
+- `A` baseline: same edit intent with empty `scope_selectors` (full-page fallback path).
+- `B` optimized: same edit intent with explicit heading/block selectors.
 
 ### Run Matrix
 
 - Patterns: A, B, C from `08-poc-scope.md`.
-- Pages: baseline 5-page sample from `xilinx-wiki.atlassian.net` space `A`.
-- Dataset provenance: baseline page profile and payload evidence are documented in `ideas/2026-03-confluence-adf-markdown-size-evidence.md`.
+- Pages: controlled sandbox pages with planned structural variety (size, prose/table mix, locked structural adjacency).
+- Optional reference pages: 5-page public seed from `xilinx-wiki.atlassian.net` space `A`.
 - Minimum runs: 3 runs per `(page_id, pattern, flow)` pair.
 - Randomization: alternate A/B order per pair to reduce order bias.
 - Retry policy: enforce one scoped rebase retry max for both flows.
@@ -72,8 +81,8 @@ Define a reproducible measurement protocol that validates v1 goals for token eff
 ### Controlled Variables
 
 - Same page version window and same edit intent text per paired run.
-- Same model family and comparable inference settings.
-- Same verifier and publish gates.
+- Same target section semantics across baseline and optimized runs.
+- Same runtime backend, verifier, and publish gates.
 - No expansion of v1 table or structural editing scope during PoC.
 
 ## Instrumentation Contract
@@ -85,8 +94,9 @@ Each run must emit one record with at least:
 - `git_dirty` (boolean working-tree cleanliness marker at run start).
 - `page_id`, `pattern` (`A|B|C`), `edit_intent_hash`.
 - `scope_selectors`, `scope_resolution_failed`, `full_page_fetch`.
-- `state_token_usage` map keyed by pipeline state.
-- `total_tokens`, `retry_count`, `retry_tokens`.
+- `full_page_adf_bytes`, `scoped_adf_bytes`, `context_reduction_ratio`.
+- `patch_ops_bytes`, `retry_count`.
+- `state_token_usage` map keyed by pipeline state (supporting telemetry).
 - `verify_result`, `verify_error_codes[]`.
 - `publish_result`, `publish_error_code?`, `new_version?`.
 - `start_ts`, `verify_end_ts`, `publish_end_ts`, `latency_ms`.
@@ -103,8 +113,13 @@ Replay artifacts per run:
 For each KPI, compute:
 
 - median, p90, min, max by flow.
-- absolute delta and relative delta (`optimized vs baseline`).
+- absolute delta and relative delta (`optimized vs baseline`) where applicable.
 - per-pattern breakdown (A/B/C) and aggregate breakdown.
+
+Additional required slices:
+
+- per-page `context_reduction_ratio` distribution.
+- fallback reason breakdown for `full_page_fetch=true` runs.
 
 Outlier handling:
 
@@ -116,12 +131,12 @@ Outlier handling:
 
 PoC passes when all are true:
 
-- `tokens_per_successful_update` meets 40-60% reduction target vs baseline median.
-- `full_page_retrieval_rate` meets 60-80% reduction target.
-- `formatting_fidelity_pass_rate` is non-regressive.
-- `publish_latency` is non-regressive at median and p90.
+- `context_reduction_ratio` median for optimized flow is >=70% and trend supports 70-90% target band.
+- `edit_success_rate` is >95% for in-scope runs.
+- `structural_preservation` is 100% for in-scope runs.
+- `conflict_rate` is <10% and no run exceeds one scoped conflict retry.
+- `publish_latency` median for optimized scoped runs is <3000 ms and p90 is non-regressive vs baseline.
 - No locked-node mutation is observed.
-- No run exceeds one scoped conflict retry.
 
 If any condition fails:
 
@@ -133,13 +148,15 @@ If any condition fails:
 ### Per-Run Summary
 
 - `run_id`, `flow`, `page_id`, `pattern`, `success|fail`.
-- `total_tokens`, `retry_tokens`, `full_page_fetch`, `latency_ms`.
+- `full_page_adf_bytes`, `scoped_adf_bytes`, `context_reduction_ratio`.
+- `patch_ops_bytes`, `retry_count`, `latency_ms`.
 - `verify_result`, `publish_result`, `error_codes[]`.
 
 ### Aggregate Report
 
 - KPI table with baseline, optimized, delta, target, pass/fail.
 - Pattern-level section (A/B/C) with notable regressions.
+- Fallback reason section for scope misses.
 - Top outlier runs and suspected root causes.
 - Recommendation: `go`, `iterate`, or `stop` with rationale.
 - Provenance stamp with `git_commit_sha`, `git_dirty`, and `pipeline_version`.
@@ -147,9 +164,9 @@ If any condition fails:
 ## Current Checkpoint Snapshot
 
 - Latest readiness recommendation: `iterate`.
-- Primary blockers: `tokens_per_successful_update` and `full_page_retrieval_rate` target misses.
-- KPI baseline: stub-backed execution. Live sandbox validation confirms runtime correctness and lifecycle behavior but does not yet include paired KPI revalidation runs.
-- Live evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation, not KPI-focused).
+- Prior blocker assessment was based on legacy KPI framing and mostly empty `scope_selectors` in benchmark manifests.
+- Live sandbox validation confirms runtime correctness and lifecycle behavior, but revised KPI revalidation with scoped manifests is pending.
+- Live evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation, not revised KPI-focused).
 
 ## Exit and Decision Update Workflow
 
@@ -160,7 +177,7 @@ If any condition fails:
 
 ## Threats to Validity
 
-- Small dataset may underrepresent enterprise page complexity.
-- Derived markdown comparisons may hide conversion-pipeline bias.
+- Author-controlled sandbox pages may overestimate selector quality vs unmanaged enterprise content.
+- Small datasets may underrepresent enterprise page complexity.
 - External Confluence latency variance can affect publish latency metrics.
-- Prompt drift across repeated runs can inflate variance without strict intent hashing.
+- Run intents without stable selector discipline can inflate variance.

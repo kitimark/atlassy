@@ -64,8 +64,8 @@ Use an ADF-first, token-budgeted, section-first update workflow:
 ## Signals To Revisit
 
 - Frequent context-window overflow during Confluence update tasks.
-- High `tokens_per_successful_update` compared to target.
-- Repeated full-page fetches for single-section edits.
+- `context_reduction_ratio` below target band on optimized runs.
+- High `scoped_section_tokens` on single-section edits.
 - Retry loops caused by version conflicts and repeated prompt regeneration.
 - Demand for row/column operations beyond cell text updates.
 

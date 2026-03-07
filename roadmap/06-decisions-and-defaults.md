@@ -83,6 +83,15 @@
   - non-empty page + no bootstrap flag -> unchanged flow
 - Rationale: preserve deterministic safety behavior while enabling first-write lifecycle support.
 
+### D-014: KPI framework revision for CLI-first PoC
+
+- Decision: replace legacy v1 KPI framing with MCP-predictive metrics while remaining CLI-first for implementation.
+- Retired metrics: `tokens_per_successful_update`, `full_page_retrieval_rate`, `retry_conflict_token_waste`, `formatting_fidelity_pass_rate`.
+- Adopted metrics: `context_reduction_ratio`, `scoped_section_tokens`, `edit_success_rate`, `structural_preservation`, `conflict_rate`, `publish_latency`.
+- Baseline rule: benchmark baseline uses empty `scope_selectors` (full-page fallback path).
+- Optimized rule: benchmark optimized runs must include explicit heading/block selectors.
+- Rationale: legacy metrics overemphasized internal pipeline payload accounting and underrepresented the real-world AI editing problem (context pressure, scoped reliability, and structure safety).
+
 ## Default Route Matrix
 
 - `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock, rule.

@@ -6,8 +6,8 @@ Validate that ADF-canonical routing with prose Markdown assist and ADF table-cel
 
 ## Dataset
 
-- Baseline public seed: 5-page sample from `xilinx-wiki.atlassian.net` (space `A`).
-- Expand later with private pages only after baseline instrumentation is stable.
+- Primary benchmark set: author-created sandbox pages with planned structural variety (page size spread, prose-only sections, mixed prose/table sections, and locked-structural adjacency).
+- Optional reference seed: 5-page sample from `xilinx-wiki.atlassian.net` (space `A`) for historical comparability.
 - Evidence reference for baseline payload characteristics: `ideas/2026-03-confluence-adf-markdown-size-evidence.md`.
 
 ## Edit Patterns
@@ -45,18 +45,21 @@ Lifecycle release-enablement reference:
 
 ## Instrumentation
 
-- `tokens_per_successful_update`
-- `full_page_retrieval_rate`
-- `retry_conflict_token_waste`
-- `formatting_fidelity_pass_rate`
+- `context_reduction_ratio`
+- `scoped_section_tokens`
+- `edit_success_rate`
+- `structural_preservation`
+- `conflict_rate`
 - `publish_latency`
 
 ## Success Targets
 
-- Token reduction: 40-60% vs baseline flow.
-- Full-page retrieval reduction: 60-80% vs baseline flow.
-- Fidelity pass rate: no regression from baseline.
-- Publish success and latency: non-regressive.
+- Context reduction: 70-90% on optimized in-scope runs.
+- Scoped section size: report median and p90 by pattern (diagnostic target).
+- Edit success rate: >95% on in-scope runs.
+- Structural preservation: 100% non-target structure preserved.
+- Conflict rate: <10% of runs with one scoped retry cap.
+- Publish latency: median <3000 ms for scoped optimized runs; p90 non-regressive vs baseline.
 
 ## Exit Gates
 
