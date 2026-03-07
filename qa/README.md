@@ -12,13 +12,15 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Investigations
 
 - Naming convention: `YYYY-MM-DD-<topic>.md`.
-- Latest: `qa/investigations/2026-03-07-live-confluence-failure.md`.
+- Latest: `qa/investigations/2026-03-07-live-confluence-fix-validation.md`.
+- Prior baseline: `qa/investigations/2026-03-07-live-confluence-failure.md`.
 - Include provenance (`git_commit_sha`, `git_dirty`, runtime mode) and artifact paths for every major claim.
 
 ## Evidence
 
 - Commit handoff-ready evidence bundles under `qa/evidence/YYYY-MM-DD-<topic>/`.
-- Latest bundle: `qa/evidence/2026-03-07-live-confluence-failure/`.
+- Latest bundle: `qa/evidence/2026-03-07-live-confluence-fix-validation/`.
+- Prior baseline bundle: `qa/evidence/2026-03-07-live-confluence-failure/`.
 - Keep root `artifacts/` as local scratch; use committed `qa/evidence/` paths in investigation docs.
 
 ## Safety Defaults

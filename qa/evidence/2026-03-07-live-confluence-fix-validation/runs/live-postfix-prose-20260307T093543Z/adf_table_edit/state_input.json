@@ -1,0 +1,13 @@
+{
+  "request_id": "live-postfix-prose-20260307T093543Z",
+  "page_id": "131207",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "sandbox post-fix scoped prose update"
+  }
+}

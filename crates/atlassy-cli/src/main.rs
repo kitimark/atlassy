@@ -4,14 +4,14 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-use atlassy_confluence::{LiveConfluenceClient, StubConfluenceClient, StubPage};
+use atlassy_confluence::{ConfluenceError, LiveConfluenceClient, StubConfluenceClient, StubPage};
 use atlassy_contracts::{
-    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_RUNTIME_UNMAPPED_HARD,
-    ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A, PATTERN_B, PATTERN_C,
-    PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
-    validate_provenance_stamp, validate_run_summary_telemetry,
+    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_RUNTIME_BACKEND,
+    ERR_RUNTIME_UNMAPPED_HARD, ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A,
+    PATTERN_B, PATTERN_C, PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_LIVE,
+    RUNTIME_STUB, RunSummary, validate_provenance_stamp, validate_run_summary_telemetry,
 };
-use atlassy_pipeline::{Orchestrator, RunMode, RunRequest};
+use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest};
 use clap::{Parser, ValueEnum};
 use serde::{Deserialize, Serialize};
 
@@ -445,8 +445,7 @@ struct FlowGroup {
     optimized: Vec<RunSummary>,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), DynError> {
+fn main() -> Result<(), DynError> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -544,6 +543,14 @@ async fn main() -> Result<(), DynError> {
     Ok(())
 }
 
+fn map_live_startup_error(error: ConfluenceError) -> PipelineError {
+    PipelineError::Hard {
+        state: PipelineState::Fetch,
+        code: ERR_RUNTIME_BACKEND.to_string(),
+        message: format!("live runtime startup failure: {error}"),
+    }
+}
+
 fn run_single_request(
     request: RunRequest,
     artifacts_dir: PathBuf,
@@ -571,7 +578,13 @@ fn run_single_request(
             }
         }
         RuntimeBackend::Live => {
-            let client = LiveConfluenceClient::from_env()?;
+            let client = match LiveConfluenceClient::from_env() {
+                Ok(client) => client,
+                Err(error) => {
+                    eprintln!("pipeline failed: {}", map_live_startup_error(error));
+                    std::process::exit(1);
+                }
+            };
             let mut orchestrator = Orchestrator::new(client, artifacts_dir);
             match orchestrator.run(request) {
                 Ok(summary) => println!("{}", serde_json::to_string_pretty(&summary)?),
@@ -2632,6 +2645,27 @@ mod tests {
             .join("tests")
             .join("fixtures")
             .join(name)
+    }
+
+    #[test]
+    fn live_startup_errors_map_to_runtime_backend_hard_error() {
+        let mapped = map_live_startup_error(ConfluenceError::Transport(
+            "missing ATLASSY_CONFLUENCE_API_TOKEN".to_string(),
+        ));
+
+        match mapped {
+            PipelineError::Hard {
+                state,
+                code,
+                message,
+            } => {
+                assert_eq!(state, PipelineState::Fetch);
+                assert_eq!(code, ERR_RUNTIME_BACKEND);
+                assert!(message.contains("live runtime startup failure"));
+                assert!(message.contains("missing ATLASSY_CONFLUENCE_API_TOKEN"));
+            }
+            other => panic!("unexpected mapped error: {other:?}"),
+        }
     }
 
     #[test]

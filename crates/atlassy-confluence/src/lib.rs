@@ -192,6 +192,30 @@ impl LiveConfluenceClient {
         let snippet = body.chars().take(240).collect::<String>();
         ConfluenceError::Transport(format!("http_status={} body={snippet}", status.as_u16()))
     }
+
+    fn build_publish_payload(
+        page_id: &str,
+        title: &str,
+        page_version: u64,
+        candidate_adf: &Value,
+    ) -> Result<Value, ConfluenceError> {
+        let adf_value = serde_json::to_string(candidate_adf)
+            .map_err(|error| ConfluenceError::Transport(error.to_string()))?;
+
+        Ok(serde_json::json!({
+            "id": page_id,
+            "type": "page",
+            "status": "current",
+            "title": title,
+            "version": { "number": page_version + 1 },
+            "body": {
+                "atlas_doc_format": {
+                    "value": adf_value,
+                    "representation": "atlas_doc_format"
+                }
+            }
+        }))
+    }
 }
 
 impl ConfluenceClient for LiveConfluenceClient {
@@ -291,18 +315,12 @@ impl ConfluenceClient for LiveConfluenceClient {
             return Err(ConfluenceError::Conflict(page_id.to_string()));
         }
 
-        let publish_payload = serde_json::json!({
-            "id": page_id,
-            "type": "page",
-            "title": metadata.title,
-            "version": { "number": page_version + 1 },
-            "body": {
-                "atlas_doc_format": {
-                    "value": candidate_adf,
-                    "representation": "atlas_doc_format"
-                }
-            }
-        });
+        let publish_payload = Self::build_publish_payload(
+            page_id,
+            &metadata.title,
+            page_version,
+            candidate_adf,
+        )?;
 
         let publish_response = self
             .request(reqwest::Method::PUT, self.content_endpoint(page_id))
@@ -334,5 +352,66 @@ impl ConfluenceClient for LiveConfluenceClient {
 
     fn publish_attempts(&self) -> usize {
         self.publish_attempts
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn publish_payload_includes_required_contract_fields() {
+        let candidate_adf = serde_json::json!({
+            "type": "doc",
+            "version": 1,
+            "content": []
+        });
+
+        let payload = LiveConfluenceClient::build_publish_payload(
+            "18841604",
+            "Sandbox page",
+            7,
+            &candidate_adf,
+        )
+        .expect("payload should build");
+
+        assert_eq!(payload["id"], serde_json::json!("18841604"));
+        assert_eq!(payload["type"], serde_json::json!("page"));
+        assert_eq!(payload["status"], serde_json::json!("current"));
+        assert_eq!(payload["version"]["number"], serde_json::json!(8));
+        assert_eq!(
+            payload["body"]["atlas_doc_format"]["representation"],
+            serde_json::json!("atlas_doc_format")
+        );
+    }
+
+    #[test]
+    fn publish_payload_encodes_candidate_adf_as_json_string_value() {
+        let candidate_adf = serde_json::json!({
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        { "type": "text", "text": "hello" }
+                    ]
+                }
+            ]
+        });
+
+        let payload = LiveConfluenceClient::build_publish_payload(
+            "18841604",
+            "Sandbox page",
+            1,
+            &candidate_adf,
+        )
+        .expect("payload should build");
+
+        let encoded = payload["body"]["atlas_doc_format"]["value"]
+            .as_str()
+            .expect("atlas_doc_format.value should be a string");
+        let decoded: Value = serde_json::from_str(encoded).expect("encoded value should be JSON");
+        assert_eq!(decoded, candidate_adf);
     }
 }

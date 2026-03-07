@@ -12,7 +12,7 @@ Run Atlassy end-to-end against real Confluence sandbox pages with explicit safet
 
 Latest investigation:
 
-- `qa/investigations/2026-03-07-live-confluence-failure.md`
+- `qa/investigations/2026-03-07-live-confluence-fix-validation.md`
 
 ## Preconditions
 

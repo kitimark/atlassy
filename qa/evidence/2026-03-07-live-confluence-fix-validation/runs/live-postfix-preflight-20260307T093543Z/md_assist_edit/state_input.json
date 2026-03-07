@@ -1,0 +1,36 @@
+{
+  "request_id": "live-postfix-preflight-20260307T093543Z",
+  "page_id": "131207",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "markdown": "Sandbox prose update 2026-03-07T08:45:41Z"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": ""
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "adf_path": "/content/0/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0/content/0",
+      "/content/1"
+    ],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "sandbox post-fix preflight"
+  }
+}

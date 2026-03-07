@@ -2,10 +2,13 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use atlassy_confluence::{ConfluenceClient, StubConfluenceClient, StubPage};
+use atlassy_confluence::{
+    ConfluenceClient, ConfluenceError, FetchPageResponse, PublishPageResponse,
+    StubConfluenceClient, StubPage,
+};
 use atlassy_contracts::{
-    ContractError, ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION,
-    PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
+    ContractError, ERR_RUNTIME_BACKEND, ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A,
+    PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
@@ -56,6 +59,48 @@ fn make_orchestrator_with_fixture(
     );
 
     Orchestrator::new(StubConfluenceClient::new(pages), artifact_root)
+}
+
+#[derive(Debug, Clone)]
+struct PublishTransportErrorClient {
+    page_version: u64,
+    adf: serde_json::Value,
+    publish_attempts: usize,
+    message: String,
+}
+
+impl PublishTransportErrorClient {
+    fn new(adf: serde_json::Value, page_version: u64, message: impl Into<String>) -> Self {
+        Self {
+            page_version,
+            adf,
+            publish_attempts: 0,
+            message: message.into(),
+        }
+    }
+}
+
+impl ConfluenceClient for PublishTransportErrorClient {
+    fn fetch_page(&mut self, _page_id: &str) -> Result<FetchPageResponse, ConfluenceError> {
+        Ok(FetchPageResponse {
+            page_version: self.page_version,
+            adf: self.adf.clone(),
+        })
+    }
+
+    fn publish_page(
+        &mut self,
+        _page_id: &str,
+        _page_version: u64,
+        _candidate_adf: &serde_json::Value,
+    ) -> Result<PublishPageResponse, ConfluenceError> {
+        self.publish_attempts += 1;
+        Err(ConfluenceError::Transport(self.message.clone()))
+    }
+
+    fn publish_attempts(&self) -> usize {
+        self.publish_attempts
+    }
 }
 
 fn read_state_output(artifact_root: &Path, run_id: &str, state: &str) -> serde_json::Value {
@@ -163,6 +208,41 @@ fn verify_failure_blocks_publish() {
         other => panic!("unexpected error: {other:?}"),
     }
     assert_eq!(orchestrator.client().publish_attempts(), 0);
+}
+
+#[test]
+fn publish_transport_error_maps_to_runtime_backend_publish_failure() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let client = PublishTransportErrorClient::new(
+        load_fixture("prose_only_adf.json"),
+        7,
+        "http_status=400 body=Must supply an incremented version when updating Content. No version",
+    );
+    let mut orchestrator = Orchestrator::new(client, temp.path());
+
+    let mut request = sample_request("run-live-publish-400");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: "/content/1/content/0/text".to_string(),
+        markdown: "Updated prose body".to_string(),
+    };
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("publish transport failure should be hard error");
+    assert_hard_error(error, PipelineState::Publish, ERR_RUNTIME_BACKEND);
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+
+    let run_dir = temp.path().join("artifacts").join("run-live-publish-400");
+    let summary: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(run_dir.join("summary.json")).expect("summary should exist"),
+    )
+    .expect("summary should deserialize");
+    assert_eq!(summary["failure_state"], serde_json::json!("publish"));
+    assert_eq!(
+        summary["error_codes"],
+        serde_json::json!([ERR_RUNTIME_BACKEND])
+    );
 }
 
 #[test]
