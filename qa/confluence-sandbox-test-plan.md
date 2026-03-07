@@ -28,19 +28,25 @@ Run Atlassy end-to-end against real Confluence sandbox pages with explicit safet
 ## Environment Setup
 
 ```bash
-export ATLASSY_CONFLUENCE_BASE_URL="https://YOURDOMAIN.atlassian.net"
-export ATLASSY_CONFLUENCE_EMAIL="you@example.com"
-read -rsp "Confluence API token: " ATLASSY_CONFLUENCE_API_TOKEN; echo
-export ATLASSY_CONFLUENCE_API_TOKEN
-
-export ARTIFACTS_DIR="."
-export PAGE_ID="REPLACE_WITH_SANDBOX_PAGE_ID"
+source qa/scripts/setup-confluence-env.sh
 ```
 
 Notes:
 
+- The setup script prompts for `ATLASSY_CONFLUENCE_BASE_URL`, `ATLASSY_CONFLUENCE_EMAIL`, `ATLASSY_CONFLUENCE_API_TOKEN`, `ARTIFACTS_DIR`, and optional `PAGE_ID`.
+- You must `source` the script (do not execute it) so exports persist in the current shell.
 - Do not append `/wiki` to `ATLASSY_CONFLUENCE_BASE_URL`.
 - Runtime reads credentials from env vars only.
+
+Manual fallback (if you do not use the script):
+
+```bash
+export ATLASSY_CONFLUENCE_BASE_URL="https://YOURDOMAIN.atlassian.net"
+export ATLASSY_CONFLUENCE_EMAIL="you@example.com"
+read -rs "ATLASSY_CONFLUENCE_API_TOKEN?Confluence API token: "; print; export ATLASSY_CONFLUENCE_API_TOKEN
+export ARTIFACTS_DIR="."
+export PAGE_ID="REPLACE_WITH_SANDBOX_PAGE_ID"
+```
 
 ## Step 1: No-Write Live Preflight
 

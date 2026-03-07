@@ -6,6 +6,7 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 
 - `qa/confluence-sandbox-test-plan.md`: detailed, step-by-step Confluence sandbox testing flow.
 - `qa/manifests/live-sandbox-smoke.example.json`: example batch manifest for live smoke validation.
+- `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables.
 
 ## Safety Defaults
 
