@@ -2,7 +2,7 @@
 
 ## Status
 
-Incubating
+Incubating (signals met, execution in progress)
 
 ## Plain Problem Points
 
@@ -25,9 +25,11 @@ Create an author-controlled sandbox dataset specifically for revised KPI reruns.
 
 ## Why Not Now
 
-- KPI and telemetry doc changes are being finalized before implementation updates.
-- Dataset construction should align with the exact run-summary fields emitted by the pipeline (`full_page_adf_bytes`, `scoped_adf_bytes`, `context_reduction_ratio`).
-- Immediate priority is documentation and experiment protocol alignment.
+- ~~KPI and telemetry doc changes are being finalized before implementation updates.~~ Resolved: KPI telemetry aligned at commit `e29065f`.
+- ~~Dataset construction should align with the exact run-summary fields emitted by the pipeline (`full_page_adf_bytes`, `scoped_adf_bytes`, `context_reduction_ratio`).~~ Resolved: all six KPI fields are wired up end-to-end.
+- ~~Immediate priority is documentation and experiment protocol alignment.~~ Resolved: QA test plan updated with full KPI batch protocol.
+
+All "Why Not Now" blockers are resolved. Execution is in progress.
 
 ## Risks
 
@@ -37,11 +39,23 @@ Create an author-controlled sandbox dataset specifically for revised KPI reruns.
 
 ## Signals To Revisit
 
-- Pipeline emits revised KPI telemetry fields consistently.
-- QA manifests are ready for paired scoped reruns.
+- ~~Pipeline emits revised KPI telemetry fields consistently.~~ Met: `align-kpi-implementation` change archived at `e29065f`.
+- ~~QA manifests are ready for paired scoped reruns.~~ Met: `qa/confluence-sandbox-test-plan.md` updated with Step 8 KPI batch protocol.
 - Decision review requires stronger per-page variance explanation.
+
+All signals met. Dataset construction is underway.
 
 ## Promotion Path
 
 - Promote into `roadmap/08-poc-scope.md` and `qa/manifests/` when telemetry implementation is ready.
 - Capture final dataset profile in a committed QA investigation with provenance.
+
+## Execution Progress
+
+- Page inventory: `qa/manifests/sandbox-page-inventory.md`.
+- KPI batch protocol: `qa/confluence-sandbox-test-plan.md`, Step 8.
+- Experiment pages created and bootstrapped (commit `dce393b`):
+  - P1 (prose-rich): page `65934`.
+  - P2 (mixed prose+table): page `98323`.
+  - P3 (locked-adjacent): page `131227`.
+- Next: seed pages with structural content, run scoped fetch spike, execute KPI batch.
