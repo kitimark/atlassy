@@ -8,7 +8,7 @@ Establish automated quality gates that validate code correctness, style, and saf
 
 - All testing has been manual: `cargo fmt`, `cargo clippy`, `cargo test` run locally.
 - No automated CI pipeline exists.
-- 82 tests across 7 binaries (5 crates) run reliably in under 60 seconds.
+- 76 tests across 7 binaries (5 crates) run reliably in under 60 seconds.
 - All tests are self-contained with no external service dependencies (live runtime tests use dummy credentials and assert on expected failures).
 
 ## Phase 1: Test Job (Current)
@@ -29,7 +29,7 @@ Automated test job on GitHub Actions triggered by push to `main` and pull reques
 | Step | Command | Purpose |
 | --- | --- | --- |
 | Checkout | `actions/checkout@v4` | Fetch source |
-| Toolchain | `dtolnay/rust-toolchain@stable` | Install Rust (reads `rust-toolchain.toml`) |
+| Toolchain | `dtolnay/rust-toolchain@stable` | Install Rust (toolchain selected by `@ref`, not by `rust-toolchain.toml`) |
 | Cache | `Swatinem/rust-cache@v2` | Cache `target/` and cargo registry by `Cargo.lock` hash |
 | Format check | `cargo fmt --all -- --check` | Reject unformatted code |
 | Clippy | `cargo clippy --workspace --all-targets -- -D warnings` | Reject lint warnings |
@@ -68,7 +68,7 @@ Versions chosen for stability, community adoption, and broad compatibility (rese
 - Workflow file exists at `.github/workflows/ci.yml`.
 - `rust-toolchain.toml` exists at repo root.
 - All existing tests pass in CI on first run.
-- PRs to `main` are gated by the test job.
+- PRs to `main` are gated by the test job (requires GitHub repo branch protection rules with required status checks — this is a repo settings step, not a CI file step).
 
 ## Phase 2: Build and Artifact Validation (Deferred)
 
