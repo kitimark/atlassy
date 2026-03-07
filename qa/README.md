@@ -9,7 +9,9 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 - `qa/manifests/scoped-poc-experiment.example.json`: example paired baseline/optimized manifest for revised scoped KPI evaluation.
 - `qa/manifests/sandbox-page-inventory.md`: page ID inventory and structural characteristics for KPI experiment pages.
 - `qa/manifests/kpi-revalidation-batch.json`: 18-run paired baseline/optimized manifest for KPI revalidation (patterns A, B, C).
-- `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables.
+- `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables (run via `make qa-setup`).
+- `qa/scripts/check-env.sh`: non-interactive environment and connectivity validation (run `make qa-check` before QA execution).
+- `qa/.env.local`: local credentials file written by setup script (git-ignored, never commit).
 - `qa/investigations/`: timestamped investigation reports with evidence and provenance.
 
 ## Investigations
@@ -35,7 +37,7 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Safety Defaults
 
 - Use live runtime only against a dedicated sandbox page or sandbox space.
-- Keep Confluence credentials in shell environment variables only.
+- Keep Confluence credentials out of chat/docs/commits; manage them through `make qa-setup`, which writes local `qa/.env.local` (git-ignored).
 - Never commit secrets, page tokens, or tenant-specific credentials.
 - `no-op` mode still reaches publish unless `--force-verify-fail` is set.
 - Treat `artifacts/` as temporary runtime output, even though it is git-ignored.

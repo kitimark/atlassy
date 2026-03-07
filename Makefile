@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt check
+.PHONY: build test lint fmt check qa-setup qa-check
 
 build:
 	cargo build --workspace
@@ -14,3 +14,9 @@ fmt:
 
 check:
 	cargo check --workspace
+
+qa-setup:
+	bash qa/scripts/setup-confluence-env.sh
+
+qa-check:
+	bash qa/scripts/check-env.sh

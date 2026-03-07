@@ -37,26 +37,33 @@ Latest investigation:
 ## Environment Setup
 
 ```bash
-source qa/scripts/setup-confluence-env.sh
+make qa-setup
 ```
 
 Notes:
 
 - The setup script prompts for `ATLASSY_CONFLUENCE_BASE_URL`, `ATLASSY_CONFLUENCE_EMAIL`, `ATLASSY_CONFLUENCE_API_TOKEN`, `ARTIFACTS_DIR`, optional `PAGE_ID`, and optional `SPACE_KEY`.
-- You must `source` the script (do not execute it) so exports persist in the current shell.
+- Values are saved to `qa/.env.local`.
 - Do not append `/wiki` to `ATLASSY_CONFLUENCE_BASE_URL`.
-- Runtime reads credentials from env vars only.
+- `qa/.env.local` is git-ignored and required by `make qa-check`.
+- Re-run `make qa-setup` whenever credentials or target page values change.
 
-Manual fallback (if you do not use the script):
+## Step 0: Environment Prerequisite Check
+
+After setting up environment variables, validate the environment before proceeding:
 
 ```bash
-export ATLASSY_CONFLUENCE_BASE_URL="https://YOURDOMAIN.atlassian.net"
-export ATLASSY_CONFLUENCE_EMAIL="you@example.com"
-read -rs "ATLASSY_CONFLUENCE_API_TOKEN?Confluence API token: "; print; export ATLASSY_CONFLUENCE_API_TOKEN
-export ARTIFACTS_DIR="."
-export PAGE_ID="REPLACE_WITH_SANDBOX_PAGE_ID"
-export SPACE_KEY="REPLACE_WITH_SPACE_KEY"
+make qa-check
 ```
+
+This validates:
+
+- Required env vars are set (`ATLASSY_CONFLUENCE_BASE_URL`, `ATLASSY_CONFLUENCE_EMAIL`, `ATLASSY_CONFLUENCE_API_TOKEN`).
+- Base URL format (must use `https://`, must not end with `/wiki`).
+- API token length sanity.
+- Confluence API connectivity (read-only probe against `/wiki/rest/api/user/current`).
+
+All checks must pass before continuing to Step 1. If any fail, re-run `make qa-setup`.
 
 ## KPI Experiment Page Setup
 
