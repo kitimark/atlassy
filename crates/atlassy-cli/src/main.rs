@@ -1395,7 +1395,7 @@ fn build_risk_status_deltas(report: &BatchReport) -> Vec<RiskStatusDelta> {
         ),
         risk_delta(
             "R-004",
-            "Full-page retrieval fallback overuse",
+            "Insufficient context reduction",
             "medium",
             report
                 .kpi
@@ -1403,10 +1403,10 @@ fn build_risk_status_deltas(report: &BatchReport) -> Vec<RiskStatusDelta> {
                 .and_then(|kpi| {
                     kpi.checks
                         .iter()
-                        .find(|check| check.name == "full_page_retrieval_rate")
+                        .find(|check| check.name == "context_reduction_ratio")
                 })
                 .is_none_or(|check| check.pass),
-            "full-page retrieval KPI result",
+            "context reduction KPI result",
         ),
         risk_delta(
             "R-005",
@@ -2191,10 +2191,11 @@ fn build_kpi_rollup(scope: &str, flow_groups: &[FlowGroup]) -> KpiRollup {
         .collect::<Vec<_>>();
 
     let metrics = [
-        "tokens_per_successful_update",
-        "full_page_retrieval_rate",
-        "retry_conflict_token_waste",
-        "formatting_fidelity_pass_rate",
+        "context_reduction_ratio",
+        "scoped_section_tokens",
+        "edit_success_rate",
+        "structural_preservation",
+        "conflict_rate",
         "publish_latency",
     ]
     .into_iter()
@@ -2230,35 +2231,51 @@ fn build_kpi_rollup(scope: &str, flow_groups: &[FlowGroup]) -> KpiRollup {
 
 fn kpi_values(summaries: &[RunSummary], kpi: &str) -> Vec<f64> {
     match kpi {
-        "tokens_per_successful_update" => summaries
+        "context_reduction_ratio" => summaries
             .iter()
-            .filter(|summary| summary.publish_result == "published")
-            .map(|summary| summary.total_tokens as f64)
+            .map(|summary| summary.context_reduction_ratio * 100.0)
             .collect(),
-        "full_page_retrieval_rate" => summaries
+        "scoped_section_tokens" => summaries
             .iter()
-            .map(|summary| {
-                if summary.scope_resolution_failed || summary.full_page_fetch {
-                    100.0
-                } else {
-                    0.0
-                }
-            })
+            .map(|summary| summary.scoped_adf_bytes as f64 / 4.0)
             .collect(),
-        "retry_conflict_token_waste" => summaries
-            .iter()
-            .map(|summary| summary.retry_tokens as f64)
-            .collect(),
-        "formatting_fidelity_pass_rate" => summaries
-            .iter()
-            .map(|summary| {
-                if summary.verify_result == "pass" && !summary.locked_node_mutation {
-                    100.0
-                } else {
-                    0.0
-                }
-            })
-            .collect(),
+        "edit_success_rate" => {
+            if summaries.is_empty() {
+                Vec::new()
+            } else {
+                let successful = summaries
+                    .iter()
+                    .filter(|summary| summary.publish_result == "published")
+                    .count() as f64;
+                vec![(successful / summaries.len() as f64) * 100.0]
+            }
+        }
+        "structural_preservation" => {
+            if summaries.is_empty() {
+                Vec::new()
+            } else {
+                let preserved = summaries
+                    .iter()
+                    .filter(|summary| {
+                        summary.verify_result == "pass"
+                            && !summary.locked_node_mutation
+                            && !summary.out_of_scope_mutation
+                    })
+                    .count() as f64;
+                vec![(preserved / summaries.len() as f64) * 100.0]
+            }
+        }
+        "conflict_rate" => {
+            if summaries.is_empty() {
+                Vec::new()
+            } else {
+                let conflicts = summaries
+                    .iter()
+                    .filter(|summary| summary.retry_count > 0)
+                    .count() as f64;
+                vec![(conflicts / summaries.len() as f64) * 100.0]
+            }
+        }
         "publish_latency" => summaries
             .iter()
             .map(|summary| summary.latency_ms as f64)
@@ -2309,44 +2326,52 @@ fn normalize_metric_value(value: f64) -> f64 {
 fn evaluate_kpi_checks(global: &KpiRollup) -> Vec<GateCheck> {
     let metric = |name: &str| global.metrics.iter().find(|metric| metric.kpi == name);
 
-    let tokens_check = metric("tokens_per_successful_update")
-        .map(|metric| metric.delta_relative <= -0.4 && metric.delta_relative >= -0.6)
+    let context_reduction_check = metric("context_reduction_ratio")
+        .map(|metric| metric.optimized.median >= 70.0)
         .unwrap_or(false);
 
-    let full_page_check = metric("full_page_retrieval_rate")
-        .map(|metric| metric.delta_relative <= -0.6 && metric.delta_relative >= -0.8)
+    let edit_success_check = metric("edit_success_rate")
+        .map(|metric| metric.optimized.median > 95.0)
         .unwrap_or(false);
 
-    let fidelity_check = metric("formatting_fidelity_pass_rate")
-        .map(|metric| metric.optimized.median >= metric.baseline.median)
+    let structural_preservation_check = metric("structural_preservation")
+        .map(|metric| metric.optimized.median >= 100.0)
+        .unwrap_or(false);
+
+    let conflict_rate_check = metric("conflict_rate")
+        .map(|metric| metric.optimized.median < 10.0)
         .unwrap_or(false);
 
     let latency_check = metric("publish_latency")
         .map(|metric| {
-            metric.optimized.median <= metric.baseline.median
-                && metric.optimized.p90 <= metric.baseline.p90
+            metric.optimized.median < 3000.0 && metric.optimized.p90 <= metric.baseline.p90
         })
         .unwrap_or(false);
 
     vec![
         GateCheck {
-            name: "tokens_per_successful_update".to_string(),
-            target: "40-60% reduction vs baseline median".to_string(),
-            pass: tokens_check,
+            name: "context_reduction_ratio".to_string(),
+            target: "optimized median >= 70%".to_string(),
+            pass: context_reduction_check,
         },
         GateCheck {
-            name: "full_page_retrieval_rate".to_string(),
-            target: "60-80% reduction vs baseline".to_string(),
-            pass: full_page_check,
+            name: "edit_success_rate".to_string(),
+            target: "optimized median > 95%".to_string(),
+            pass: edit_success_check,
         },
         GateCheck {
-            name: "formatting_fidelity_pass_rate".to_string(),
-            target: "non-regressive vs baseline".to_string(),
-            pass: fidelity_check,
+            name: "structural_preservation".to_string(),
+            target: "optimized median = 100%".to_string(),
+            pass: structural_preservation_check,
+        },
+        GateCheck {
+            name: "conflict_rate".to_string(),
+            target: "optimized median < 10%".to_string(),
+            pass: conflict_rate_check,
         },
         GateCheck {
             name: "publish_latency".to_string(),
-            target: "non-regressive at median and p90".to_string(),
+            target: "optimized median < 3000 ms and p90 <= baseline".to_string(),
             pass: latency_check,
         },
     ]
@@ -2418,21 +2443,20 @@ fn build_outliers(summaries: &[RunSummary]) -> Vec<OutlierRun> {
     });
     outliers.extend(latency.into_iter().take(3));
 
-    let mut tokens = summaries
+    let mut context_reduction = summaries
         .iter()
         .map(|summary| OutlierRun {
             run_id: summary.run_id.clone(),
-            kpi: "tokens_per_successful_update".to_string(),
-            value: summary.total_tokens as f64,
+            kpi: "context_reduction_ratio".to_string(),
+            value: summary.context_reduction_ratio * 100.0,
         })
         .collect::<Vec<_>>();
-    tokens.sort_by(|left, right| {
-        right
-            .value
-            .total_cmp(&left.value)
+    context_reduction.sort_by(|left, right| {
+        left.value
+            .total_cmp(&right.value)
             .then_with(|| left.run_id.cmp(&right.run_id))
     });
-    outliers.extend(tokens.into_iter().take(3));
+    outliers.extend(context_reduction.into_iter().take(3));
 
     outliers
 }
@@ -2445,51 +2469,33 @@ fn build_regressions(flow_groups: &[FlowGroup]) -> Vec<RegressionSummary> {
             continue;
         }
 
-        let baseline_tokens =
-            compute_stats(&kpi_values(&group.baseline, "tokens_per_successful_update")).median;
-        let optimized_tokens = compute_stats(&kpi_values(
-            &group.optimized,
-            "tokens_per_successful_update",
-        ))
-        .median;
-        if optimized_tokens > baseline_tokens {
+        let baseline_context_reduction =
+            compute_stats(&kpi_values(&group.baseline, "context_reduction_ratio")).median;
+        let optimized_context_reduction =
+            compute_stats(&kpi_values(&group.optimized, "context_reduction_ratio")).median;
+        if optimized_context_reduction < baseline_context_reduction {
             regressions.push(RegressionSummary {
                 page_id: group.page_id.clone(),
                 pattern: group.pattern.clone(),
                 edit_intent_hash: group.edit_intent_hash.clone(),
-                kpi: "tokens_per_successful_update".to_string(),
-                baseline: baseline_tokens,
-                optimized: optimized_tokens,
+                kpi: "context_reduction_ratio".to_string(),
+                baseline: baseline_context_reduction,
+                optimized: optimized_context_reduction,
             });
         }
 
-        let baseline_latency =
-            compute_stats(&kpi_values(&group.baseline, "publish_latency")).median;
-        let optimized_latency =
-            compute_stats(&kpi_values(&group.optimized, "publish_latency")).median;
-        if optimized_latency > baseline_latency {
+        let baseline_edit_success =
+            compute_stats(&kpi_values(&group.baseline, "edit_success_rate")).median;
+        let optimized_edit_success =
+            compute_stats(&kpi_values(&group.optimized, "edit_success_rate")).median;
+        if optimized_edit_success < baseline_edit_success {
             regressions.push(RegressionSummary {
                 page_id: group.page_id.clone(),
                 pattern: group.pattern.clone(),
                 edit_intent_hash: group.edit_intent_hash.clone(),
-                kpi: "publish_latency".to_string(),
-                baseline: baseline_latency,
-                optimized: optimized_latency,
-            });
-        }
-
-        let baseline_full_page =
-            compute_stats(&kpi_values(&group.baseline, "full_page_retrieval_rate")).median;
-        let optimized_full_page =
-            compute_stats(&kpi_values(&group.optimized, "full_page_retrieval_rate")).median;
-        if optimized_full_page > baseline_full_page {
-            regressions.push(RegressionSummary {
-                page_id: group.page_id.clone(),
-                pattern: group.pattern.clone(),
-                edit_intent_hash: group.edit_intent_hash.clone(),
-                kpi: "full_page_retrieval_rate".to_string(),
-                baseline: baseline_full_page,
-                optimized: optimized_full_page,
+                kpi: "edit_success_rate".to_string(),
+                baseline: baseline_edit_success,
+                optimized: optimized_edit_success,
             });
         }
     }

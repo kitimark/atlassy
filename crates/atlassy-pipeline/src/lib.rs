@@ -197,6 +197,9 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             scope_selectors: request.scope_selectors.clone(),
             scope_resolution_failed: false,
             full_page_fetch: false,
+            full_page_adf_bytes: 0,
+            scoped_adf_bytes: 0,
+            context_reduction_ratio: 0.0,
             pipeline_version: request.provenance.pipeline_version.clone(),
             git_commit_sha: request.provenance.git_commit_sha.clone(),
             git_dirty: request.provenance.git_dirty,
@@ -205,6 +208,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             total_tokens: 0,
             retry_count: 0,
             retry_tokens: 0,
+            patch_ops_bytes: 0,
             verify_result: String::new(),
             verify_error_codes: Vec::new(),
             publish_result: String::new(),
@@ -215,6 +219,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             publish_end_ts: String::new(),
             latency_ms: 0,
             locked_node_mutation: false,
+            out_of_scope_mutation: false,
             telemetry_complete: false,
             applied_paths: Vec::new(),
             blocked_paths: Vec::new(),
@@ -245,6 +250,10 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .error_codes
             .iter()
             .any(|code| code == ERR_LOCKED_NODE_MUTATION);
+        run_summary.out_of_scope_mutation = run_summary
+            .error_codes
+            .iter()
+            .any(|code| code == ERR_OUT_OF_SCOPE_MUTATION);
         run_summary.telemetry_complete = validate_run_summary_telemetry(&run_summary).is_ok();
 
         self.artifact_store
@@ -325,6 +334,16 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             }
         }
 
+        summary.full_page_adf_bytes = fetch.payload.full_page_adf_bytes;
+        summary.scoped_adf_bytes = serde_json::to_vec(&fetch.payload.scoped_adf)
+            .map(|value| value.len() as u64)
+            .unwrap_or(0);
+        summary.context_reduction_ratio = if summary.full_page_adf_bytes > 0 {
+            1.0 - (summary.scoped_adf_bytes as f64 / summary.full_page_adf_bytes as f64)
+        } else {
+            0.0
+        };
+
         let classify = self
             .run_classify_state(request, tracker, &fetch)
             .map_err(|error| self.hard_fail(summary, PipelineState::Classify, error))?;
@@ -383,6 +402,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
 
         summary.scope_resolution_failed = fetch.payload.scope_resolution_failed;
         summary.full_page_fetch = fetch.payload.full_page_fetch;
+        summary.patch_ops_bytes = patch.payload.patch_ops_bytes;
         summary.verify_result = match verify.payload.verify_result {
             VerifyResult::Pass => "pass".to_string(),
             VerifyResult::Fail => "fail".to_string(),
@@ -488,6 +508,10 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .fetch_page(&request.page_id)
             .map_err(|error| confluence_error_to_hard_error(PipelineState::Fetch, error))?;
 
+        let full_page_adf_bytes = serde_json::to_vec(&page.adf)
+            .map(|value| value.len() as u64)
+            .unwrap_or(0);
+
         let scope = resolve_scope(&page.adf, &request.scope_selectors)
             .map_err(|error| to_hard_error(PipelineState::Fetch, error))?;
 
@@ -501,6 +525,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 scope_resolution_failed: scope.scope_resolution_failed,
                 full_page_fetch: scope.full_page_fetch,
                 fallback_reason: scope.fallback_reason,
+                full_page_adf_bytes,
             },
         };
 
@@ -1012,12 +1037,16 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 value: op.value,
             })
             .collect::<Vec<_>>();
+        let patch_ops_bytes = serde_json::to_vec(&patch_ops)
+            .map(|value| value.len() as u64)
+            .unwrap_or(0);
 
         let output = StateEnvelope {
             meta: meta(request, PipelineState::Patch),
             payload: PatchOutput {
                 patch_ops,
                 candidate_page_adf,
+                patch_ops_bytes,
             },
         };
 

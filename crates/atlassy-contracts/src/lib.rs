@@ -165,6 +165,7 @@ pub struct FetchOutput {
     pub scope_resolution_failed: bool,
     pub full_page_fetch: bool,
     pub fallback_reason: Option<String>,
+    pub full_page_adf_bytes: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -302,6 +303,7 @@ pub struct PatchInput {
 pub struct PatchOutput {
     pub patch_ops: Vec<PatchOp>,
     pub candidate_page_adf: serde_json::Value,
+    pub patch_ops_bytes: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -358,6 +360,9 @@ pub struct RunSummary {
     pub scope_selectors: Vec<String>,
     pub scope_resolution_failed: bool,
     pub full_page_fetch: bool,
+    pub full_page_adf_bytes: u64,
+    pub scoped_adf_bytes: u64,
+    pub context_reduction_ratio: f64,
     pub pipeline_version: String,
     pub git_commit_sha: String,
     pub git_dirty: bool,
@@ -366,6 +371,7 @@ pub struct RunSummary {
     pub total_tokens: u64,
     pub retry_count: u32,
     pub retry_tokens: u64,
+    pub patch_ops_bytes: u64,
     pub verify_result: String,
     pub verify_error_codes: Vec<String>,
     pub publish_result: String,
@@ -376,6 +382,7 @@ pub struct RunSummary {
     pub publish_end_ts: String,
     pub latency_ms: u64,
     pub locked_node_mutation: bool,
+    pub out_of_scope_mutation: bool,
     pub telemetry_complete: bool,
     pub applied_paths: Vec<String>,
     pub blocked_paths: Vec<String>,
@@ -599,6 +606,11 @@ pub fn validate_run_summary_telemetry(summary: &RunSummary) -> Result<(), Contra
     if !matches!(summary.runtime_mode.as_str(), RUNTIME_STUB | RUNTIME_LIVE) {
         return Err(ContractError::TelemetryIncomplete(
             "runtime_mode".to_string(),
+        ));
+    }
+    if !summary.context_reduction_ratio.is_finite() {
+        return Err(ContractError::TelemetryIncomplete(
+            "context_reduction_ratio".to_string(),
         ));
     }
     if summary.state_token_usage.is_empty() {
@@ -904,6 +916,9 @@ mod tests {
             scope_selectors: vec!["heading:Overview".to_string()],
             scope_resolution_failed: false,
             full_page_fetch: false,
+            full_page_adf_bytes: 2048,
+            scoped_adf_bytes: 512,
+            context_reduction_ratio: 0.75,
             pipeline_version: PIPELINE_VERSION.to_string(),
             git_commit_sha: "0123456789abcdef0123456789abcdef01234567".to_string(),
             git_dirty: false,
@@ -916,6 +931,7 @@ mod tests {
             total_tokens: 0,
             retry_count: 0,
             retry_tokens: 0,
+            patch_ops_bytes: 128,
             verify_result: "pass".to_string(),
             verify_error_codes: Vec::new(),
             publish_result: "published".to_string(),
@@ -926,6 +942,7 @@ mod tests {
             publish_end_ts: "2026-03-06T10:00:02Z".to_string(),
             latency_ms: 200,
             locked_node_mutation: false,
+            out_of_scope_mutation: false,
             telemetry_complete: true,
             applied_paths: Vec::new(),
             blocked_paths: Vec::new(),
