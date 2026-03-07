@@ -105,6 +105,15 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 
 ## Phase 4: PoC Execution and Metrics Validation
 
+### Blocking Prerequisites
+
+Before paired KPI experiments can produce valid results, the following must be resolved:
+
+- **Section extraction fix**: `resolve_scope()` must return the heading section (heading + subsequent sibling content until the next heading), not just the heading node. Without this, all optimized runs fail at `patch` with `ERR_SCHEMA_INVALID`. Location: `crates/atlassy-adf/src/lib.rs`, `find_heading_paths()` and `resolve_scope()`.
+- **Section extraction unit tests**: heading with trailing content, heading at end of array, adjacent headings (empty section), nested content under heading, multi-selector merge.
+- **Scoped pipeline integration test**: at least one integration test with non-empty `scope_selectors` verifying `scope_resolution_failed: false`, `context_reduction_ratio > 0`, and downstream states (`patch`, `verify`, `publish`) succeed.
+- **`seed-page` CLI command**: publish arbitrary ADF JSON to an existing page, bypassing the pipeline safety envelope. Required for reproducible experiment page setup without manual Confluence UI editing or `curl`. Design: explicit opt-in command, page must already exist, full-body ADF replacement, validate ADF syntax before publish, require `--runtime-backend live`.
+
 ### Scope
 
 - Execute dataset and Pattern A/B/C scenarios from `08-poc-scope.md`.
@@ -135,6 +144,9 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 - Stabilize error handling, observability, and operator guidance.
 - Address PoC gaps with non-breaking v1 refinements.
 - Implement lifecycle release-enablement features from `12-page-lifecycle-expansion-plan.md`.
+- Resolve heading selector matching policy (D-015): change to exact match by default.
+- Fix `rule` node route classification drift: align spec to code (`rule` stays `locked_structural` in v1).
+- Add `block:` selector test coverage (unit tests for `find_block_paths()` matching on `attrs.id` and `attrs.localId`).
 - Complete readiness checklist and decision sign-off.
 
 ### Acceptance Criteria

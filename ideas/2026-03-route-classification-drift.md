@@ -2,7 +2,12 @@
 
 ## Status
 
-Incubating
+Promoted to roadmap (Phase 5 hardening)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/03-phased-roadmap.md` (Phase 5 scope: fix `rule` node route classification drift)
+- `roadmap/06-decisions-and-defaults.md` (Default Route Matrix: `rule` removed from `editable_prose`)
 
 ## Plain Problem Points
 
@@ -19,7 +24,7 @@ Either:
 
 The correct choice depends on whether horizontal rules should be editable in v1. They are simple structural elements with no complex attributes, so option 1 (making them editable) is likely the intended behavior.
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - Impact is very low. Horizontal rules are rarely edit targets in typical Confluence workflows.
 - No KPI experiment or test scenario currently targets `rule` nodes.
@@ -36,10 +41,13 @@ The correct choice depends on whether horizontal rules should be editable in v1.
 - Content classification issues surface during KPI experiments.
 - A user or test scenario explicitly targets `rule` nodes.
 
-## Promotion Path
+## Promotion Outcome
 
-- Fix as a one-line code change when next touching `route_for_node()` or the default route matrix.
-- No OpenSpec change needed; can be included as a minor fix in any pipeline change.
+This idea has been promoted into v1 Phase 5 hardening scope.
+
+- Resolution: align spec to code. `rule` removed from `editable_prose` in the Default Route Matrix; stays `locked_structural` via the catch-all arm in `route_for_node()`.
+- Rationale: horizontal rules are rarely edit targets, and keeping them locked is the safer default. Revisit post-PoC if editing use cases emerge.
+- No code change needed — spec updated to match existing code behavior.
 
 ## Code References
 

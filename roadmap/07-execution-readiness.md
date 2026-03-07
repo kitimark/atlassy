@@ -77,6 +77,9 @@ Define the minimum operational, quality, and governance conditions required to r
 - Stub simulation scenarios cover all required v1 hard-error paths.
 - Live smoke checks are defined for behavior drift detection.
 - Lifecycle matrix tests are defined and reproducible (blank subpage create, bootstrap required fail, bootstrap success, bootstrap-on-non-empty hard fail).
+- Scope resolution unit tests cover `heading:` section extraction (heading with trailing content, heading at end of array, adjacent headings, nested content, multi-selector merge).
+- At least one pipeline integration test uses non-empty `scope_selectors` and verifies `scope_resolution_failed: false`, `context_reduction_ratio > 0`, and downstream states succeed.
+- `block:` selector has unit test coverage for `attrs.id` and `attrs.localId` matching.
 
 ### Gate 5: Metrics and Reporting
 

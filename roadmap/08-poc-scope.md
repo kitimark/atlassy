@@ -19,12 +19,14 @@ Validate that ADF-canonical routing with prose Markdown assist and ADF table-cel
 ## In Scope
 
 - Scoped ADF retrieval by heading or block ID.
+- Scope resolution section extraction: heading selectors return the heading plus subsequent sibling content until the next heading or end of parent array (blocking prerequisite for KPI experiments).
 - Route classification into `editable_prose`, `table_adf`, `locked_structural`.
 - Markdown assist round-trip for prose nodes only.
 - ADF-native table cell text patching.
 - Path-targeted patch generation and strict verifier gates.
 - Command-first sub-page creation for lifecycle E2E testing (`create-subpage`) with blank-page default.
 - Explicit empty-page first-edit bootstrap via `--bootstrap-empty-page` with deterministic hard-fail preconditions.
+- Programmatic page content seeding via `seed-page` command for reproducible experiment page setup.
 
 ## Out of Scope
 

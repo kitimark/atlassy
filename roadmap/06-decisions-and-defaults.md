@@ -92,11 +92,27 @@
 - Optimized rule: benchmark optimized runs must include explicit heading/block selectors.
 - Rationale: legacy metrics overemphasized internal pipeline payload accounting and underrepresented the real-world AI editing problem (context pressure, scoped reliability, and structure safety).
 
+### D-015: Heading selector matching policy
+
+- Decision: `heading:` scope selectors use exact text matching by default.
+- Prior behavior: `find_heading_paths()` used substring matching (`text.contains(heading_text)`), which caused `heading:View` to match a heading titled "Overview".
+- Rationale: enterprise content commonly has headings with shared prefixes (e.g., "Introduction", "Introduction to Setup"). Exact matching prevents silent incorrect scoping.
+- Constraint: substring matching was not triggered during KPI revalidation (heading names were chosen to avoid overlaps), but remains a latent risk for uncontrolled content.
+- Discovery: `ideas/2026-03-scope-resolution-quality.md`, `qa/investigations/2026-03-08-kpi-revalidation.md`.
+
+### D-016: Page content seeding policy
+
+- Decision: v1 includes a `seed-page` command for publishing arbitrary ADF JSON to an existing page, bypassing the pipeline safety envelope.
+- Design: explicit opt-in command (not part of `run`), page must already exist, full-body ADF replacement, validate ADF syntax before publish, require `--runtime-backend live`.
+- Constraint: `seed-page` is a setup/QA tool, not an editing tool. No verify gates, no route classification, no scope enforcement.
+- Rationale: KPI experiment page setup requires structural variety (tables, expand macros, locked blocks). Manual Confluence UI editing does not scale and is non-reproducible. The underlying `publish_page()` capability exists but was unexposed.
+- Discovery: `ideas/2026-03-raw-adf-page-seeding.md`.
+
 ## Default Route Matrix
 
-- `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock, rule.
+- `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock.
 - `table_adf`: table node family, cell text edits only.
-- `locked_structural`: all other nodes by default.
+- `locked_structural`: rule, and all other nodes by default.
 
 ## Change Control
 

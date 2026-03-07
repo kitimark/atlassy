@@ -27,9 +27,6 @@ Use this structure for each idea:
 - `2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`
 - `2026-03-mcp-server-integration.md`
 - `2026-03-poc-test-dataset-design.md` (signals met, execution in progress)
-- `2026-03-scope-resolution-quality.md`
-- `2026-03-raw-adf-page-seeding.md`
-- `2026-03-route-classification-drift.md`
 
 ## Promoted Baseline Inputs
 
@@ -37,6 +34,9 @@ Use this structure for each idea:
 - `2026-03-confluence-subpage-creation-support.md`
 - `2026-03-empty-page-bootstrap-editing.md`
 - `2026-03-token-reduction-confluence-updates.md`
+- `2026-03-scope-resolution-quality.md` (Phase 4 blocking + Phase 5 hardening)
+- `2026-03-raw-adf-page-seeding.md` (Phase 4 experiment tooling)
+- `2026-03-route-classification-drift.md` (Phase 5 hardening)
 
 ## Evidence Notes
 

@@ -171,6 +171,15 @@ If any condition fails:
 - Live evidence: `qa/evidence/2026-03-08-kpi-revalidation/` (KPI revalidation batch, blocking defect documented).
 - Prior evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation).
 
+## Blocking Prerequisites for Re-Run
+
+The following must be resolved before the KPI batch can be re-run with valid paired results:
+
+- **Section extraction fix** (P0): `resolve_scope()` must return the heading section, not just the heading node. All 9 optimized runs in the 2026-03-08 batch failed because the scoped ADF contained only the heading (~88 bytes), making `target_path` references to subsequent paragraphs invalid. See `ideas/2026-03-scope-resolution-quality.md` (promoted).
+- **Section extraction unit tests** (P0): regression safety net for the fix. Required cases: heading with trailing content, heading at end of array, adjacent headings (empty section), nested content, multi-selector merge.
+- **`seed-page` CLI command** (P1): pages are at version 6 after baseline publishes. Re-seeding requires either manual Confluence UI editing or `curl` — both non-reproducible. The `seed-page` command enables automated, reproducible page setup. See `ideas/2026-03-raw-adf-page-seeding.md` (promoted).
+- **Scoped pipeline integration test** (P1): at least one integration test with non-empty `scope_selectors` to prevent regression of the scoped pipeline path.
+
 ## Exit and Decision Update Workflow
 
 - Publish experiment report with attached artifact index.

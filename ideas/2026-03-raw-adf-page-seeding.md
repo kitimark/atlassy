@@ -2,7 +2,14 @@
 
 ## Status
 
-Incubating
+Promoted to roadmap (Phase 4 experiment tooling)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/03-phased-roadmap.md` (Phase 4 Blocking Prerequisites: `seed-page` CLI command)
+- `roadmap/04-kpi-and-experiments.md` (Blocking Prerequisites for Re-Run)
+- `roadmap/06-decisions-and-defaults.md` (D-016: page content seeding policy)
+- `roadmap/08-poc-scope.md` (In Scope: programmatic page content seeding)
 
 ## Plain Problem Points
 
@@ -33,7 +40,7 @@ Design constraints:
 
 Alternative: parameterize `bootstrap_scaffold()` to accept a file path or richer content specification. This is more constrained but keeps the pipeline safety model intact.
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - v1 focus is on validating the scoped editing pipeline, not on page authoring.
 - Manual Confluence UI editing or curl workaround is sufficient for small-scale QA setup (3-5 pages).
@@ -51,7 +58,11 @@ Alternative: parameterize `bootstrap_scaffold()` to accept a file path or richer
 - CI/CD automation needs programmatic page setup for test fixtures.
 - MCP server integration (`ideas/2026-03-mcp-server-integration.md`) needs a page seeding capability for agent workflows.
 
-## Promotion Path
+## Promotion Outcome
 
-- Promote to a roadmap item or OpenSpec change when page setup automation is blocking experiment velocity.
-- Consider adding to the MCP server tool surface alongside the safe editing tools.
+This idea has been promoted into v1 Phase 4 experiment tooling scope.
+
+- `seed-page` is a command-first setup capability, not an editing tool.
+- Bypasses pipeline safety envelope by design (no verify, no route classification, no scope enforcement).
+- Policy recorded as D-016 in `roadmap/06-decisions-and-defaults.md`.
+- Promotion triggered by: pages reaching version 6 after baseline publishes, making manual re-seeding a recurring bottleneck that blocks KPI batch re-runs.

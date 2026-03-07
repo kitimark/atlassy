@@ -2,7 +2,15 @@
 
 ## Status
 
-Incubating — elevated to blocking defect after KPI revalidation (2026-03-08).
+Promoted to roadmap (Phase 4 blocking + Phase 5 hardening)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/03-phased-roadmap.md` (Phase 4 Blocking Prerequisites, Phase 5 hardening)
+- `roadmap/04-kpi-and-experiments.md` (Blocking Prerequisites for Re-Run)
+- `roadmap/06-decisions-and-defaults.md` (D-015: heading selector matching policy)
+- `roadmap/07-execution-readiness.md` (Gate 4: scope resolution test coverage)
+- `roadmap/08-poc-scope.md` (In Scope: section extraction)
 
 ## Blocking Defect: Section Extraction
 
@@ -32,7 +40,7 @@ Incubating — elevated to blocking defect after KPI revalidation (2026-03-08).
 - Add at least one pipeline integration test that uses non-empty `scope_selectors` and verifies `scope_resolution_failed: false` and `context_reduction_ratio > 0`.
 - Update test fixtures (`batch_complete_manifest.json` and integration test helpers) to include runs with populated `scope_selectors`.
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - Section extraction is blocking and should be promoted to a code change immediately.
 - Substring matching was not triggered during the KPI revalidation (heading names were chosen to avoid overlaps). It may be acceptable for v1 if heading names are chosen carefully.
@@ -49,10 +57,14 @@ Incubating — elevated to blocking defect after KPI revalidation (2026-03-08).
 - Enterprise content testing surfaces substring collision issues.
 - Any code change touches `resolve_scope` or `find_heading_paths`.
 
-## Promotion Path
+## Promotion Outcome
 
-- Section extraction defect: **promote immediately** to a code change. This blocks KPI revalidation.
-- Substring matching and test coverage: promote after section extraction fix is landed and KPI revalidation re-run is complete.
+This idea has been promoted into v1 scope across two phases:
+
+- **Phase 4 (blocking)**: section extraction fix in `resolve_scope()`, section extraction unit tests, scoped pipeline integration test.
+- **Phase 5 (hardening)**: heading selector exact match policy (D-015), `block:` selector test coverage.
+- Heading match decision recorded as D-015 in `roadmap/06-decisions-and-defaults.md`: exact match by default.
+- Route matrix updated: `rule` removed from `editable_prose`, aligned to code behavior.
 
 ## Code References
 
