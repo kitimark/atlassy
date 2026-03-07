@@ -76,6 +76,7 @@ atlassy_prompt_secret \
   "${ATLASSY_CONFLUENCE_API_TOKEN:-}"
 
 atlassy_prompt PAGE_ID 'PAGE_ID (optional)' "${PAGE_ID:-}"
+atlassy_prompt SPACE_KEY 'SPACE_KEY (optional, for create-subpage)' "${SPACE_KEY:-}"
 atlassy_prompt ARTIFACTS_DIR 'ARTIFACTS_DIR' "${ARTIFACTS_DIR:-.}"
 
 if [ -z "${ATLASSY_CONFLUENCE_BASE_URL}" ]; then
@@ -106,6 +107,10 @@ if [ -n "${PAGE_ID}" ]; then
   export PAGE_ID
 fi
 
+if [ -n "${SPACE_KEY}" ]; then
+  export SPACE_KEY
+fi
+
 printf '\nConfigured environment variables:\n'
 printf '  ATLASSY_CONFLUENCE_BASE_URL=%s\n' "${ATLASSY_CONFLUENCE_BASE_URL}"
 printf '  ATLASSY_CONFLUENCE_EMAIL=%s\n' "${ATLASSY_CONFLUENCE_EMAIL}"
@@ -113,6 +118,9 @@ printf '  ATLASSY_CONFLUENCE_API_TOKEN=<hidden, length %s>\n' "${#ATLASSY_CONFLU
 printf '  ARTIFACTS_DIR=%s\n' "${ARTIFACTS_DIR}"
 if [ -n "${PAGE_ID}" ]; then
   printf '  PAGE_ID=%s\n' "${PAGE_ID}"
+fi
+if [ -n "${SPACE_KEY}" ]; then
+  printf '  SPACE_KEY=%s\n' "${SPACE_KEY}"
 fi
 
 printf '\nReady. Example preflight command:\n'
