@@ -7,6 +7,19 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 - `qa/confluence-sandbox-test-plan.md`: detailed, step-by-step Confluence sandbox testing flow.
 - `qa/manifests/live-sandbox-smoke.example.json`: example batch manifest for live smoke validation.
 - `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables.
+- `qa/investigations/`: timestamped investigation reports with evidence and provenance.
+
+## Investigations
+
+- Naming convention: `YYYY-MM-DD-<topic>.md`.
+- Latest: `qa/investigations/2026-03-07-live-confluence-failure.md`.
+- Include provenance (`git_commit_sha`, `git_dirty`, runtime mode) and artifact paths for every major claim.
+
+## Evidence
+
+- Commit handoff-ready evidence bundles under `qa/evidence/YYYY-MM-DD-<topic>/`.
+- Latest bundle: `qa/evidence/2026-03-07-live-confluence-failure/`.
+- Keep root `artifacts/` as local scratch; use committed `qa/evidence/` paths in investigation docs.
 
 ## Safety Defaults
 

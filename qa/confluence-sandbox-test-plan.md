@@ -10,6 +10,10 @@ Run Atlassy end-to-end against real Confluence sandbox pages with explicit safet
 - Uses v1-safe operations only (scoped prose and table cell text updates).
 - Focuses on sandbox validation, not production release sign-off.
 
+Latest investigation:
+
+- `qa/investigations/2026-03-07-live-confluence-failure.md`
+
 ## Preconditions
 
 - You have a dedicated sandbox Confluence page ID.

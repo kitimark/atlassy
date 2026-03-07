@@ -1,0 +1,27 @@
+{
+  "request_id": "live-qa-prose-20260307T0850Z",
+  "page_id": "131207",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "markdown": "Sandbox prose update 2026-03-07T08:45:41Z"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": ""
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/0/content/0/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/0/content/0/content/0/text",
+        "markdown": "Sandbox prose update 2026-03-07T08:45:41Z"
+      }
+    ]
+  }
+}

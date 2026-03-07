@@ -1,0 +1,16 @@
+{
+  "request_id": "live-qa-prose-20260307T0850Z",
+  "page_id": "131207",
+  "state": "publish",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 2,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

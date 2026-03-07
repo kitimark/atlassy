@@ -1,0 +1,14 @@
+{
+  "request_id": "live-qa-prose-20260307T0850Z",
+  "page_id": "131207",
+  "state": "verify",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "verify_result": "pass",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

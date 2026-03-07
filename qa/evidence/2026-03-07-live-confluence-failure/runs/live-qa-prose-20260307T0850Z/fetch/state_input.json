@@ -1,0 +1,11 @@
+{
+  "request_id": "live-qa-prose-20260307T0850Z",
+  "page_id": "131207",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "131207",
+    "edit_intent": "sandbox scoped prose update",
+    "scope_selectors": []
+  }
+}
