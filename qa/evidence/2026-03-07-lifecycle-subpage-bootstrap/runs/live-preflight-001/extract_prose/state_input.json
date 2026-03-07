@@ -1,0 +1,68 @@
+{
+  "request_id": "live-preflight-001",
+  "page_id": "131207",
+  "state": "extract_prose",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "node_manifest": [
+      {
+        "path": "/",
+        "node_type": "doc",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/0",
+        "node_type": "panel",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/1",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      }
+    ],
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "localId": "64448220f4ee",
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "attrs": {
+                "localId": "138985edbd1a"
+              },
+              "content": [
+                {
+                  "text": "Sandbox clean update 2026-03-07T09:52:35Z",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "localId": "ec49fcd30569"
+          },
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    }
+  }
+}

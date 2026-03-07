@@ -1,0 +1,42 @@
+{
+  "success": false,
+  "run_id": "live-bootstrap-required-001",
+  "request_id": "live-bootstrap-required-001",
+  "page_id": "98309",
+  "flow": "optimized",
+  "pattern": "A",
+  "edit_intent_hash": "h7567226edc7c653f",
+  "scope_selectors": [],
+  "scope_resolution_failed": false,
+  "full_page_fetch": false,
+  "pipeline_version": "v1",
+  "git_commit_sha": "1d24e2df5099a8827b83b36a519e172bbabffd4c",
+  "git_dirty": false,
+  "runtime_mode": "live",
+  "state_token_usage": {
+    "fetch": 98
+  },
+  "total_tokens": 98,
+  "retry_count": 0,
+  "retry_tokens": 0,
+  "verify_result": "",
+  "verify_error_codes": [],
+  "publish_result": "",
+  "publish_error_code": null,
+  "new_version": null,
+  "start_ts": "2026-03-06T10:00:00Z",
+  "verify_end_ts": "2026-03-06T10:00:00Z+367ms",
+  "publish_end_ts": "2026-03-06T10:00:00Z+367ms",
+  "latency_ms": 367,
+  "locked_node_mutation": false,
+  "telemetry_complete": false,
+  "applied_paths": [],
+  "blocked_paths": [],
+  "error_codes": [
+    "ERR_BOOTSTRAP_REQUIRED"
+  ],
+  "token_metrics": {},
+  "failure_state": "fetch",
+  "empty_page_detected": true,
+  "bootstrap_applied": false
+}

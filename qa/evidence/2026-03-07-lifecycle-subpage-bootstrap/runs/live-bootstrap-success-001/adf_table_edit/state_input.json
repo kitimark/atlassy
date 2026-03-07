@@ -1,0 +1,17 @@
+{
+  "request_id": "live-bootstrap-success-001",
+  "page_id": "98309",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/",
+      "/content/0",
+      "/content/0/content/0",
+      "/content/1",
+      "/content/1/content/0"
+    ],
+    "edit_intent": "bootstrap scaffold injection"
+  }
+}

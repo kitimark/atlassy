@@ -1,0 +1,10 @@
+{
+  "request_id": "live-preflight-001",
+  "page_id": "131207",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "prose_changed_paths": [],
+    "table_changed_paths": []
+  }
+}

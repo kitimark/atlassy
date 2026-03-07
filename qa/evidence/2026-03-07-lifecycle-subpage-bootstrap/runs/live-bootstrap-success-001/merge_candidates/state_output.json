@@ -1,0 +1,9 @@
+{
+  "request_id": "live-bootstrap-success-001",
+  "page_id": "98309",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "changed_paths": []
+  }
+}

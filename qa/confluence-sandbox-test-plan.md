@@ -12,7 +12,7 @@ Run Atlassy end-to-end against real Confluence sandbox pages with explicit safet
 
 Latest investigation:
 
-- `qa/investigations/2026-03-07-live-confluence-clean-validation.md`
+- `qa/investigations/2026-03-07-lifecycle-subpage-bootstrap-validation.md`
 
 ## Preconditions
 

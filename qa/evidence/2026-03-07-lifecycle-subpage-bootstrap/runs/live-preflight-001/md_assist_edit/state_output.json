@@ -1,0 +1,20 @@
+{
+  "request_id": "live-preflight-001",
+  "page_id": "131207",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "markdown": "Sandbox clean update 2026-03-07T09:52:35Z"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": ""
+      }
+    ],
+    "prose_changed_paths": [],
+    "prose_change_candidates": []
+  }
+}

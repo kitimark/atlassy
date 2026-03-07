@@ -1,0 +1,16 @@
+{
+  "request_id": "live-prose-001",
+  "page_id": "131207",
+  "state": "publish",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 5,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}
