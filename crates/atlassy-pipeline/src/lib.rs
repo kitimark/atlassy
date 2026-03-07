@@ -3,23 +3,24 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use atlassy_adf::{
-    AdfError, PatchCandidate, apply_patch_ops, build_patch_ops, canonicalize_mapped_path,
-    ensure_paths_in_scope, is_path_within_or_descendant, is_table_cell_text_path,
-    is_table_shape_or_attr_path, markdown_for_path, normalize_changed_paths,
-    path_has_ancestor_type, resolve_scope,
+    AdfError, PatchCandidate, apply_patch_ops, bootstrap_scaffold, build_node_path_index,
+    build_patch_ops, canonicalize_mapped_path, ensure_paths_in_scope, is_page_effectively_empty,
+    is_path_within_or_descendant, is_table_cell_text_path, is_table_shape_or_attr_path,
+    markdown_for_path, normalize_changed_paths, path_has_ancestor_type, resolve_scope,
 };
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
     AdfTableEditInput, AdfTableEditOutput, ClassifyInput, ClassifyOutput, ContractError,
-    Diagnostics, ERR_CONFLICT_RETRY_EXHAUSTED, ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION,
-    ERR_ROUTE_VIOLATION, ERR_RUNTIME_BACKEND, ERR_RUNTIME_UNMAPPED_HARD, ERR_SCHEMA_INVALID,
-    ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo, ExtractProseInput, ExtractProseOutput,
-    FetchInput, FetchOutput, MarkdownBlock, MarkdownMapEntry, MdAssistEditInput,
-    MdAssistEditOutput, MergeCandidatesInput, MergeCandidatesOutput, PatchInput, PatchOp,
-    PatchOutput, PipelineState, ProseChangeCandidate, ProvenanceStamp, PublishInput, PublishOutput,
-    PublishResult, RunSummary, StateEnvelope, TableChangeCandidate, TableOperation, VerifyInput,
-    VerifyOutput, VerifyResult, validate_markdown_mapping, validate_prose_changed_paths,
-    validate_run_summary_telemetry, validate_table_candidates,
+    Diagnostics, ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_CONFLICT_RETRY_EXHAUSTED,
+    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_ROUTE_VIOLATION, ERR_RUNTIME_BACKEND,
+    ERR_RUNTIME_UNMAPPED_HARD, ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo,
+    ExtractProseInput, ExtractProseOutput, FetchInput, FetchOutput, MarkdownBlock,
+    MarkdownMapEntry, MdAssistEditInput, MdAssistEditOutput, MergeCandidatesInput,
+    MergeCandidatesOutput, PatchInput, PatchOp, PatchOutput, PipelineState, ProseChangeCandidate,
+    ProvenanceStamp, PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope,
+    TableChangeCandidate, TableOperation, VerifyInput, VerifyOutput, VerifyResult,
+    validate_markdown_mapping, validate_prose_changed_paths, validate_run_summary_telemetry,
+    validate_table_candidates,
 };
 use thiserror::Error;
 
@@ -64,6 +65,7 @@ pub struct RunRequest {
     pub provenance: ProvenanceStamp,
     pub run_mode: RunMode,
     pub force_verify_fail: bool,
+    pub bootstrap_empty_page: bool,
 }
 
 #[derive(Debug, Error)]
@@ -219,6 +221,8 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             error_codes: Vec::new(),
             token_metrics: BTreeMap::new(),
             failure_state: None,
+            empty_page_detected: false,
+            bootstrap_applied: false,
         };
 
         let result = self.run_internal(&request, &mut tracker, &mut run_summary, &run_started);
@@ -259,13 +263,67 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         summary: &mut RunSummary,
         run_started: &std::time::Instant,
     ) -> Result<(), PipelineError> {
-        let fetch = self
+        let mut fetch = self
             .run_fetch_state(request, tracker)
             .map_err(|error| self.hard_fail(summary, PipelineState::Fetch, error))?;
         summary.state_token_usage.insert(
             PipelineState::Fetch.as_str().to_string(),
             estimate_tokens(&fetch)?,
         );
+
+        // Bootstrap empty-page detection: evaluate the four-path behavior matrix
+        // between fetch and classify, without adding a new pipeline state.
+        let page_empty = is_page_effectively_empty(&fetch.payload.scoped_adf);
+        summary.empty_page_detected = page_empty;
+
+        match (page_empty, request.bootstrap_empty_page) {
+            (true, false) => {
+                return Err(self.hard_fail(
+                    summary,
+                    PipelineState::Fetch,
+                    PipelineError::Hard {
+                        state: PipelineState::Fetch,
+                        code: ERR_BOOTSTRAP_REQUIRED.to_string(),
+                        message:
+                            "page is effectively empty; use --bootstrap-empty-page to bootstrap"
+                                .to_string(),
+                    },
+                ));
+            }
+            (false, true) => {
+                return Err(self.hard_fail(
+                    summary,
+                    PipelineState::Fetch,
+                    PipelineError::Hard {
+                        state: PipelineState::Fetch,
+                        code: ERR_BOOTSTRAP_INVALID_STATE.to_string(),
+                        message: "page is not empty; --bootstrap-empty-page is not valid for non-empty pages".to_string(),
+                    },
+                ));
+            }
+            (true, true) => {
+                // Inject minimal prose scaffold and rebuild index
+                let scaffold = bootstrap_scaffold();
+                let node_path_index = build_node_path_index(&scaffold).map_err(|error| {
+                    self.hard_fail(
+                        summary,
+                        PipelineState::Fetch,
+                        to_hard_error(PipelineState::Fetch, error),
+                    )
+                })?;
+                let allowed_scope_paths: Vec<String> = node_path_index.keys().cloned().collect();
+                fetch.payload.scoped_adf = scaffold;
+                fetch.payload.node_path_index = node_path_index;
+                fetch.payload.allowed_scope_paths = allowed_scope_paths;
+                fetch.payload.full_page_fetch = true;
+                fetch.payload.scope_resolution_failed = true;
+                fetch.payload.fallback_reason = Some("bootstrap_scaffold".to_string());
+                summary.bootstrap_applied = true;
+            }
+            (false, false) => {
+                // Normal v1 flow — unchanged
+            }
+        }
 
         let classify = self
             .run_classify_state(request, tracker, &fetch)

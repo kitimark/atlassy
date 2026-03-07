@@ -58,7 +58,10 @@ fn live_runtime_startup_config_failure_is_deterministic() {
         .arg("--force-verify-fail")
         .arg("--artifacts-dir")
         .arg(temp.path())
-        .env("ATLASSY_CONFLUENCE_BASE_URL", "https://example.atlassian.net")
+        .env(
+            "ATLASSY_CONFLUENCE_BASE_URL",
+            "https://example.atlassian.net",
+        )
         .env("ATLASSY_CONFLUENCE_EMAIL", "qa@example.com")
         .env_remove("ATLASSY_CONFLUENCE_API_TOKEN")
         .output()
@@ -68,7 +71,10 @@ fn live_runtime_startup_config_failure_is_deterministic() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("pipeline failed:"), "stderr: {stderr}");
     assert!(stderr.contains("ERR_RUNTIME_BACKEND"), "stderr: {stderr}");
-    assert!(stderr.contains("live runtime startup failure"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("live runtime startup failure"),
+        "stderr: {stderr}"
+    );
     assert!(
         stderr.contains("missing ATLASSY_CONFLUENCE_API_TOKEN"),
         "stderr: {stderr}"

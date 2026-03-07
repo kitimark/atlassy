@@ -15,6 +15,8 @@ pub const ERR_TABLE_SHAPE_CHANGE: &str = "ERR_TABLE_SHAPE_CHANGE";
 pub const ERR_CONFLICT_RETRY_EXHAUSTED: &str = "ERR_CONFLICT_RETRY_EXHAUSTED";
 pub const ERR_RUNTIME_BACKEND: &str = "ERR_RUNTIME_BACKEND";
 pub const ERR_RUNTIME_UNMAPPED_HARD: &str = "ERR_RUNTIME_UNMAPPED_HARD";
+pub const ERR_BOOTSTRAP_REQUIRED: &str = "ERR_BOOTSTRAP_REQUIRED";
+pub const ERR_BOOTSTRAP_INVALID_STATE: &str = "ERR_BOOTSTRAP_INVALID_STATE";
 
 pub const FLOW_BASELINE: &str = "baseline";
 pub const FLOW_OPTIMIZED: &str = "optimized";
@@ -380,6 +382,8 @@ pub struct RunSummary {
     pub error_codes: Vec<String>,
     pub token_metrics: BTreeMap<String, u64>,
     pub failure_state: Option<PipelineState>,
+    pub empty_page_detected: bool,
+    pub bootstrap_applied: bool,
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -928,6 +932,8 @@ mod tests {
             error_codes: Vec::new(),
             token_metrics: BTreeMap::new(),
             failure_state: None,
+            empty_page_detected: false,
+            bootstrap_applied: false,
         };
 
         assert!(validate_run_summary_telemetry(&summary).is_ok());

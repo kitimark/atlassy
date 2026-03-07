@@ -4,12 +4,15 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-use atlassy_confluence::{ConfluenceError, LiveConfluenceClient, StubConfluenceClient, StubPage};
+use atlassy_confluence::{
+    ConfluenceClient, ConfluenceError, LiveConfluenceClient, StubConfluenceClient, StubPage,
+};
 use atlassy_contracts::{
-    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_RUNTIME_BACKEND,
-    ERR_RUNTIME_UNMAPPED_HARD, ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A,
-    PATTERN_B, PATTERN_C, PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_LIVE,
-    RUNTIME_STUB, RunSummary, validate_provenance_stamp, validate_run_summary_telemetry,
+    ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_LOCKED_NODE_MUTATION,
+    ERR_OUT_OF_SCOPE_MUTATION, ERR_RUNTIME_BACKEND, ERR_RUNTIME_UNMAPPED_HARD,
+    ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A, PATTERN_B, PATTERN_C,
+    PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
+    validate_provenance_stamp, validate_run_summary_telemetry,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest};
 use clap::{Parser, ValueEnum};
@@ -50,6 +53,8 @@ enum Commands {
         new_value: Option<String>,
         #[arg(long)]
         force_verify_fail: bool,
+        #[arg(long)]
+        bootstrap_empty_page: bool,
         #[arg(long, value_enum, default_value_t = RuntimeBackend::Stub)]
         runtime_backend: RuntimeBackend,
     },
@@ -66,6 +71,16 @@ enum Commands {
         artifacts_dir: PathBuf,
         #[arg(long)]
         verify_replay: bool,
+    },
+    CreateSubpage {
+        #[arg(long)]
+        parent_page_id: String,
+        #[arg(long)]
+        space_key: String,
+        #[arg(long)]
+        title: String,
+        #[arg(long, value_enum, default_value_t = RuntimeBackend::Stub)]
+        runtime_backend: RuntimeBackend,
     },
 }
 
@@ -109,6 +124,8 @@ struct BatchManifestMetadata {
     live_smoke: DriftStatusInput,
     #[serde(default = "default_runtime_mode")]
     runtime_mode: String,
+    #[serde(default)]
+    lifecycle_create_subpage_validated: bool,
 }
 
 impl Default for BatchManifestMetadata {
@@ -118,6 +135,7 @@ impl Default for BatchManifestMetadata {
             observed_scenario_ids: Vec::new(),
             live_smoke: DriftStatusInput::default(),
             runtime_mode: default_runtime_mode(),
+            lifecycle_create_subpage_validated: false,
         }
     }
 }
@@ -165,6 +183,9 @@ struct ManifestRunEntry {
     simulate_conflict_once: bool,
     #[serde(default)]
     simulate_conflict_exhausted: bool,
+    bootstrap_empty_page: Option<bool>,
+    #[serde(default)]
+    simulate_empty_page: bool,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -459,6 +480,7 @@ fn main() -> Result<(), DynError> {
             target_path,
             new_value,
             force_verify_fail,
+            bootstrap_empty_page,
             runtime_backend,
         } => {
             let provenance = collect_provenance(runtime_backend.as_str())?;
@@ -507,6 +529,7 @@ fn main() -> Result<(), DynError> {
                 provenance,
                 run_mode,
                 force_verify_fail,
+                bootstrap_empty_page,
             };
 
             run_single_request(request, artifacts_dir, runtime_backend)?;
@@ -537,6 +560,46 @@ fn main() -> Result<(), DynError> {
                 println!("readiness replay verification passed");
             }
             ensure_readiness_unblocked(&readiness.decision_packet)?;
+        }
+        Commands::CreateSubpage {
+            parent_page_id,
+            space_key,
+            title,
+            runtime_backend,
+        } => {
+            let result = match runtime_backend {
+                RuntimeBackend::Stub => {
+                    let mut pages = HashMap::new();
+                    pages.insert(
+                        parent_page_id.clone(),
+                        StubPage {
+                            version: 1,
+                            adf: serde_json::json!({"type": "doc", "version": 1, "content": []}),
+                        },
+                    );
+                    let mut client = StubConfluenceClient::new(pages);
+                    client
+                        .create_page(&title, &parent_page_id, &space_key)
+                        .map_err(|error| format!("{error}"))
+                }
+                RuntimeBackend::Live => {
+                    let mut client = LiveConfluenceClient::from_env()
+                        .map_err(|error| format!("live runtime startup failure: {error}"))?;
+                    client
+                        .create_page(&title, &parent_page_id, &space_key)
+                        .map_err(|error| format!("{error}"))
+                }
+            };
+
+            match result {
+                Ok(response) => {
+                    println!("{}", serde_json::to_string_pretty(&response)?);
+                }
+                Err(error) => {
+                    eprintln!("create-subpage failed: {error}");
+                    std::process::exit(1);
+                }
+            }
         }
     }
 
@@ -677,16 +740,22 @@ fn execute_manifest_runs(
             provenance: provenance.clone(),
             run_mode: run_mode_from_manifest(run),
             force_verify_fail: run.force_verify_fail,
+            bootstrap_empty_page: run.bootstrap_empty_page.unwrap_or(false),
         };
 
         match runtime_backend {
             RuntimeBackend::Stub => {
+                let page_adf = if run.simulate_empty_page {
+                    empty_page()
+                } else {
+                    demo_page()
+                };
                 let mut pages = HashMap::new();
                 pages.insert(
                     run.page_id.clone(),
                     StubPage {
                         version: 1,
-                        adf: demo_page(),
+                        adf: page_adf,
                     },
                 );
                 let client = if run.simulate_conflict_exhausted {
@@ -894,7 +963,14 @@ fn validate_readiness_evidence(
     }
 
     for (run_id, summary) in summaries {
-        validate_run_summary_telemetry(summary)?;
+        // Early-failure runs (e.g., bootstrap failures at fetch) may not have
+        // complete verify/publish telemetry — skip strict validation for those.
+        let early_failure = summary.failure_state.is_some()
+            && summary.failure_state != Some(PipelineState::Verify)
+            && summary.failure_state != Some(PipelineState::Publish);
+        if !early_failure {
+            validate_run_summary_telemetry(summary)?;
+        }
         if !provenance_matches(summary, &report.provenance) {
             return Err(format!(
                 "missing readiness evidence: summary provenance mismatch for run {}",
@@ -919,6 +995,31 @@ fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist 
     let gate_4_pass = evidence.report.scenario_coverage.complete;
     let gate_5_pass = evidence.report.telemetry_complete && evidence.report.kpi.is_some();
     let gate_6_pass = !evidence.report.drift.unresolved_material_drift;
+
+    // Gate 7: lifecycle enablement validation
+    // Checks batch summaries for lifecycle evidence: bootstrap-required failure,
+    // bootstrap success, bootstrap-on-non-empty failure, and create-subpage marker.
+    let has_bootstrap_required_failure = evidence.summaries.values().any(|s| {
+        s.empty_page_detected
+            && !s.success
+            && s.error_codes.iter().any(|c| c == ERR_BOOTSTRAP_REQUIRED)
+    });
+    let has_bootstrap_success = evidence
+        .summaries
+        .values()
+        .any(|s| s.bootstrap_applied && s.success);
+    let has_bootstrap_invalid_state = evidence.summaries.values().any(|s| {
+        !s.empty_page_detected
+            && !s.success
+            && s.error_codes
+                .iter()
+                .any(|c| c == ERR_BOOTSTRAP_INVALID_STATE)
+    });
+    let has_create_subpage_evidence = evidence.manifest.batch.lifecycle_create_subpage_validated;
+    let gate_7_pass = has_bootstrap_required_failure
+        && has_bootstrap_success
+        && has_bootstrap_invalid_state
+        && has_create_subpage_evidence;
 
     let gates = vec![
         readiness_gate_result(
@@ -1000,6 +1101,22 @@ fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist 
                 None
             } else {
                 Some("live-vs-stub material drift remains unresolved".to_string())
+            },
+        ),
+        readiness_gate_result(
+            "gate_7_lifecycle_enablement_validation",
+            "Lifecycle Enablement Validation",
+            "lifecycle matrix evidence covers bootstrap and create-subpage paths",
+            gate_7_pass,
+            "qa_owner",
+            vec![
+                "artifacts/batch/manifest.normalized.json".to_string(),
+                "artifacts/batch/report.json".to_string(),
+            ],
+            if gate_7_pass {
+                None
+            } else {
+                Some("lifecycle evidence is incomplete: requires bootstrap-required failure, bootstrap success, bootstrap-on-non-empty failure, and create-subpage validation".to_string())
             },
         ),
     ];
@@ -1613,13 +1730,22 @@ fn rebuild_batch_report_from_artifacts(
         .filter(|diag| diag.status == "failed")
         .count();
     let telemetry_complete = manifest.runs.iter().all(|run| {
-        summaries
-            .get(&run.run_id)
-            .is_some_and(summary_telemetry_complete)
+        summaries.get(&run.run_id).is_some_and(|summary| {
+            // Runs that failed before reaching verify/publish (e.g., bootstrap
+            // failures at fetch) are exempt from telemetry completeness checks.
+            let early_failure = summary.failure_state.is_some()
+                && summary.failure_state != Some(PipelineState::Verify)
+                && summary.failure_state != Some(PipelineState::Publish);
+            early_failure || summary_telemetry_complete(summary)
+        })
     });
     let provenance_complete = manifest.runs.iter().all(|run| {
         summaries.get(&run.run_id).is_some_and(|summary| {
-            summary_telemetry_complete(summary) && provenance_matches(summary, provenance)
+            let early_failure = summary.failure_state.is_some()
+                && summary.failure_state != Some(PipelineState::Verify)
+                && summary.failure_state != Some(PipelineState::Publish);
+            early_failure
+                || (summary_telemetry_complete(summary) && provenance_matches(summary, provenance))
         })
     });
     let retry_policy_ok = manifest.runs.iter().all(|run| {
@@ -2020,7 +2146,10 @@ fn collect_flow_groups(
         }
     }
 
-    grouped.into_values().collect()
+    grouped
+        .into_values()
+        .filter(|group| !group.baseline.is_empty() || !group.optimized.is_empty())
+        .collect()
 }
 
 fn build_kpi_report(flow_groups: &[FlowGroup]) -> KpiReport {
@@ -2636,6 +2765,19 @@ fn demo_page() -> serde_json::Value {
     })
 }
 
+fn empty_page() -> serde_json::Value {
+    serde_json::json!({
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": []
+        }
+      ]
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2677,7 +2819,7 @@ mod tests {
         )
         .expect("batch run should succeed");
 
-        assert_eq!(report.total_runs, 6);
+        assert_eq!(report.total_runs, 10);
         assert!(report.kpi.is_some());
         assert_eq!(
             report
@@ -2957,6 +3099,7 @@ mod tests {
                 "gate_4_test_and_fixture_coverage",
                 "gate_5_metrics_and_reporting",
                 "gate_6_risk_control_activation",
+                "gate_7_lifecycle_enablement_validation",
             ]
         );
         assert!(readiness.checklist.gates.iter().all(|gate| gate.mandatory));
@@ -3145,6 +3288,58 @@ mod tests {
             err.to_string().contains("readiness replay mismatch"),
             "unexpected error: {err}"
         );
+    }
+
+    #[test]
+    fn gate_7_lifecycle_evidence_controls_pass_and_iterate_recommendation() {
+        // Batch WITHOUT lifecycle evidence should fail Gate 7
+        let no_lifecycle_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_coverage_failure_manifest.json"),
+            no_lifecycle_temp.path(),
+        )
+        .expect("batch run should complete");
+        let no_lifecycle = generate_readiness_outputs_from_artifacts(no_lifecycle_temp.path())
+            .expect("readiness outputs should be generated");
+        let gate_7 = no_lifecycle
+            .checklist
+            .gates
+            .iter()
+            .find(|gate| gate.gate_id == "gate_7_lifecycle_enablement_validation")
+            .expect("gate 7 should be present");
+        assert!(
+            !gate_7.pass,
+            "gate 7 should fail without lifecycle evidence"
+        );
+        assert!(gate_7.mandatory);
+        assert_eq!(gate_7.owner_role, "qa_owner");
+        assert!(
+            gate_7
+                .blocking_reason
+                .as_ref()
+                .is_some_and(|reason| reason.contains("lifecycle evidence is incomplete"))
+        );
+        assert!(no_lifecycle.checklist.blocked);
+        // The recommendation should be "iterate" (coverage gate fails first)
+        assert_eq!(no_lifecycle.decision_packet.recommendation, "iterate");
+
+        // Batch WITH lifecycle evidence should pass Gate 7
+        let with_lifecycle_temp = tempfile::tempdir().expect("tempdir should be created");
+        execute_batch_from_manifest_file(
+            &fixture_path("batch_complete_manifest.json"),
+            with_lifecycle_temp.path(),
+        )
+        .expect("batch run should complete");
+        let with_lifecycle = generate_readiness_outputs_from_artifacts(with_lifecycle_temp.path())
+            .expect("readiness outputs should be generated");
+        let gate_7 = with_lifecycle
+            .checklist
+            .gates
+            .iter()
+            .find(|gate| gate.gate_id == "gate_7_lifecycle_enablement_validation")
+            .expect("gate 7 should be present");
+        assert!(gate_7.pass, "gate 7 should pass with lifecycle evidence");
+        assert!(gate_7.blocking_reason.is_none());
     }
 
     #[test]

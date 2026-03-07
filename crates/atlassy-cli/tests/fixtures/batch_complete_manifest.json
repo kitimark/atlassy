@@ -28,7 +28,8 @@
       "scoped_fetch_parity": true,
       "publish_conflict_parity": true,
       "error_payload_parity": true
-    }
+    },
+    "lifecycle_create_subpage_validated": true
   },
   "runs": [
     {
@@ -101,6 +102,60 @@
       "scenario_ids": ["S-009"],
       "scope_selectors": [],
       "timestamp": "2026-03-07T10:05:00Z",
+      "mode": "no_op"
+    },
+    {
+      "run_id": "run-lifecycle-bootstrap-required",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Lifecycle expected failures",
+      "edit_intent_hash": "hash-lifecycle-1",
+      "scenario_ids": [],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:06:00Z",
+      "mode": "no_op",
+      "simulate_empty_page": true,
+      "bootstrap_empty_page": false
+    },
+    {
+      "run_id": "run-lifecycle-bootstrap-invalid-state",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Lifecycle expected failures",
+      "edit_intent_hash": "hash-lifecycle-1",
+      "scenario_ids": [],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:07:00Z",
+      "mode": "no_op",
+      "simulate_empty_page": false,
+      "bootstrap_empty_page": true
+    },
+    {
+      "run_id": "run-lifecycle-bootstrap-success",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Lifecycle bootstrap success",
+      "edit_intent_hash": "hash-lifecycle-2",
+      "scenario_ids": [],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:08:00Z",
+      "mode": "no_op",
+      "simulate_empty_page": true,
+      "bootstrap_empty_page": true
+    },
+    {
+      "run_id": "run-lifecycle-bootstrap-normal",
+      "page_id": "18841604",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Lifecycle bootstrap success",
+      "edit_intent_hash": "hash-lifecycle-2",
+      "scenario_ids": [],
+      "scope_selectors": [],
+      "timestamp": "2026-03-07T10:09:00Z",
       "mode": "no_op"
     }
   ]

@@ -7,8 +7,9 @@ use atlassy_confluence::{
     StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    ContractError, ERR_RUNTIME_BACKEND, ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A,
-    PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
+    ContractError, ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_RUNTIME_BACKEND,
+    ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, PipelineState,
+    ProvenanceStamp, RUNTIME_STUB, TableOperation,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
@@ -42,6 +43,7 @@ fn sample_request(run_id: &str) -> RunRequest {
         },
         run_mode: RunMode::NoOp,
         force_verify_fail: false,
+        bootstrap_empty_page: false,
     }
 }
 
@@ -96,6 +98,15 @@ impl ConfluenceClient for PublishTransportErrorClient {
     ) -> Result<PublishPageResponse, ConfluenceError> {
         self.publish_attempts += 1;
         Err(ConfluenceError::Transport(self.message.clone()))
+    }
+
+    fn create_page(
+        &mut self,
+        _title: &str,
+        _parent_page_id: &str,
+        _space_key: &str,
+    ) -> Result<atlassy_confluence::CreatePageResponse, ConfluenceError> {
+        Err(ConfluenceError::NotImplemented)
     }
 
     fn publish_attempts(&self) -> usize {
@@ -607,5 +618,117 @@ fn table_state_artifacts_include_candidates_and_allowed_ops() {
     assert_eq!(
         table_output["payload"]["allowed_ops"],
         serde_json::json!(["cell_text_update"])
+    );
+}
+
+// --- Bootstrap empty-page detection integration tests ---
+
+fn make_orchestrator_with_empty_page(artifact_root: &Path) -> Orchestrator<StubConfluenceClient> {
+    let mut pages = HashMap::new();
+    pages.insert(
+        "18841604".to_string(),
+        StubPage {
+            version: 1,
+            adf: load_fixture("empty_page_adf.json"),
+        },
+    );
+    Orchestrator::new(StubConfluenceClient::new(pages), artifact_root)
+}
+
+#[test]
+fn bootstrap_empty_page_without_flag_fails_with_err_bootstrap_required() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_empty_page(temp.path());
+
+    let mut request = sample_request("run-bootstrap-no-flag");
+    request.scope_selectors = vec![];
+    request.bootstrap_empty_page = false;
+    request.run_mode = RunMode::NoOp;
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("empty page without bootstrap flag should fail");
+    assert_hard_error(error, PipelineState::Fetch, ERR_BOOTSTRAP_REQUIRED);
+
+    // Verify summary records empty_page_detected = true
+    let run_dir = temp.path().join("artifacts").join("run-bootstrap-no-flag");
+    let summary: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(run_dir.join("summary.json")).expect("summary should exist"),
+    )
+    .expect("summary should deserialize");
+    assert_eq!(summary["empty_page_detected"], serde_json::json!(true));
+    assert_eq!(summary["bootstrap_applied"], serde_json::json!(false));
+}
+
+#[test]
+fn bootstrap_empty_page_with_flag_succeeds() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_empty_page(temp.path());
+
+    let mut request = sample_request("run-bootstrap-with-flag");
+    request.scope_selectors = vec![];
+    request.bootstrap_empty_page = true;
+    request.run_mode = RunMode::NoOp;
+
+    let summary = orchestrator
+        .run(request)
+        .expect("empty page with bootstrap flag should succeed");
+    assert!(summary.success);
+    assert!(summary.empty_page_detected);
+    assert!(summary.bootstrap_applied);
+    assert!(summary.full_page_fetch);
+    assert!(summary.scope_resolution_failed);
+}
+
+#[test]
+fn bootstrap_non_empty_page_with_flag_fails_with_err_bootstrap_invalid_state() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-bootstrap-non-empty");
+    request.scope_selectors = vec![];
+    request.bootstrap_empty_page = true;
+    request.run_mode = RunMode::NoOp;
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("non-empty page with bootstrap flag should fail");
+    assert_hard_error(error, PipelineState::Fetch, ERR_BOOTSTRAP_INVALID_STATE);
+
+    // Verify summary records empty_page_detected = false
+    let run_dir = temp
+        .path()
+        .join("artifacts")
+        .join("run-bootstrap-non-empty");
+    let summary: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(run_dir.join("summary.json")).expect("summary should exist"),
+    )
+    .expect("summary should deserialize");
+    assert_eq!(summary["empty_page_detected"], serde_json::json!(false));
+    assert_eq!(summary["bootstrap_applied"], serde_json::json!(false));
+}
+
+#[test]
+fn bootstrap_non_empty_page_without_flag_proceeds_normally() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-bootstrap-normal");
+    request.scope_selectors = vec![];
+    request.bootstrap_empty_page = false;
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: "/content/1/content/0/text".to_string(),
+        markdown: "Updated prose body".to_string(),
+    };
+
+    let summary = orchestrator
+        .run(request)
+        .expect("non-empty page without bootstrap flag should succeed normally");
+    assert!(summary.success);
+    assert!(!summary.empty_page_detected);
+    assert!(!summary.bootstrap_applied);
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/1/content/0/text".to_string()]
     );
 }

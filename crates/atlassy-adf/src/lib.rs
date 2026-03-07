@@ -253,6 +253,62 @@ pub fn is_table_shape_or_attr_path(path: &str, node_path_index: &BTreeMap<String
     !path.ends_with("/text")
 }
 
+pub fn is_page_effectively_empty(adf: &Value) -> bool {
+    let content = match adf.get("content") {
+        Some(Value::Array(arr)) => arr,
+        _ => return true,
+    };
+
+    if content.is_empty() {
+        return true;
+    }
+
+    content.iter().all(|node| {
+        let node_type = node.get("type").and_then(Value::as_str).unwrap_or_default();
+
+        if node_type != "paragraph" {
+            return false;
+        }
+
+        match node.get("content") {
+            None => true,
+            Some(Value::Array(children)) if children.is_empty() => true,
+            Some(Value::Array(children)) => children.iter().all(|child| {
+                let child_type = child
+                    .get("type")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default();
+                if child_type != "text" {
+                    return false;
+                }
+                match child.get("text").and_then(Value::as_str) {
+                    None => true,
+                    Some(text) => text.is_empty(),
+                }
+            }),
+            _ => false,
+        }
+    })
+}
+
+pub fn bootstrap_scaffold() -> Value {
+    serde_json::json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            {
+                "type": "heading",
+                "attrs": {"level": 2},
+                "content": [{"type": "text", "text": ""}]
+            },
+            {
+                "type": "paragraph",
+                "content": [{"type": "text", "text": ""}]
+            }
+        ]
+    })
+}
+
 fn full_page_resolution(adf: &Value, reason: Option<String>) -> Result<ScopeResolution, AdfError> {
     let node_path_index = build_node_path_index(adf)?;
     Ok(ScopeResolution {
@@ -531,5 +587,105 @@ mod tests {
                 .and_then(Value::as_str),
             Some("after")
         );
+    }
+
+    #[test]
+    fn empty_content_array_is_effectively_empty() {
+        let adf = serde_json::json!({"type": "doc", "version": 1, "content": []});
+        assert!(is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn missing_content_is_effectively_empty() {
+        let adf = serde_json::json!({"type": "doc", "version": 1});
+        assert!(is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn single_empty_paragraph_is_effectively_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "paragraph"}]
+        });
+        assert!(is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn paragraph_with_empty_text_is_effectively_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "paragraph", "content": [{"type": "text", "text": ""}]}]
+        });
+        assert!(is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn paragraph_with_local_id_but_no_text_is_effectively_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{
+                "type": "paragraph",
+                "attrs": {"localId": "abc123"},
+                "content": []
+            }]
+        });
+        assert!(is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn paragraph_with_non_empty_text_is_not_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}]
+        });
+        assert!(!is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn heading_with_text_is_not_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "heading", "content": [{"type": "text", "text": "Title"}]}]
+        });
+        assert!(!is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn table_node_is_not_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "table", "content": []}]
+        });
+        assert!(!is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn panel_node_is_not_empty() {
+        let adf = serde_json::json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "panel", "content": []}]
+        });
+        assert!(!is_page_effectively_empty(&adf));
+    }
+
+    #[test]
+    fn bootstrap_scaffold_contains_only_prose_nodes() {
+        let scaffold = bootstrap_scaffold();
+        let content = scaffold["content"].as_array().unwrap();
+        assert_eq!(content.len(), 2);
+
+        assert_eq!(content[0]["type"], "heading");
+        assert_eq!(content[0]["attrs"]["level"], 2);
+
+        assert_eq!(content[1]["type"], "paragraph");
+
+        // All nodes are editable_prose route types
+        for node in content {
+            let node_type = node["type"].as_str().unwrap();
+            assert!(
+                matches!(node_type, "heading" | "paragraph"),
+                "unexpected node type in scaffold: {node_type}"
+            );
+        }
     }
 }
