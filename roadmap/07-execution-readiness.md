@@ -6,7 +6,7 @@ Define the minimum operational, quality, and governance conditions required to r
 
 ## Scope
 
-- Applies to v1 single-page scoped update flow only.
+- Applies to v1 single-page scoped update flow plus lifecycle release-enablement checks.
 - Uses KPI and experiment protocol from `04-kpi-and-experiments.md`.
 - Uses risk controls from `05-risks-and-mitigations.md`.
 - Uses pipeline and contract rules from `02-solution-architecture.md` and `09-ai-contract-spec.md`.
@@ -49,7 +49,7 @@ Define the minimum operational, quality, and governance conditions required to r
 
 - v1 route matrix is frozen (`editable_prose`, `table_adf`, `locked_structural`).
 - State contracts and error taxonomy are versioned and shared.
-- Deferred capabilities are explicitly out of scope.
+- Deferred capabilities are explicitly out of scope, except approved lifecycle release-enablement defaults.
 
 ### Gate 2: Environment and Access
 
@@ -59,6 +59,7 @@ Define the minimum operational, quality, and governance conditions required to r
 - Clock synchronization and timestamps are reliable for latency metrics.
 - Rust toolchain (`rustc`, `cargo`) is installed and pinned for the repository runtime.
 - Dedicated sandbox write access is available for controlled live research probes.
+- Sandbox permissions include child-page creation under designated parent pages.
 
 ### Gate 3: Pipeline Integrity
 
@@ -75,6 +76,7 @@ Define the minimum operational, quality, and governance conditions required to r
 - Replay artifacts can reproduce at least one failure in each major error class.
 - Stub simulation scenarios cover all required v1 hard-error paths.
 - Live smoke checks are defined for behavior drift detection.
+- Lifecycle matrix tests are defined and reproducible (blank subpage create, bootstrap required fail, bootstrap success, bootstrap-on-non-empty hard fail).
 
 ### Gate 5: Metrics and Reporting
 
@@ -101,6 +103,14 @@ Define the minimum operational, quality, and governance conditions required to r
 - Triage runbook exists for verify fail and conflict retry exhaustion.
 - Escalation owners are assigned for blocked publish events.
 
+### Gate 7: Lifecycle Enablement Validation
+
+- `create-subpage` produces truly blank child pages with deterministic metadata.
+- Empty-page first edit without `--bootstrap-empty-page` hard-fails deterministically.
+- Empty-page first edit with `--bootstrap-empty-page` succeeds without route-policy regression.
+- Bootstrap on non-empty page hard-fails deterministically.
+- Lifecycle evidence bundle is committed with clean provenance for decision review.
+
 ## Pre-Run Checklist
 
 - Confirm dataset page list and pattern matrix for the batch.
@@ -108,20 +118,22 @@ Define the minimum operational, quality, and governance conditions required to r
 - Confirm logging schema validation is active.
 - Confirm retry policy is configured to one scoped retry.
 - Confirm rollback and failure artifact retention settings.
+- Confirm sandbox parent-page IDs and lifecycle test pages are prepared for create/bootstrap checks.
 
 ## Batch Runbook
 
-1. Start batch with run manifest (`run_id`, page, pattern, flow, intent hash).
-2. Execute paired baseline/optimized runs with alternating order.
-3. Validate run record completeness immediately after each run.
-4. Triage hard failures by error code before continuing large batches.
-5. Publish batch summary and artifact index at batch close.
+1. Execute lifecycle matrix checks and record expected outcomes before paired KPI runs.
+2. Start batch with run manifest (`run_id`, page, pattern, flow, intent hash).
+3. Execute paired baseline/optimized runs with alternating order.
+4. Validate run record completeness immediately after each run.
+5. Triage hard failures by error code before continuing large batches.
+6. Publish batch summary and artifact index at batch close.
 
 ## Go/No-Go Decision Criteria
 
 Decision uses KPI and safety gates together:
 
-- `go`: all PoC pass rules in `04-kpi-and-experiments.md` pass, with no unresolved safety violations.
+- `go`: all PoC pass rules in `04-kpi-and-experiments.md` pass, lifecycle matrix checks pass, and no unresolved safety violations.
 - `iterate`: safety gates hold, but one or more KPI targets miss and can be corrected without changing v1 scope.
 - `stop`: safety gates fail or target recovery requires expanding scope beyond v1 defaults.
 
@@ -130,6 +142,7 @@ Decision uses KPI and safety gates together:
 - Latest aggregate KPI report.
 - Provenance stamp for evidence build (`git_commit_sha`, `git_dirty`, `pipeline_version`).
 - Risk register delta from `05-risks-and-mitigations.md`.
+- Lifecycle validation evidence and matrix outcome summary.
 - Top failure classes with root-cause summaries.
 - Recommendation memo with explicit `go | iterate | stop`.
 

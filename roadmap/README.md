@@ -24,6 +24,7 @@ This folder contains design and delivery planning for Atlassy.
 - `09-ai-contract-spec.md`
 - `10-testing-strategy-and-simulation.md`
 - `11-live-runtime-execution-plan.md`
+- `12-page-lifecycle-expansion-plan.md`
 
 ## Working Rules
 

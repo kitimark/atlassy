@@ -2,7 +2,16 @@
 
 ## Status
 
-Incubating (deferred from v1)
+Promoted to roadmap (v1 release enablement)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/03-phased-roadmap.md`
+- `roadmap/06-decisions-and-defaults.md`
+- `roadmap/07-execution-readiness.md`
+- `roadmap/08-poc-scope.md`
+- `roadmap/11-live-runtime-execution-plan.md`
+- `roadmap/12-page-lifecycle-expansion-plan.md`
 
 ## Plain Problem Points
 
@@ -19,7 +28,7 @@ Introduce a command-first page lifecycle capability:
 - Return created page metadata (minimum: new page ID) for immediate follow-up edit runs.
 - Keep `run` behavior unchanged in phase 1 (no implicit page creation inside edit execution).
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - Current stabilization work focused on deterministic live runtime behavior and publish reliability.
 - Page creation introduces new permission, hierarchy, and duplicate-title failure modes.
@@ -38,11 +47,11 @@ Introduce a command-first page lifecycle capability:
 - Frequent requests for end-to-end "create then edit" automation.
 - Stable live runtime behavior across multiple clean validation cycles.
 
-## Promotion Path
+## Promotion Outcome
 
-Move this idea to `roadmap/` when all conditions are true:
+This idea has been promoted into v1 release-enablement scope.
 
-- `create-subpage` contract is defined for stub and live clients with deterministic error mapping.
-- Duplicate-title handling policy is explicit and covered by tests.
-- Provenance and audit outputs capture parent page ID, created page ID, and request context.
-- QA runbook includes safe usage and cleanup guidance for created pages.
+- `create-subpage` is a command-first capability in v1 planning.
+- New sub-pages must be created truly blank by default.
+- Standard edit runs must not create pages implicitly.
+- Release readiness requires lifecycle matrix evidence and deterministic failure handling.

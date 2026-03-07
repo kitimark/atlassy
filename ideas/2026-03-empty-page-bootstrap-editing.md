@@ -2,7 +2,16 @@
 
 ## Status
 
-Incubating (deferred from v1)
+Promoted to roadmap (v1 release enablement)
+
+## Roadmap Linkage (current source of truth)
+
+- `roadmap/03-phased-roadmap.md`
+- `roadmap/06-decisions-and-defaults.md`
+- `roadmap/07-execution-readiness.md`
+- `roadmap/08-poc-scope.md`
+- `roadmap/11-live-runtime-execution-plan.md`
+- `roadmap/12-page-lifecycle-expansion-plan.md`
 
 ## Plain Problem Points
 
@@ -23,7 +32,7 @@ Add explicit first-edit bootstrap support for empty pages:
 - Keep bootstrap minimal and constrained to safe prose initialization only.
 - Emit explicit telemetry/provenance markers when bootstrap is evaluated or applied.
 
-## Why Not Now
+## Historical Why Not Now (pre-promotion)
 
 - Existing v1 flow prioritizes strict route safety and deterministic taxonomy before adding lifecycle exceptions.
 - Bootstrap logic needs careful boundaries to avoid structural drift.
@@ -42,11 +51,11 @@ Add explicit first-edit bootstrap support for empty pages:
 - Repeated operator requests for zero-touch first-write experiences.
 - Increased usage of automated sub-page creation with blank defaults.
 
-## Promotion Path
+## Promotion Outcome
 
-Move this idea to `roadmap/` when all conditions are true:
+This idea has been promoted into v1 release-enablement scope.
 
-- Bootstrap preconditions and deterministic error codes are specified and validated.
-- Regression tests cover all four bootstrap matrix cases.
-- Existing route and safety invariants remain non-regressive.
-- QA evidence demonstrates stable first-edit outcomes on blank pages.
+- First edit on empty pages requires explicit `--bootstrap-empty-page`.
+- Bootstrap on non-empty pages must hard-fail deterministically.
+- Non-empty pages without bootstrap flag retain unchanged behavior.
+- Release readiness requires full lifecycle matrix evidence before `go` sign-off.

@@ -10,6 +10,7 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
 - Route policy and safety gates follow `06-decisions-and-defaults.md`.
 - KPI pass/fail logic follows `04-kpi-and-experiments.md`.
 - Deferred capabilities remain out of scope unless formally promoted.
+- Lifecycle release-enablement capabilities in `12-page-lifecycle-expansion-plan.md` are in scope for v1 release gating.
 
 ## Risk Rating Model
 
@@ -156,11 +157,49 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
   - Report primary view with all runs.
   - Add secondary incident-filtered view, never hiding verifier failures.
 
+### R-009 Sub-page creation misplacement or duplication
+
+- Description: lifecycle page creation produces wrong parent placement or duplicate-title ambiguity.
+- Likelihood: M.
+- Impact: M.
+- Priority: medium.
+- Preventive controls:
+  - Require explicit parent page ID for `create-subpage`.
+  - Enforce deterministic duplicate-title handling policy.
+  - Emit provenance fields for parent and created page IDs.
+- Detection signals:
+  - Repeated create failures for duplicate-title or permission classes.
+  - Unexpected page placement discovered in sandbox audits.
+- Response:
+  - Stop automated lifecycle run, correct parent/title policy, and rerun.
+  - Add regression coverage for parent/duplicate failure paths.
+
+### R-010 Empty-page bootstrap precondition drift
+
+- Description: empty/non-empty detection or bootstrap precondition handling becomes non-deterministic.
+- Likelihood: M.
+- Impact: H.
+- Priority: high.
+- Preventive controls:
+  - Enforce explicit bootstrap behavior matrix with hard-fail preconditions.
+  - Add regression tests for all four lifecycle matrix outcomes.
+  - Persist bootstrap telemetry markers for each run.
+- Detection signals:
+  - Missing expected bootstrap failures on non-empty pages.
+  - Unexpected route-policy or schema violations after bootstrap.
+- Response:
+  - Pause lifecycle release gating and triage bootstrap state classification.
+  - Restore deterministic hard-fail behavior before readiness continuation.
+
 ## Deferred-Scope Risk Notes
 
 - Advanced table operations are deferred to `ideas/2026-03-advanced-table-editing-modes.md`.
 - Structural block editing is deferred to `ideas/2026-03-structural-block-editing-support.md`.
 - Multi-page orchestration is deferred to `ideas/2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`.
+
+Lifecycle release-enablement reference (in v1 scope):
+
+- `roadmap/12-page-lifecycle-expansion-plan.md`
 
 Any pull-in of these scopes requires a decision-log update and new verifier rules before implementation.
 

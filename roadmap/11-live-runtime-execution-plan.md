@@ -23,10 +23,11 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 3. Live Confluence runtime implementation and runtime backend selection (`stub|live`).
 4. Telemetry quality improvements for KPI validity.
 5. End-to-end gated rerun of validation sequence.
+6. Lifecycle release-enablement support for blank subpage creation and explicit empty-page bootstrap.
 
 ### Out of Scope
 
-- New editing capabilities beyond current v1 scope.
+- New editing capabilities beyond current v1 scope and approved lifecycle enablement track.
 - Multi-page orchestration.
 - Long-term analytics platform work.
 
@@ -99,7 +100,25 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 - KPI report fields are not static/placeholder unless expected by scenario.
 - Telemetry completeness checks continue to pass.
 
-### WP5: Gated Validation Rerun
+### WP5: Lifecycle Release-Enablement Validation
+
+**Goal**
+
+- Validate lifecycle behaviors required for v1 release testing.
+
+**Required Outcomes**
+
+- `create-subpage` creates truly blank child pages in live sandbox.
+- Empty-page first edit without `--bootstrap-empty-page` fails deterministically.
+- Empty-page first edit with `--bootstrap-empty-page` succeeds.
+- Bootstrap on non-empty page fails deterministically.
+
+**Done Criteria**
+
+- Lifecycle matrix outcomes are captured in committed evidence.
+- No implicit create/bootstrap side effects are observed.
+
+### WP6: Gated Validation Rerun
 
 **Goal**
 
@@ -107,16 +126,21 @@ Move Atlassy from stub-validated execution to real Confluence pilot readiness wh
 
 **Execution Sequence**
 
-1. Smoke run (no-op)
-2. Scoped prose update run
-3. Scoped table-cell update run
-4. Negative safety run (expected failure)
-5. Batch run
-6. Readiness run with replay verification
+1. Create blank sub-page in sandbox
+2. First edit on empty page without bootstrap flag (expected deterministic fail)
+3. First edit on empty page with bootstrap flag (expected success)
+4. Edit on non-empty page with bootstrap flag (expected deterministic fail)
+5. Smoke run (no-op)
+6. Scoped prose update run
+7. Scoped table-cell update run
+8. Negative safety run (expected failure)
+9. Batch run
+10. Readiness run with replay verification
 
 **Done Criteria**
 
 - Safety-negative run blocks publish with deterministic error code.
+- Lifecycle matrix checks pass with expected outcomes.
 - Replay verification passes.
 - Decision output is evidence-backed and provenance-stamped.
 
@@ -129,6 +153,8 @@ Stop execution and triage if any occur:
 - Missing provenance in decision-grade outputs.
 - Replay mismatch for rebuilt decision outputs.
 - Unmapped hard errors in live publish path.
+- Bootstrap succeeds on non-empty page.
+- Any implicit page creation during standard edit runs.
 
 ## Exit Criteria (Pilot-Ready)
 
@@ -137,5 +163,6 @@ This plan is complete when all conditions hold:
 1. Provenance is present in run, batch, and readiness outputs.
 2. Patch stage candidate payload reflects patch operations.
 3. Live sandbox fetch/publish works in `live` mode.
-4. Gated validation sequence completes with deterministic evidence.
-5. Final recommendation is documented with explicit blocking reasons (if non-go).
+4. Lifecycle matrix checks pass with deterministic evidence.
+5. Gated validation sequence completes with deterministic evidence.
+6. Final recommendation is documented with explicit blocking reasons (if non-go).

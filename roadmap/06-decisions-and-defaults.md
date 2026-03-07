@@ -66,6 +66,23 @@
 - Required metadata: `git_commit_sha` (full 40-character SHA), `git_dirty`, and `pipeline_version`.
 - Rationale: regenerated outputs can change across implementation revisions; provenance is required for defensible comparisons.
 
+### D-012: Sub-page creation policy
+
+- Decision: v1 includes command-first page creation via `create-subpage`.
+- Default behavior: create a truly blank child page under an explicit parent page ID.
+- Constraint: standard `run` flow must not create pages implicitly.
+- Rationale: enables repeatable end-to-end release testing while keeping side effects explicit.
+
+### D-013: Empty-page bootstrap policy
+
+- Decision: first prose edit on an empty page requires explicit `--bootstrap-empty-page`.
+- Default behavior matrix:
+  - empty page + no bootstrap flag -> hard fail (`ERR_BOOTSTRAP_REQUIRED`)
+  - empty page + bootstrap flag -> bootstrap minimal prose scaffold, then apply edit
+  - non-empty page + bootstrap flag -> hard fail (`ERR_BOOTSTRAP_INVALID_STATE`)
+  - non-empty page + no bootstrap flag -> unchanged flow
+- Rationale: preserve deterministic safety behavior while enabling first-write lifecycle support.
+
 ## Default Route Matrix
 
 - `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock, rule.
@@ -76,3 +93,4 @@
 
 - Any expansion of `table_adf` beyond cell text requires a new decision entry and updated verifier rules.
 - Any expansion of Markdown conversion scope requires explicit fidelity test evidence.
+- Any relaxation of explicit lifecycle controls (implicit create or implicit bootstrap) requires a new decision entry and readiness evidence update.

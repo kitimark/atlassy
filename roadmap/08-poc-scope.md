@@ -23,6 +23,8 @@ Validate that ADF-canonical routing with prose Markdown assist and ADF table-cel
 - Markdown assist round-trip for prose nodes only.
 - ADF-native table cell text patching.
 - Path-targeted patch generation and strict verifier gates.
+- Command-first sub-page creation for lifecycle E2E testing (`create-subpage`) with blank-page default.
+- Explicit empty-page first-edit bootstrap via `--bootstrap-empty-page` with deterministic hard-fail preconditions.
 
 ## Out of Scope
 
@@ -36,6 +38,10 @@ Deferred idea tracking:
 - `ideas/2026-03-advanced-table-editing-modes.md`
 - `ideas/2026-03-structural-block-editing-support.md`
 - `ideas/2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`
+
+Lifecycle release-enablement reference:
+
+- `roadmap/12-page-lifecycle-expansion-plan.md`
 
 ## Instrumentation
 
@@ -57,4 +63,5 @@ Deferred idea tracking:
 - All in-scope edit patterns pass verifier checks.
 - No locked-node mutation is observed in PoC logs.
 - Conflict handling shows bounded retry behavior (one scoped retry max).
+- Lifecycle matrix passes (blank subpage create success, empty-first-edit bootstrap required fail, bootstrap success, bootstrap-on-non-empty hard fail).
 - Decision log is updated with measured outcomes and recommended next scope.

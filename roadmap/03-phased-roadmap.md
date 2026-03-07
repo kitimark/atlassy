@@ -130,12 +130,14 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 
 - Stabilize error handling, observability, and operator guidance.
 - Address PoC gaps with non-breaking v1 refinements.
+- Implement lifecycle release-enablement features from `12-page-lifecycle-expansion-plan.md`.
 - Complete readiness checklist and decision sign-off.
 
 ### Acceptance Criteria
 
 - Failure modes map to clear operator actions.
 - Metrics collection is reproducible and complete.
+- Lifecycle matrix passes in sandbox (`create-subpage` blank creation, empty-page bootstrap required fail, empty-page bootstrap success, bootstrap-on-non-empty hard fail).
 - Readiness checklist is signed.
 - Final recommendation is documented (`go | iterate | stop`).
 
@@ -146,6 +148,7 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 - Risk controls: `05-risks-and-mitigations.md`
 - Execution checklist: `07-execution-readiness.md`
 - Testing strategy and simulation: `10-testing-strategy-and-simulation.md`
+- Lifecycle release-enablement track: `12-page-lifecycle-expansion-plan.md`
 
 ## OpenSpec Change Map
 
