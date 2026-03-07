@@ -68,7 +68,38 @@ Versions chosen for stability, community adoption, and broad compatibility (rese
 - Workflow file exists at `.github/workflows/ci.yml`.
 - `rust-toolchain.toml` exists at repo root.
 - All existing tests pass in CI on first run.
-- PRs to `main` are gated by the test job (requires GitHub repo branch protection rules with required status checks — this is a repo settings step, not a CI file step).
+- PRs to `main` are gated by the test job.
+
+### Branch Protection Setup
+
+PR gating requires branch protection rules in GitHub repo settings. This is a post-implementation step — the CI workflow must exist and have run at least once so GitHub registers the status check name.
+
+**Sequence:**
+
+1. Push `.github/workflows/ci.yml` and `rust-toolchain.toml` to `main`.
+2. Wait for the first CI run to complete (registers the `Test` check name).
+3. Enable branch protection via `gh api`:
+
+```bash
+gh api --method PUT /repos/{owner}/{repo}/branches/main/protection \
+  --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["Test"]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+EOF
+```
+
+- `"contexts": ["Test"]` matches the job name in `ci.yml`.
+- `"strict": true` requires the branch to be up-to-date before merging.
+- `"enforce_admins": false` allows repo admins to bypass during initial setup.
+- `"required_pull_request_reviews": null` does not require PR reviews (single-contributor project).
+- Requires `gh` authenticated with `repo` scope (verified available).
 
 ## Phase 2: Build and Artifact Validation (Deferred)
 
