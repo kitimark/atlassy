@@ -335,9 +335,10 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         }
 
         summary.full_page_adf_bytes = fetch.payload.full_page_adf_bytes;
-        summary.scoped_adf_bytes = serde_json::to_vec(&fetch.payload.scoped_adf)
-            .map(|value| value.len() as u64)
-            .unwrap_or(0);
+        summary.scoped_adf_bytes = compute_section_bytes(
+            &fetch.payload.scoped_adf,
+            &fetch.payload.allowed_scope_paths,
+        );
         summary.context_reduction_ratio = if summary.full_page_adf_bytes > 0 {
             1.0 - (summary.scoped_adf_bytes as f64 / summary.full_page_adf_bytes as f64)
         } else {
@@ -1399,6 +1400,24 @@ fn estimate_tokens<T: serde::Serialize>(value: &T) -> Result<u64, PipelineError>
     Ok(tokens.max(1))
 }
 
+fn compute_section_bytes(adf: &serde_json::Value, section_paths: &[String]) -> u64 {
+    if section_paths.iter().any(|path| path == "/") {
+        return serde_json::to_vec(adf)
+            .map(|value| value.len() as u64)
+            .unwrap_or(0);
+    }
+
+    section_paths
+        .iter()
+        .filter_map(|path| adf.pointer(path))
+        .map(|node| {
+            serde_json::to_vec(node)
+                .map(|value| value.len() as u64)
+                .unwrap_or(0)
+        })
+        .sum()
+}
+
 fn add_duration_suffix(timestamp: &str, elapsed_ms: u64) -> String {
     format!("{timestamp}+{elapsed_ms}ms")
 }
@@ -1480,5 +1499,46 @@ mod tests {
                 actual: "patch".to_string(),
             }
         );
+    }
+
+    #[test]
+    fn compute_section_bytes_sums_serialized_nodes_for_paths() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "One"}]},
+                {"type": "paragraph", "content": [{"type": "text", "text": "Two"}]}
+            ]
+        });
+
+        let first = serde_json::to_vec(adf.pointer("/content/0").unwrap())
+            .map(|value| value.len() as u64)
+            .unwrap();
+        let second = serde_json::to_vec(adf.pointer("/content/1").unwrap())
+            .map(|value| value.len() as u64)
+            .unwrap();
+
+        let section_bytes =
+            compute_section_bytes(&adf, &["/content/0".to_string(), "/content/1".to_string()]);
+
+        assert_eq!(section_bytes, first + second);
+    }
+
+    #[test]
+    fn compute_section_bytes_returns_full_page_size_for_root_scope() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Overview"}]},
+                {"type": "paragraph", "content": [{"type": "text", "text": "Body"}]}
+            ]
+        });
+
+        let full_page = serde_json::to_vec(&adf)
+            .map(|value| value.len() as u64)
+            .unwrap();
+        let section_bytes = compute_section_bytes(&adf, &["/".to_string()]);
+
+        assert_eq!(section_bytes, full_page);
     }
 }

@@ -51,15 +51,31 @@ pub fn resolve_scope(adf: &Value, selectors: &[String]) -> Result<ScopeResolutio
     }
 
     let mut matched_paths = Vec::new();
+    let mut matched_heading_count = 0usize;
+    let mut expanded_heading_found = false;
     for selector in selectors {
         let (kind, value) = selector
             .split_once(':')
             .ok_or_else(|| AdfError::InvalidSelector(selector.clone()))?;
         match kind {
-            "heading" => matched_paths.extend(find_heading_paths(adf, value, String::new())),
+            "heading" => {
+                for heading_path in find_heading_paths(adf, value, String::new()) {
+                    matched_heading_count += 1;
+                    let expanded = expand_heading_to_section(adf, &heading_path);
+                    if expanded.is_empty() {
+                        continue;
+                    }
+                    expanded_heading_found = true;
+                    matched_paths.extend(expanded);
+                }
+            }
             "block" => matched_paths.extend(find_block_paths(adf, value, String::new())),
             _ => return Err(AdfError::InvalidSelector(selector.clone())),
         }
+    }
+
+    if matched_heading_count > 0 && !expanded_heading_found && matched_paths.is_empty() {
+        return full_page_resolution(adf, Some("nested_heading_scope_unsupported".to_string()));
     }
 
     if matched_paths.is_empty() {
@@ -69,23 +85,9 @@ pub fn resolve_scope(adf: &Value, selectors: &[String]) -> Result<ScopeResolutio
     matched_paths.sort();
     matched_paths.dedup();
 
-    let scoped = if matched_paths.len() == 1 {
-        pointer_get(adf, &matched_paths[0])
-            .cloned()
-            .unwrap_or_else(|| adf.clone())
-    } else {
-        let mut nodes = Vec::new();
-        for path in &matched_paths {
-            if let Some(value) = pointer_get(adf, path) {
-                nodes.push(value.clone());
-            }
-        }
-        serde_json::json!({ "type": "doc", "content": nodes })
-    };
-
-    let node_path_index = build_node_path_index(&scoped)?;
+    let node_path_index = build_node_path_index(adf)?;
     Ok(ScopeResolution {
-        scoped_adf: scoped,
+        scoped_adf: adf.clone(),
         allowed_scope_paths: matched_paths,
         node_path_index,
         scope_resolution_failed: false,
@@ -321,6 +323,52 @@ fn full_page_resolution(adf: &Value, reason: Option<String>) -> Result<ScopeReso
     })
 }
 
+fn heading_level(node: &Value) -> u8 {
+    node.get("attrs")
+        .and_then(Value::as_object)
+        .and_then(|attrs| attrs.get("level"))
+        .and_then(Value::as_u64)
+        .and_then(|level| u8::try_from(level).ok())
+        .filter(|level| (1..=6).contains(level))
+        .unwrap_or(6)
+}
+
+fn expand_heading_to_section(adf: &Value, heading_path: &str) -> Vec<String> {
+    let Some(index_str) = heading_path.strip_prefix("/content/") else {
+        return Vec::new();
+    };
+    if index_str.is_empty() || index_str.contains('/') {
+        return Vec::new();
+    }
+
+    let Ok(start_index) = index_str.parse::<usize>() else {
+        return Vec::new();
+    };
+
+    let Some(content) = adf.get("content").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    let Some(heading_node) = content.get(start_index) else {
+        return Vec::new();
+    };
+    if heading_node.get("type").and_then(Value::as_str) != Some("heading") {
+        return Vec::new();
+    }
+
+    let base_level = heading_level(heading_node);
+    let mut section_paths = vec![heading_path.to_string()];
+    for (index, node) in content.iter().enumerate().skip(start_index + 1) {
+        if node.get("type").and_then(Value::as_str) == Some("heading")
+            && heading_level(node) <= base_level
+        {
+            break;
+        }
+        section_paths.push(format!("/content/{index}"));
+    }
+
+    section_paths
+}
+
 fn build_node_path_index_inner(
     value: &Value,
     path: String,
@@ -451,13 +499,6 @@ fn is_json_pointer(path: &str) -> bool {
     path.starts_with('/')
 }
 
-fn pointer_get<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
-    if path == "/" {
-        return Some(value);
-    }
-    value.pointer(path)
-}
-
 fn escape_pointer_segment(segment: &str) -> String {
     segment.replace('~', "~0").replace('/', "~1")
 }
@@ -489,7 +530,183 @@ mod tests {
 
         let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
         assert!(!resolution.scope_resolution_failed);
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1"]
+        );
+        assert_eq!(resolution.scoped_adf, adf);
+    }
+
+    #[test]
+    fn resolves_heading_scope_until_next_same_level_heading() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Overview"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body A"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body B"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Details"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body C"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1", "/content/2"]
+        );
+    }
+
+    #[test]
+    fn resolves_heading_scope_for_heading_at_end_of_content() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Overview"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert_eq!(resolution.allowed_scope_paths, vec!["/content/1"]);
+    }
+
+    #[test]
+    fn resolves_adjacent_same_level_headings_to_single_path() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"A"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"B"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:A".to_string()]).unwrap();
         assert_eq!(resolution.allowed_scope_paths, vec!["/content/0"]);
+    }
+
+    #[test]
+    fn includes_nested_subheading_content_in_parent_section() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Overview"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body A"}]},
+                {"type": "heading", "attrs": {"level": 3}, "content": [{"type":"text", "text":"Subsection"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body B"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Next"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1", "/content/2", "/content/3"]
+        );
+    }
+
+    #[test]
+    fn h1_section_includes_nested_h2_and_h3_until_next_h1() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 1}, "content": [{"type":"text", "text":"Overview"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Top"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Details"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Middle"}]},
+                {"type": "heading", "attrs": {"level": 3}, "content": [{"type":"text", "text":"Deep"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Bottom"}]},
+                {"type": "heading", "attrs": {"level": 1}, "content": [{"type":"text", "text":"Next"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec![
+                "/content/0",
+                "/content/1",
+                "/content/2",
+                "/content/3",
+                "/content/4",
+                "/content/5"
+            ]
+        );
+    }
+
+    #[test]
+    fn unions_multiple_heading_selectors_with_sorted_deduped_paths() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Alpha"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"A"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Beta"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"B"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(
+            &adf,
+            &[
+                "heading:Beta".to_string(),
+                "heading:Alpha".to_string(),
+                "heading:Alpha".to_string(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1", "/content/2", "/content/3"]
+        );
+    }
+
+    #[test]
+    fn heading_without_level_defaults_to_six() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "content": [{"type":"text", "text":"Overview"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body"}]},
+                {"type": "heading", "attrs": {"level": 3}, "content": [{"type":"text", "text":"Details"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"More"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1"]
+        );
+    }
+
+    #[test]
+    fn nested_heading_falls_back_to_full_page() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "panel",
+                    "content": [
+                        {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Overview"}]},
+                        {"type": "paragraph", "content": [{"type":"text", "text":"Inside panel"}]}
+                    ]
+                },
+                {"type": "paragraph", "content": [{"type":"text", "text":"Outside"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert!(resolution.scope_resolution_failed);
+        assert!(resolution.full_page_fetch);
+        assert_eq!(resolution.allowed_scope_paths, vec!["/"]);
+        assert!(
+            resolution
+                .fallback_reason
+                .as_deref()
+                .is_some_and(|reason| reason.contains("nested_heading_scope_unsupported"))
+        );
+        assert_eq!(resolution.scoped_adf, adf);
     }
 
     #[test]
