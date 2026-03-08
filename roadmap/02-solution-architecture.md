@@ -12,7 +12,7 @@ Deliver a minimal-change Confluence update pipeline that keeps ADF fidelity whil
 
 ## Block Routing Policy (v1)
 
-- `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock, rule.
+- `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock.
 - `table_adf`: table updates in ADF-native mode, cell text only.
 - `locked_structural`: unsupported or high-risk nodes (media, macros/extensions, layout blocks, mentions, status, panels, embeds, and all non-whitelisted types).
 

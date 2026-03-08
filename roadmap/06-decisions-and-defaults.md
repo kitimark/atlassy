@@ -110,9 +110,50 @@
 
 ## Default Route Matrix
 
-- `editable_prose`: paragraph, heading, bulletList, orderedList, listItem, blockquote, simple codeBlock.
-- `table_adf`: table node family, cell text edits only.
-- `locked_structural`: rule, and all other nodes by default.
+Authoritative ADF schema reference: [http://go.atlassian.com/adf-json-schema](http://go.atlassian.com/adf-json-schema) (43 node types, 16 mark types as of 2026-03).
+
+### `editable_prose` (7 types)
+
+paragraph, heading, bulletList, orderedList, listItem, blockquote, codeBlock.
+
+### `table_adf` (4 types)
+
+table, tableRow, tableCell, tableHeader.
+
+v1 scope: cell text updates only. Row/column topology changes are forbidden (`ERR_TABLE_SHAPE_CHANGE`).
+
+### `locked_structural` (32 types, catch-all)
+
+All node types not listed above fall to `locked_structural` via the catch-all arm in `route_for_node()`.
+
+| Category | Node Types |
+|---|---|
+| Containers | panel, expand, nestedExpand |
+| Media | mediaSingle, mediaGroup, media, mediaInline, caption |
+| Extensions / Macros | extension, bodiedExtension, inlineExtension |
+| Smart Cards | blockCard, embedCard, inlineCard |
+| Layouts | layoutSection, layoutColumn |
+| Tasks / Decisions | taskList, taskItem, blockTaskItem, decisionList, decisionItem |
+| Live Pages | syncBlock, bodiedSyncBlock |
+| Inline | text, hardBreak, date, emoji, mention, status, placeholder |
+| Divider | rule |
+| Root | doc (never classified; structural root only) |
+
+### Container routing note
+
+Container nodes (panel, expand, nestedExpand, layoutSection, layoutColumn, bodiedExtension) are themselves `locked_structural`, but their child nodes are routed individually. A paragraph inside a panel is classified as `editable_prose`; a table inside an expand is classified as `table_adf`. The container wrapper is preserved unchanged; only the inner content is eligible for editing.
+
+### Marks (16 types, all opaque)
+
+alignment, annotation, backgroundColor, border, breakout, code, dataConsumer, em, fragment, indentation, link, strike, strong, subsup, textColor, underline.
+
+Marks are never read, modified, or validated by the pipeline. Patch operations target `text` property values only, so marks on text nodes and block-level marks on containers are preserved by construction. This is correct for v1 text-replacement scope.
+
+### Known gaps
+
+- `tableHeader` is not yet explicitly referenced in the Rust code (works via `has_table_ancestor` fallback). Tracked for code fix.
+- `taskList` / `decisionList` contain editable text but are locked in v1. Tracked in `ideas/2026-03-structural-block-editing-support.md`.
+- Heading scope resolution only works for top-level headings in `doc.content[]`. Headings nested inside containers (panel, expand, layoutColumn, tableCell) trigger full-page fallback.
 
 ## Change Control
 
