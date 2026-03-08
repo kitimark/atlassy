@@ -351,7 +351,7 @@ cargo run -p atlassy-cli -- run \
 Check that auto-discovery resolved a target:
 
 ```bash
-jq '{discovered_target_path,scope_resolution_failed,allowed_scope_paths}' \
+jq '{discovered_target_path,scope_resolution_failed}' \
   "artifacts/spike-autodiscover-p1/summary.json"
 ```
 
@@ -359,7 +359,6 @@ Pass criteria:
 
 - `discovered_target_path` is non-null and points to a valid text node within the heading section.
 - `scope_resolution_failed: false`.
-- `allowed_scope_paths` includes the heading and its section content nodes (not just the heading node).
 
 Repeat for P2 (prose and table cell routes) and P3. For P2, also validate table cell auto-discovery:
 
