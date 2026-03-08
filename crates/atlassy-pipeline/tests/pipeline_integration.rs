@@ -42,6 +42,7 @@ fn sample_request(run_id: &str) -> RunRequest {
             runtime_mode: RUNTIME_STUB.to_string(),
         },
         run_mode: RunMode::NoOp,
+        target_index: 0,
         force_verify_fail: false,
         bootstrap_empty_page: false,
     }
@@ -146,7 +147,7 @@ fn happy_path_run_succeeds() {
     let mut request = sample_request("run-happy");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/text".to_string()),
         markdown: "Updated prose body".to_string(),
     };
 
@@ -160,6 +161,59 @@ fn happy_path_run_succeeds() {
 }
 
 #[test]
+fn explicit_target_path_skips_discovery() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-explicit-path");
+    request.scope_selectors = vec![];
+    request.target_index = 0;
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: Some("/content/1/content/0/text".to_string()),
+        markdown: "Updated prose body".to_string(),
+    };
+
+    let summary = orchestrator.run(request).expect("run should succeed");
+    assert!(summary.success);
+    assert_eq!(summary.discovered_target_path, None);
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/1/content/0/text".to_string()]
+    );
+}
+
+#[test]
+fn pipeline_auto_discovers_and_patches() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-auto-discovery");
+    request.scope_selectors = vec![];
+    request.target_index = 0;
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: None,
+        markdown: "Updated prose body".to_string(),
+    };
+
+    let summary = orchestrator.run(request).expect("run should succeed");
+    assert!(summary.success);
+    assert_eq!(
+        summary.discovered_target_path,
+        Some("/content/0/content/0/text".to_string())
+    );
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/0/content/0/text".to_string()]
+    );
+
+    let patch_output = read_state_output(temp.path(), "run-auto-discovery", "patch");
+    assert_eq!(
+        patch_output["payload"]["patch_ops"][0]["path"],
+        serde_json::json!("/content/0/content/0/text")
+    );
+}
+
+#[test]
 fn table_cell_update_run_succeeds() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
     let mut orchestrator =
@@ -168,7 +222,7 @@ fn table_cell_update_run_succeeds() {
     let mut request = sample_request("run-table-update");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedTableCellUpdate {
-        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/content/0/content/0/content/0/text".to_string()),
         text: "Updated table cell".to_string(),
     };
 
@@ -206,7 +260,7 @@ fn verify_failure_blocks_publish() {
     let mut request = sample_request("run-verify-fail");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/text".to_string()),
         markdown: "Updated prose body".to_string(),
     };
     request.force_verify_fail = true;
@@ -234,7 +288,7 @@ fn publish_transport_error_maps_to_runtime_backend_publish_failure() {
     let mut request = sample_request("run-live-publish-400");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/text".to_string()),
         markdown: "Updated prose body".to_string(),
     };
 
@@ -282,7 +336,7 @@ fn replay_artifacts_exist_for_successful_run() {
     let mut request = sample_request("run-success-artifacts");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedTableCellUpdate {
-        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/content/0/content/0/content/0/text".to_string()),
         text: "Updated table cell".to_string(),
     };
 
@@ -328,7 +382,7 @@ fn replay_artifacts_exist_for_failed_run_until_failure_state() {
     let mut request = sample_request("run-failed-artifacts");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedTableCellUpdate {
-        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/content/0/content/0/content/0/text".to_string()),
         text: "Updated table cell".to_string(),
     };
     request.force_verify_fail = true;
@@ -416,7 +470,7 @@ fn unmapped_prose_path_fails_before_publish() {
     let mut request = sample_request("run-unmapped-path");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/99/content/0/text".to_string(),
+        target_path: Some("/content/99/content/0/text".to_string()),
         markdown: "Invalid update".to_string(),
     };
 
@@ -435,7 +489,7 @@ fn top_level_boundary_violation_fails_before_publish() {
     let mut request = sample_request("run-boundary-violation");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1".to_string(),
+        target_path: Some("/content/1".to_string()),
         markdown: "Replacement".to_string(),
     };
 
@@ -454,7 +508,7 @@ fn table_route_target_is_rejected_for_prose_assist() {
     let mut request = sample_request("run-table-route-rejection");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/2/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/2/content/0/content/0/content/0/text".to_string()),
         markdown: "Should fail".to_string(),
     };
 
@@ -472,7 +526,7 @@ fn prose_state_artifacts_include_mapping_and_candidates() {
     let mut request = sample_request("run-prose-artifacts");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/text".to_string()),
         markdown: "Updated prose body".to_string(),
     };
     orchestrator.run(request).expect("run should succeed");
@@ -575,7 +629,7 @@ fn table_candidate_generation_is_deterministic() {
     let mut first = sample_request("run-table-map-a");
     first.scope_selectors = vec![];
     first.run_mode = RunMode::SimpleScopedTableCellUpdate {
-        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/content/0/content/0/content/0/text".to_string()),
         text: "Updated table cell".to_string(),
     };
     orchestrator.run(first).expect("first run should succeed");
@@ -583,19 +637,17 @@ fn table_candidate_generation_is_deterministic() {
     let mut second = sample_request("run-table-map-b");
     second.scope_selectors = vec![];
     second.run_mode = RunMode::SimpleScopedTableCellUpdate {
-        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/content/0/content/0/content/0/text".to_string()),
         text: "Updated table cell".to_string(),
     };
     orchestrator.run(second).expect("second run should succeed");
 
-    let candidates_a =
-        read_state_output(temp.path(), "run-table-map-a", "adf_table_edit")["payload"]
-            ["table_candidates"]
-            .clone();
-    let candidates_b =
-        read_state_output(temp.path(), "run-table-map-b", "adf_table_edit")["payload"]
-            ["table_candidates"]
-            .clone();
+    let candidates_a = read_state_output(temp.path(), "run-table-map-a", "adf_table_edit")
+        ["payload"]["table_candidates"]
+        .clone();
+    let candidates_b = read_state_output(temp.path(), "run-table-map-b", "adf_table_edit")
+        ["payload"]["table_candidates"]
+        .clone();
     assert_eq!(candidates_a, candidates_b);
 }
 
@@ -608,7 +660,7 @@ fn table_state_artifacts_include_candidates_and_allowed_ops() {
     let mut request = sample_request("run-table-artifacts");
     request.scope_selectors = vec![];
     request.run_mode = RunMode::SimpleScopedTableCellUpdate {
-        target_path: "/content/1/content/0/content/0/content/0/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/content/0/content/0/content/0/text".to_string()),
         text: "Updated table cell".to_string(),
     };
     orchestrator.run(request).expect("run should succeed");
@@ -717,7 +769,7 @@ fn bootstrap_non_empty_page_without_flag_proceeds_normally() {
     request.scope_selectors = vec![];
     request.bootstrap_empty_page = false;
     request.run_mode = RunMode::SimpleScopedProseUpdate {
-        target_path: "/content/1/content/0/text".to_string(),
+        target_path: Some("/content/1/content/0/text".to_string()),
         markdown: "Updated prose body".to_string(),
     };
 

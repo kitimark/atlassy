@@ -17,6 +17,7 @@ pub const ERR_RUNTIME_BACKEND: &str = "ERR_RUNTIME_BACKEND";
 pub const ERR_RUNTIME_UNMAPPED_HARD: &str = "ERR_RUNTIME_UNMAPPED_HARD";
 pub const ERR_BOOTSTRAP_REQUIRED: &str = "ERR_BOOTSTRAP_REQUIRED";
 pub const ERR_BOOTSTRAP_INVALID_STATE: &str = "ERR_BOOTSTRAP_INVALID_STATE";
+pub const ERR_TARGET_DISCOVERY_FAILED: &str = "ERR_TARGET_DISCOVERY_FAILED";
 
 pub const FLOW_BASELINE: &str = "baseline";
 pub const FLOW_OPTIMIZED: &str = "optimized";
@@ -384,6 +385,8 @@ pub struct RunSummary {
     pub locked_node_mutation: bool,
     pub out_of_scope_mutation: bool,
     pub telemetry_complete: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discovered_target_path: Option<String>,
     pub applied_paths: Vec<String>,
     pub blocked_paths: Vec<String>,
     pub error_codes: Vec<String>,
@@ -944,6 +947,7 @@ mod tests {
             locked_node_mutation: false,
             out_of_scope_mutation: false,
             telemetry_complete: true,
+            discovered_target_path: None,
             applied_paths: Vec::new(),
             blocked_paths: Vec::new(),
             error_codes: Vec::new(),

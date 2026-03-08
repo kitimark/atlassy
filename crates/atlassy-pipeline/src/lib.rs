@@ -3,8 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use atlassy_adf::{
-    AdfError, PatchCandidate, apply_patch_ops, bootstrap_scaffold, build_node_path_index,
-    build_patch_ops, canonicalize_mapped_path, ensure_paths_in_scope, is_page_effectively_empty,
+    AdfError, EDITABLE_PROSE_TYPES, PatchCandidate, TargetRoute, apply_patch_ops,
+    bootstrap_scaffold, build_node_path_index, build_patch_ops, canonicalize_mapped_path,
+    discover_target_path, ensure_paths_in_scope, is_page_effectively_empty,
     is_path_within_or_descendant, is_table_cell_text_path, is_table_shape_or_attr_path,
     markdown_for_path, normalize_changed_paths, path_has_ancestor_type, resolve_scope,
 };
@@ -13,14 +14,14 @@ use atlassy_contracts::{
     AdfTableEditInput, AdfTableEditOutput, ClassifyInput, ClassifyOutput, ContractError,
     Diagnostics, ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_CONFLICT_RETRY_EXHAUSTED,
     ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_ROUTE_VIOLATION, ERR_RUNTIME_BACKEND,
-    ERR_RUNTIME_UNMAPPED_HARD, ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE, EnvelopeMeta, ErrorInfo,
-    ExtractProseInput, ExtractProseOutput, FetchInput, FetchOutput, MarkdownBlock,
-    MarkdownMapEntry, MdAssistEditInput, MdAssistEditOutput, MergeCandidatesInput,
-    MergeCandidatesOutput, PatchInput, PatchOp, PatchOutput, PipelineState, ProseChangeCandidate,
-    ProvenanceStamp, PublishInput, PublishOutput, PublishResult, RunSummary, StateEnvelope,
-    TableChangeCandidate, TableOperation, VerifyInput, VerifyOutput, VerifyResult,
-    validate_markdown_mapping, validate_prose_changed_paths, validate_run_summary_telemetry,
-    validate_table_candidates,
+    ERR_RUNTIME_UNMAPPED_HARD, ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE,
+    ERR_TARGET_DISCOVERY_FAILED, EnvelopeMeta, ErrorInfo, ExtractProseInput, ExtractProseOutput,
+    FetchInput, FetchOutput, MarkdownBlock, MarkdownMapEntry, MdAssistEditInput,
+    MdAssistEditOutput, MergeCandidatesInput, MergeCandidatesOutput, PatchInput, PatchOp,
+    PatchOutput, PipelineState, ProseChangeCandidate, ProvenanceStamp, PublishInput, PublishOutput,
+    PublishResult, RunSummary, StateEnvelope, TableChangeCandidate, TableOperation, VerifyInput,
+    VerifyOutput, VerifyResult, validate_markdown_mapping, validate_prose_changed_paths,
+    validate_run_summary_telemetry, validate_table_candidates,
 };
 use thiserror::Error;
 
@@ -32,11 +33,11 @@ pub enum RunMode {
         new_value: serde_json::Value,
     },
     SimpleScopedProseUpdate {
-        target_path: String,
+        target_path: Option<String>,
         markdown: String,
     },
     SimpleScopedTableCellUpdate {
-        target_path: String,
+        target_path: Option<String>,
         text: String,
     },
     ForbiddenTableOperation {
@@ -64,6 +65,7 @@ pub struct RunRequest {
     pub timestamp: String,
     pub provenance: ProvenanceStamp,
     pub run_mode: RunMode,
+    pub target_index: usize,
     pub force_verify_fail: bool,
     pub bootstrap_empty_page: bool,
 }
@@ -221,6 +223,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             locked_node_mutation: false,
             out_of_scope_mutation: false,
             telemetry_complete: false,
+            discovered_target_path: None,
             applied_paths: Vec::new(),
             blocked_paths: Vec::new(),
             error_codes: Vec::new(),
@@ -362,7 +365,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         );
 
         let md_edit = self
-            .run_md_assist_edit_state(request, tracker, &fetch, &extract)
+            .run_md_assist_edit_state(request, tracker, &fetch, &extract, summary)
             .map_err(|error| self.hard_fail(summary, PipelineState::MdAssistEdit, error))?;
         summary.state_token_usage.insert(
             PipelineState::MdAssistEdit.as_str().to_string(),
@@ -370,7 +373,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         );
 
         let table_edit = self
-            .run_adf_table_edit_state(request, tracker, &fetch, &classify)
+            .run_adf_table_edit_state(request, tracker, &fetch, &classify, summary)
             .map_err(|error| self.hard_fail(summary, PipelineState::AdfTableEdit, error))?;
         summary.state_token_usage.insert(
             PipelineState::AdfTableEdit.as_str().to_string(),
@@ -664,6 +667,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         tracker: &mut StateTracker,
         fetch: &StateEnvelope<FetchOutput>,
         extract: &StateEnvelope<ExtractProseOutput>,
+        summary: &mut RunSummary,
     ) -> Result<StateEnvelope<MdAssistEditOutput>, PipelineError> {
         tracker.transition_to(PipelineState::MdAssistEdit)?;
         let input = StateEnvelope {
@@ -711,8 +715,26 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 target_path,
                 markdown,
             } => {
+                let resolved_target_path = if let Some(path) = target_path {
+                    path.clone()
+                } else {
+                    let discovered_path = discover_target_path(
+                        &fetch.payload.node_path_index,
+                        &input.payload.allowed_scope_paths,
+                        TargetRoute::Prose,
+                        request.target_index,
+                    )
+                    .map_err(|error| PipelineError::Hard {
+                        state: PipelineState::MdAssistEdit,
+                        code: ERR_TARGET_DISCOVERY_FAILED.to_string(),
+                        message: error.to_string(),
+                    })?;
+                    summary.discovered_target_path = Some(discovered_path.clone());
+                    discovered_path
+                };
+
                 project_prose_candidate(
-                    target_path,
+                    &resolved_target_path,
                     markdown,
                     &input.payload.editable_prose_paths,
                     &input.payload.allowed_scope_paths,
@@ -775,6 +797,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         tracker: &mut StateTracker,
         fetch: &StateEnvelope<FetchOutput>,
         classify: &StateEnvelope<ClassifyOutput>,
+        summary: &mut RunSummary,
     ) -> Result<StateEnvelope<AdfTableEditOutput>, PipelineError> {
         tracker.transition_to(PipelineState::AdfTableEdit)?;
         let table_nodes = classify
@@ -815,8 +838,26 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 }
             }
             RunMode::SimpleScopedTableCellUpdate { target_path, text } => {
+                let resolved_target_path = if let Some(path) = target_path {
+                    path.clone()
+                } else {
+                    let discovered_path = discover_target_path(
+                        &fetch.payload.node_path_index,
+                        &fetch.payload.allowed_scope_paths,
+                        TargetRoute::TableCell,
+                        request.target_index,
+                    )
+                    .map_err(|error| PipelineError::Hard {
+                        state: PipelineState::AdfTableEdit,
+                        code: ERR_TARGET_DISCOVERY_FAILED.to_string(),
+                        message: error.to_string(),
+                    })?;
+                    summary.discovered_target_path = Some(discovered_path.clone());
+                    discovered_path
+                };
+
                 project_table_candidate(
-                    target_path,
+                    &resolved_target_path,
                     text,
                     &fetch.payload.allowed_scope_paths,
                     &fetch.payload.node_path_index,
@@ -1363,10 +1404,10 @@ fn route_for_node(
         return "table_adf";
     }
 
-    match node_type {
-        "paragraph" | "heading" | "bulletList" | "orderedList" | "listItem" | "blockquote"
-        | "codeBlock" => "editable_prose",
-        _ => "locked_structural",
+    if EDITABLE_PROSE_TYPES.contains(&node_type) {
+        "editable_prose"
+    } else {
+        "locked_structural"
     }
 }
 

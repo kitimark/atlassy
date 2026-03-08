@@ -50,6 +50,8 @@ enum Commands {
         #[arg(long)]
         target_path: Option<String>,
         #[arg(long)]
+        target_index: Option<usize>,
+        #[arg(long)]
         new_value: Option<String>,
         #[arg(long)]
         force_verify_fail: bool,
@@ -172,10 +174,13 @@ struct ManifestRunEntry {
     scenario_ids: Vec<String>,
     #[serde(default)]
     scope_selectors: Vec<String>,
+    #[serde(default = "default_manifest_timestamp")]
     timestamp: String,
     #[serde(default)]
     mode: ManifestMode,
     target_path: Option<String>,
+    #[serde(default)]
+    target_index: Option<u32>,
     new_value: Option<String>,
     #[serde(default)]
     force_verify_fail: bool,
@@ -478,6 +483,7 @@ fn main() -> Result<(), DynError> {
             artifacts_dir,
             mode,
             target_path,
+            target_index,
             new_value,
             force_verify_fail,
             bootstrap_empty_page,
@@ -497,23 +503,15 @@ fn main() -> Result<(), DynError> {
                     }
                 }
                 CliMode::SimpleScopedProseUpdate => {
-                    let path =
-                        target_path.unwrap_or_else(|| "/content/1/content/0/text".to_string());
                     let markdown = new_value.unwrap_or_else(|| "Updated prose body".to_string());
                     RunMode::SimpleScopedProseUpdate {
-                        target_path: path,
+                        target_path,
                         markdown,
                     }
                 }
                 CliMode::SimpleScopedTableCellUpdate => {
-                    let path = target_path.unwrap_or_else(|| {
-                        "/content/2/content/0/content/0/content/0/content/0/text".to_string()
-                    });
                     let text = new_value.unwrap_or_else(|| "Updated table cell".to_string());
-                    RunMode::SimpleScopedTableCellUpdate {
-                        target_path: path,
-                        text,
-                    }
+                    RunMode::SimpleScopedTableCellUpdate { target_path, text }
                 }
             };
 
@@ -528,6 +526,7 @@ fn main() -> Result<(), DynError> {
                 timestamp: "2026-03-06T10:00:00Z".to_string(),
                 provenance,
                 run_mode,
+                target_index: target_index.unwrap_or_default(),
                 force_verify_fail,
                 bootstrap_empty_page,
             };
@@ -739,6 +738,10 @@ fn execute_manifest_runs(
             timestamp: run.timestamp.clone(),
             provenance: provenance.clone(),
             run_mode: run_mode_from_manifest(run),
+            target_index: run
+                .target_index
+                .map(|index| index as usize)
+                .unwrap_or_default(),
             force_verify_fail: run.force_verify_fail,
             bootstrap_empty_page: run.bootstrap_empty_page.unwrap_or(false),
         };
@@ -2562,19 +2565,14 @@ fn run_mode_from_manifest(entry: &ManifestRunEntry) -> RunMode {
             ),
         },
         ManifestMode::SimpleScopedProseUpdate => RunMode::SimpleScopedProseUpdate {
-            target_path: entry
-                .target_path
-                .clone()
-                .unwrap_or_else(|| "/content/1/content/0/text".to_string()),
+            target_path: entry.target_path.clone(),
             markdown: entry
                 .new_value
                 .clone()
                 .unwrap_or_else(|| "Updated prose body".to_string()),
         },
         ManifestMode::SimpleScopedTableCellUpdate => RunMode::SimpleScopedTableCellUpdate {
-            target_path: entry.target_path.clone().unwrap_or_else(|| {
-                "/content/2/content/0/content/0/content/0/content/0/text".to_string()
-            }),
+            target_path: entry.target_path.clone(),
             text: entry
                 .new_value
                 .clone()
@@ -2666,6 +2664,10 @@ fn default_true() -> bool {
 
 fn default_runtime_mode() -> String {
     RUNTIME_STUB.to_string()
+}
+
+fn default_manifest_timestamp() -> String {
+    "1970-01-01T00:00:00Z".to_string()
 }
 
 fn collect_provenance(runtime_mode: &str) -> Result<ProvenanceStamp, DynError> {
