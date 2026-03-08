@@ -199,17 +199,17 @@ fn pipeline_auto_discovers_and_patches() {
     assert!(summary.success);
     assert_eq!(
         summary.discovered_target_path,
-        Some("/content/0/content/0/text".to_string())
+        Some("/content/1/content/0/text".to_string())
     );
     assert_eq!(
         summary.applied_paths,
-        vec!["/content/0/content/0/text".to_string()]
+        vec!["/content/1/content/0/text".to_string()]
     );
 
     let patch_output = read_state_output(temp.path(), "run-auto-discovery", "patch");
     assert_eq!(
         patch_output["payload"]["patch_ops"][0]["path"],
-        serde_json::json!("/content/0/content/0/text")
+        serde_json::json!("/content/1/content/0/text")
     );
 }
 

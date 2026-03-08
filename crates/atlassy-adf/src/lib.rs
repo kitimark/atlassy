@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
@@ -52,6 +53,39 @@ pub const EDITABLE_PROSE_TYPES: &[&str] = &[
     "blockquote",
     "codeBlock",
 ];
+
+/// Node types used as scope anchors. Text under these ancestors is excluded from prose
+/// auto-discovery and must be targeted explicitly.
+pub const SCOPE_ANCHOR_TYPES: &[&str] = &["heading"];
+
+pub fn document_order_sort(paths: &mut [String]) {
+    paths.sort_by(|left, right| compare_path_segments(left, right));
+}
+
+fn compare_path_segments(left: &str, right: &str) -> Ordering {
+    let mut left_segments = left.split('/');
+    let mut right_segments = right.split('/');
+
+    loop {
+        match (left_segments.next(), right_segments.next()) {
+            (Some(left_segment), Some(right_segment)) => {
+                let ordering = match (
+                    left_segment.parse::<usize>(),
+                    right_segment.parse::<usize>(),
+                ) {
+                    (Ok(left_number), Ok(right_number)) => left_number.cmp(&right_number),
+                    _ => left_segment.cmp(right_segment),
+                };
+                if ordering != Ordering::Equal {
+                    return ordering;
+                }
+            }
+            (None, Some(_)) => return Ordering::Less,
+            (Some(_), None) => return Ordering::Greater,
+            (None, None) => return Ordering::Equal,
+        }
+    }
+}
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum AdfError {
@@ -114,7 +148,7 @@ pub fn resolve_scope(adf: &Value, selectors: &[String]) -> Result<ScopeResolutio
         return full_page_resolution(adf, Some("scope_selector_not_found".to_string()));
     }
 
-    matched_paths.sort();
+    document_order_sort(&mut matched_paths);
     matched_paths.dedup();
 
     let node_path_index = build_node_path_index(adf)?;
@@ -286,7 +320,9 @@ pub fn discover_target_path(
                 path_has_ancestor_type(path, node_path_index, &["table", "tableRow", "tableCell"]);
             match route {
                 TargetRoute::Prose => {
-                    path_has_ancestor_type(path, node_path_index, EDITABLE_PROSE_TYPES) && !in_table
+                    path_has_ancestor_type(path, node_path_index, EDITABLE_PROSE_TYPES)
+                        && !path_has_ancestor_type(path, node_path_index, SCOPE_ANCHOR_TYPES)
+                        && !in_table
                 }
                 TargetRoute::TableCell => in_table,
             }
@@ -294,7 +330,7 @@ pub fn discover_target_path(
         .cloned()
         .collect::<Vec<_>>();
 
-    candidates.sort();
+    document_order_sort(&mut candidates);
     let found = candidates.len();
     let selected = candidates
         .get(target_index)
@@ -979,6 +1015,46 @@ mod tests {
     }
 
     #[test]
+    fn document_order_sort_numeric_segments() {
+        let mut paths = vec![
+            "/content/10/content/0".to_string(),
+            "/content/2/content/0".to_string(),
+        ];
+
+        document_order_sort(&mut paths);
+
+        assert_eq!(
+            paths,
+            vec![
+                "/content/2/content/0".to_string(),
+                "/content/10/content/0".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn document_order_sort_shared_prefix() {
+        let mut paths = vec!["/content/0/content/0".to_string(), "/content/0".to_string()];
+
+        document_order_sort(&mut paths);
+
+        assert_eq!(
+            paths,
+            vec!["/content/0".to_string(), "/content/0/content/0".to_string()]
+        );
+    }
+
+    #[test]
+    fn scope_anchor_types_is_subset_of_editable_prose() {
+        for scope_anchor_type in SCOPE_ANCHOR_TYPES {
+            assert!(
+                EDITABLE_PROSE_TYPES.contains(scope_anchor_type),
+                "scope anchor type must be editable prose: {scope_anchor_type}"
+            );
+        }
+    }
+
+    #[test]
     fn discovers_first_prose_text_in_section() {
         let adf = serde_json::json!({
             "type": "doc",
@@ -1002,7 +1078,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(path, "/content/0/content/0/text");
+        assert_eq!(path, "/content/1/content/0/text");
     }
 
     #[test]
@@ -1029,7 +1105,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(path, "/content/1/content/0/text");
+        assert_eq!(path, "/content/2/content/0/text");
     }
 
     #[test]
@@ -1090,7 +1166,66 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(path, "/content/2/content/0/text");
+        assert_eq!(path, "/content/3/content/0/text");
+    }
+
+    #[test]
+    fn discovery_excludes_heading_text_nodes() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "content": [{"type": "text", "text": "Overview"}]},
+                {"type": "paragraph", "content": [{"type": "text", "text": "First body"}]},
+                {"type": "paragraph", "content": [{"type": "text", "text": "Second body"}]}
+            ]
+        });
+
+        let index = build_node_path_index(&adf).unwrap();
+        let error = discover_target_path(
+            &index,
+            &[
+                "/content/0".to_string(),
+                "/content/1".to_string(),
+                "/content/2".to_string(),
+            ],
+            TargetRoute::Prose,
+            2,
+        )
+        .unwrap_err();
+
+        assert_eq!(
+            error,
+            AdfError::TargetDiscoveryFailed {
+                route: "prose".to_string(),
+                index: 2,
+                found: 2,
+            }
+        );
+    }
+
+    #[test]
+    fn discovery_fails_for_heading_only_section() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "content": [{"type": "text", "text": "Overview"}]},
+                {"type": "paragraph", "content": [{"type": "text", "text": "Outside"}]}
+            ]
+        });
+
+        let index = build_node_path_index(&adf).unwrap();
+        let error =
+            discover_target_path(&index, &["/content/0".to_string()], TargetRoute::Prose, 0)
+                .unwrap_err();
+
+        assert_eq!(
+            error,
+            AdfError::TargetDiscoveryFailed {
+                route: "prose".to_string(),
+                index: 0,
+                found: 0,
+            }
+        );
     }
 
     #[test]
@@ -1142,7 +1277,7 @@ mod tests {
             AdfError::TargetDiscoveryFailed {
                 route: "prose".to_string(),
                 index: 5,
-                found: 2,
+                found: 1,
             }
         );
     }
