@@ -11,6 +11,7 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 - `qa/manifests/kpi-revalidation-batch.json`: 18-run paired baseline/optimized manifest for KPI revalidation (patterns A, B, C) with explicit `target_path` fields.
 - `qa/manifests/kpi-revalidation-auto-discovery.example.json`: same 18-run structure but with `target_path` omitted (requires `roadmap/14-target-path-auto-discovery.md` implementation).
 - `qa/manifests/kpi-revalidation-v3-auto-discovery.json`: live v3 revalidation manifest using fresh page IDs and auto-discovery (`kpi-v3-*` run IDs).
+- `qa/manifests/kpi-revalidation-v4-auto-discovery.json`: live v4 revalidation manifest using fresh page IDs and auto-discovery (`kpi-v4-*` run IDs).
 - `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables (run via `make qa-setup`).
 - `qa/scripts/check-env.sh`: non-interactive environment and connectivity validation (run `make qa-check` before QA execution).
 - `qa/.env.local`: local credentials file written by setup script (git-ignored, never commit).
@@ -19,7 +20,8 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Investigations
 
 - Naming convention: `YYYY-MM-DD-<topic>.md`.
-- Latest: `qa/investigations/2026-03-08-kpi-revalidation-v3.md`.
+- Latest: `qa/investigations/2026-03-08-kpi-revalidation-v4.md`.
+- Prior: `qa/investigations/2026-03-08-kpi-revalidation-v3.md`.
 - Prior: `qa/investigations/2026-03-08-kpi-revalidation-v2.md`.
 - Prior: `qa/investigations/2026-03-08-kpi-revalidation.md`.
 - Prior: `qa/investigations/2026-03-08-scoped-extract-prose-scope-miss.md`.
@@ -33,7 +35,8 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Evidence
 
 - Commit handoff-ready evidence bundles under `qa/evidence/YYYY-MM-DD-<topic>/`.
-- Latest bundle: `qa/evidence/2026-03-08-kpi-revalidation-v3/`.
+- Latest bundle: `qa/evidence/2026-03-08-kpi-revalidation-v4/`.
+- Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation-v3/`.
 - Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation-v2/`.
 - Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation/`.
 - Prior bundle: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.

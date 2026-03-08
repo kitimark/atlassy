@@ -1,0 +1,14 @@
+{
+  "request_id": "v4-prose-001",
+  "page_id": "131373",
+  "state": "verify",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "verify_result": "pass",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

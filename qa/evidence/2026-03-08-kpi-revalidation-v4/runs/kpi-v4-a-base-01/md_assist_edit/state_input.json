@@ -1,0 +1,153 @@
+{
+  "request_id": "kpi-v4-a-base-01",
+  "page_id": "131373",
+  "state": "md_assist_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "Sandbox prose update v4 2026-03-08T18:20Z"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Pattern A introduction paragraph two keeps body text available for discovery."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Pattern A introduction paragraph three increases section depth."
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Details"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "KPI-v3 optimized A2 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Detail bullet one.Detail bullet two."
+      },
+      {
+        "md_block_id": "/content/6/content/0",
+        "markdown": "Detail bullet one."
+      },
+      {
+        "md_block_id": "/content/6/content/0/content/0",
+        "markdown": "Detail bullet one."
+      },
+      {
+        "md_block_id": "/content/6/content/1",
+        "markdown": "Detail bullet two."
+      },
+      {
+        "md_block_id": "/content/6/content/1/content/0",
+        "markdown": "Detail bullet two."
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "Details blockquote for prose route coverage."
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "markdown": "Details blockquote for prose route coverage."
+      },
+      {
+        "md_block_id": "/content/8",
+        "markdown": "Summary"
+      },
+      {
+        "md_block_id": "/content/9",
+        "markdown": "KPI-v3 optimized A3 scoped prose update"
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/5",
+        "adf_path": "/content/5"
+      },
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      },
+      {
+        "md_block_id": "/content/6/content/0",
+        "adf_path": "/content/6/content/0"
+      },
+      {
+        "md_block_id": "/content/6/content/0/content/0",
+        "adf_path": "/content/6/content/0/content/0"
+      },
+      {
+        "md_block_id": "/content/6/content/1",
+        "adf_path": "/content/6/content/1"
+      },
+      {
+        "md_block_id": "/content/6/content/1/content/0",
+        "adf_path": "/content/6/content/1/content/0"
+      },
+      {
+        "md_block_id": "/content/7",
+        "adf_path": "/content/7"
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "adf_path": "/content/7/content/0"
+      },
+      {
+        "md_block_id": "/content/8",
+        "adf_path": "/content/8"
+      },
+      {
+        "md_block_id": "/content/9",
+        "adf_path": "/content/9"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3",
+      "/content/4",
+      "/content/5",
+      "/content/6",
+      "/content/6/content/0",
+      "/content/6/content/0/content/0",
+      "/content/6/content/1",
+      "/content/6/content/1/content/0",
+      "/content/7",
+      "/content/7/content/0",
+      "/content/8",
+      "/content/9"
+    ],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "Pattern A prose update pair 1"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "request_id": "kpi-v4-c-opt-02",
+  "page_id": "327877",
+  "state": "adf_table_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "Pattern C prose update pair 2"
+  }
+}

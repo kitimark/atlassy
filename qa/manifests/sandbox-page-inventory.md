@@ -6,9 +6,9 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 
 | Page | ID | Parent | Title | Headings | Table | Locked Blocks | Size Estimate |
 |------|----|--------|-------|----------|-------|---------------|---------------|
-| P1 | 98465 | 131207 | KPI Experiment - Prose Rich v3 | Introduction, Details, Summary | No | No | ~500-1000 ADF bytes |
-| P2 | 327805 | 131207 | KPI Experiment - Mixed Prose Table v3 | Overview, Data | Yes (3x3 text cells) | No | ~1000-2000 ADF bytes |
-| P3 | 131294 | 131207 | KPI Experiment - Locked Adjacent v3 | Context, Notes, References | No | Yes (expand, panel, rule) | ~800-1500 ADF bytes |
+| P1 | 131373 | 131207 | KPI Experiment - Prose Rich v4 2026-03-08 | Introduction, Details, Summary | No | No | ~500-1000 ADF bytes |
+| P2 | 131387 | 131207 | KPI Experiment - Mixed Prose Table v4 2026-03-08 | Overview, Data | Yes (3x3 text cells) | No | ~1000-2000 ADF bytes |
+| P3 | 327877 | 131207 | KPI Experiment - Locked Adjacent v4 2026-03-08 | Context, Notes, References | No | Yes (expand, panel, rule) | ~800-1500 ADF bytes |
 
 ## Route Classification Expected
 
@@ -52,7 +52,7 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 
 > **Note**: Auto-discovery is implemented. Explicit `target_path` is optional for route-specific modes; paths below are reference baselines for validating discovery output.
 
-Discovered during Phase 2 scoped fetch spike on 2026-03-08 at commit `959755ca323504d5cba8820cc990dc9753b7fceb`.
+Discovered during Phase 2 scoped fetch spike on 2026-03-08 at commit `18b7c633bf8a3ceae9185e19f4806ba1a61f06db`.
 
 | Page | Prose Target Path | Table Cell Target Path | Notes |
 |------|-------------------|----------------------|-------|
@@ -60,17 +60,17 @@ Discovered during Phase 2 scoped fetch spike on 2026-03-08 at commit `959755ca32
 | P2 | `/content/1/content/0/text` (Overview), `/content/3/content/0/text` (Data prose) | `/content/4/content/0/content/0/content/0/content/0/text` (R1C1) | Table root at `/content/4`, post-table prose at `/content/5/content/0/text` |
 | P3 | `/content/1/content/0/text` (Context), `/content/4/content/0/text` (Notes), `/content/7/content/0/text` (References) | N/A | Expand at `/content/2`, panel at `/content/5`, rule at `/content/8` |
 
-## Scoped Fetch Spike Results (current v3 pages)
+## Scoped Fetch Spike Results (current v4 pages)
 
 | Page | Full ADF Bytes | Scoped ADF Bytes | Context Reduction | Scope Resolution |
 |------|---------------|-----------------|-------------------|------------------|
-| P1 | 1270 | 467 (`heading:Introduction`) | 63.2% | OK |
-| P2 | 1858 | 1624 (`heading:Data`) | 12.6% | OK |
-| P3 | 961 | 357 (`heading:Notes`) | 62.9% | OK |
+| P1 | 1238 | 443 (`heading:Introduction`) | 64.2% | OK |
+| P2 | 1869 | 1652 (`heading:Data`) | 11.6% | OK |
+| P3 | 930 | 344 (`heading:Notes`) | 63.0% | OK |
 
 ## Notes
 
-- Current page IDs correspond to v3 revalidation created on 2026-03-08.
+- Current page IDs correspond to v4 revalidation created on 2026-03-08.
 - Target paths are discovered during Phase 2 spike via `jq` inspection of fetch state output.
 - Bootstrap injects a heading + paragraph scaffold; pages are then seeded with pattern-specific ADF content.
 - `panel` wrappers are `locked_structural` but inner paragraphs are `editable_prose`.

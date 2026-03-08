@@ -1,0 +1,40 @@
+{
+  "request_id": "v4-bootstrap-success-001",
+  "page_id": "327912",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": ""
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": ""
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1"
+    ],
+    "allowed_scope_paths": [
+      "/",
+      "/content/0",
+      "/content/0/content/0",
+      "/content/1",
+      "/content/1/content/0"
+    ],
+    "edit_intent": "bootstrap scaffold injection v4"
+  }
+}

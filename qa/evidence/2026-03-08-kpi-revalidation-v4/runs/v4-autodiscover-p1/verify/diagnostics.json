@@ -1,0 +1,11 @@
+{
+  "warnings": [],
+  "errors": [
+    {
+      "code": "ERR_SCHEMA_INVALID",
+      "message": "forced verify failure",
+      "recovery": "fix candidate payload"
+    }
+  ],
+  "metrics": {}
+}

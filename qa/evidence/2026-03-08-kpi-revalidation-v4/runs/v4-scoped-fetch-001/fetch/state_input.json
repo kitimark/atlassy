@@ -1,0 +1,13 @@
+{
+  "request_id": "v4-scoped-fetch-001",
+  "page_id": "131373",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "131373",
+    "edit_intent": "sandbox scoped fetch validation v4",
+    "scope_selectors": [
+      "heading:Introduction"
+    ]
+  }
+}

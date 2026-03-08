@@ -1,0 +1,305 @@
+{
+  "request_id": "v4-spike-fetch-p2-scoped",
+  "page_id": "131387",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Overview",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v3 baseline B3 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Data",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v3 optimized B3 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "layout": "default"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Sandbox table update v4 2026-03-08T18:21Z",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R1C2",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R1C3",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            },
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R2C1",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R2C2",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R2C3",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            },
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R3C1",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R3C2",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "R3C3",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "content": [
+            {
+              "text": "Pattern B paragraph after table for scoped prose pairing.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 3,
+    "allowed_scope_paths": [
+      "/content/2",
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "node_path_index": {
+      "/": "doc",
+      "/content/0": "heading",
+      "/content/0/content/0": "text",
+      "/content/1": "paragraph",
+      "/content/1/content/0": "text",
+      "/content/2": "heading",
+      "/content/2/content/0": "text",
+      "/content/3": "paragraph",
+      "/content/3/content/0": "text",
+      "/content/4": "table",
+      "/content/4/content/0": "tableRow",
+      "/content/4/content/0/content/0": "tableCell",
+      "/content/4/content/0/content/0/content/0": "paragraph",
+      "/content/4/content/0/content/0/content/0/content/0": "text",
+      "/content/4/content/0/content/1": "tableCell",
+      "/content/4/content/0/content/1/content/0": "paragraph",
+      "/content/4/content/0/content/1/content/0/content/0": "text",
+      "/content/4/content/0/content/2": "tableCell",
+      "/content/4/content/0/content/2/content/0": "paragraph",
+      "/content/4/content/0/content/2/content/0/content/0": "text",
+      "/content/4/content/1": "tableRow",
+      "/content/4/content/1/content/0": "tableCell",
+      "/content/4/content/1/content/0/content/0": "paragraph",
+      "/content/4/content/1/content/0/content/0/content/0": "text",
+      "/content/4/content/1/content/1": "tableCell",
+      "/content/4/content/1/content/1/content/0": "paragraph",
+      "/content/4/content/1/content/1/content/0/content/0": "text",
+      "/content/4/content/1/content/2": "tableCell",
+      "/content/4/content/1/content/2/content/0": "paragraph",
+      "/content/4/content/1/content/2/content/0/content/0": "text",
+      "/content/4/content/2": "tableRow",
+      "/content/4/content/2/content/0": "tableCell",
+      "/content/4/content/2/content/0/content/0": "paragraph",
+      "/content/4/content/2/content/0/content/0/content/0": "text",
+      "/content/4/content/2/content/1": "tableCell",
+      "/content/4/content/2/content/1/content/0": "paragraph",
+      "/content/4/content/2/content/1/content/0/content/0": "text",
+      "/content/4/content/2/content/2": "tableCell",
+      "/content/4/content/2/content/2/content/0": "paragraph",
+      "/content/4/content/2/content/2/content/0/content/0": "text",
+      "/content/5": "paragraph",
+      "/content/5/content/0": "text"
+    },
+    "scope_resolution_failed": false,
+    "full_page_fetch": false,
+    "fallback_reason": null,
+    "full_page_adf_bytes": 1869
+  }
+}

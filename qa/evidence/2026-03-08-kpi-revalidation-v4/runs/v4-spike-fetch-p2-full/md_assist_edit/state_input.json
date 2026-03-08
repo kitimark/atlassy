@@ -1,0 +1,63 @@
+{
+  "request_id": "v4-spike-fetch-p2-full",
+  "page_id": "131387",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Overview"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v3 baseline B3 prose update"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "KPI-v3 optimized B3 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "Pattern B paragraph after table for scoped prose pairing."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/5",
+        "adf_path": "/content/5"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3",
+      "/content/5"
+    ],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "scoped fetch spike v4"
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "request_id": "v4-autodiscover-p2-table",
+  "page_id": "131387",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_nodes": [
+      {
+        "path": "/content/4",
+        "node_type": "table",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0",
+        "node_type": "tableRow",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/0",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/1",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/1/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/1/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/2",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/0/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1",
+        "node_type": "tableRow",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/0",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/1",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/1/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/1/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/2",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/1/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2",
+        "node_type": "tableRow",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/0",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/0/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/0/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/1",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/1/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/1/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/2",
+        "node_type": "tableCell",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "table_adf"
+      },
+      {
+        "path": "/content/4/content/2/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "table_adf"
+      }
+    ],
+    "allowed_scope_paths": [
+      "/content/2",
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "auto-discovery table validation v4"
+  }
+}

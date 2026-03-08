@@ -1,0 +1,290 @@
+{
+  "batch": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    }
+  },
+  "runs": [
+    {
+      "run_id": "kpi-v4-a-base-01",
+      "page_id": "131373",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A prose update pair 1",
+      "edit_intent_hash": "kpi-a-pair-1",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline A1 prose update"
+    },
+    {
+      "run_id": "kpi-v4-a-opt-01",
+      "page_id": "131373",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A prose update pair 1",
+      "edit_intent_hash": "kpi-a-pair-1",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Introduction"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized A1 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-a-base-02",
+      "page_id": "131373",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A prose update pair 2",
+      "edit_intent_hash": "kpi-a-pair-2",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline A2 prose update"
+    },
+    {
+      "run_id": "kpi-v4-a-opt-02",
+      "page_id": "131373",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A prose update pair 2",
+      "edit_intent_hash": "kpi-a-pair-2",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Details"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized A2 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-a-base-03",
+      "page_id": "131373",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A prose update pair 3",
+      "edit_intent_hash": "kpi-a-pair-3",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline A3 prose update"
+    },
+    {
+      "run_id": "kpi-v4-a-opt-03",
+      "page_id": "131373",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A prose update pair 3",
+      "edit_intent_hash": "kpi-a-pair-3",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Summary"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized A3 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-b-base-01",
+      "page_id": "131387",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B prose update pair 1",
+      "edit_intent_hash": "kpi-b-pair-1",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline B1 prose update"
+    },
+    {
+      "run_id": "kpi-v4-b-opt-01",
+      "page_id": "131387",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B prose update pair 1",
+      "edit_intent_hash": "kpi-b-pair-1",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Overview"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized B1 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-b-base-02",
+      "page_id": "131387",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B table cell update pair 2",
+      "edit_intent_hash": "kpi-b-pair-2",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_table_cell_update",
+      "new_value": "KPI-v4 baseline B2 table cell update"
+    },
+    {
+      "run_id": "kpi-v4-b-opt-02",
+      "page_id": "131387",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B table cell update pair 2",
+      "edit_intent_hash": "kpi-b-pair-2",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Data"
+      ],
+      "mode": "simple_scoped_table_cell_update",
+      "target_index": 0,
+      "new_value": "KPI-v4 optimized B2 scoped table cell update"
+    },
+    {
+      "run_id": "kpi-v4-b-base-03",
+      "page_id": "131387",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B prose update pair 3",
+      "edit_intent_hash": "kpi-b-pair-3",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline B3 prose update"
+    },
+    {
+      "run_id": "kpi-v4-b-opt-03",
+      "page_id": "131387",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B prose update pair 3",
+      "edit_intent_hash": "kpi-b-pair-3",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Data"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized B3 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-c-base-01",
+      "page_id": "327877",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C prose update pair 1",
+      "edit_intent_hash": "kpi-c-pair-1",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline C1 prose update"
+    },
+    {
+      "run_id": "kpi-v4-c-opt-01",
+      "page_id": "327877",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C prose update pair 1",
+      "edit_intent_hash": "kpi-c-pair-1",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Context"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized C1 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-c-base-02",
+      "page_id": "327877",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C prose update pair 2",
+      "edit_intent_hash": "kpi-c-pair-2",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline C2 prose update"
+    },
+    {
+      "run_id": "kpi-v4-c-opt-02",
+      "page_id": "327877",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C prose update pair 2",
+      "edit_intent_hash": "kpi-c-pair-2",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Notes"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized C2 scoped prose update"
+    },
+    {
+      "run_id": "kpi-v4-c-base-03",
+      "page_id": "327877",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C prose update pair 3",
+      "edit_intent_hash": "kpi-c-pair-3",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 baseline C3 prose update"
+    },
+    {
+      "run_id": "kpi-v4-c-opt-03",
+      "page_id": "327877",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C prose update pair 3",
+      "edit_intent_hash": "kpi-c-pair-3",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:References"
+      ],
+      "mode": "simple_scoped_prose_update",
+      "new_value": "KPI-v4 optimized C3 scoped prose update"
+    }
+  ]
+}

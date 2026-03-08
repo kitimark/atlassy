@@ -1,0 +1,179 @@
+{
+  "request_id": "kpi-v4-a-base-01",
+  "page_id": "131373",
+  "state": "fetch",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Introduction",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "Sandbox prose update v4 2026-03-08T18:20Z",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Pattern A introduction paragraph two keeps body text available for discovery.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Pattern A introduction paragraph three increases section depth.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Details",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v3 optimized A2 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet one.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet two.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            }
+          ],
+          "type": "bulletList"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Details blockquote for prose route coverage.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "blockquote"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Summary",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v3 optimized A3 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 3,
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "node_path_index": {
+      "/": "doc",
+      "/content/0": "heading",
+      "/content/0/content/0": "text",
+      "/content/1": "paragraph",
+      "/content/1/content/0": "text",
+      "/content/2": "paragraph",
+      "/content/2/content/0": "text",
+      "/content/3": "paragraph",
+      "/content/3/content/0": "text",
+      "/content/4": "heading",
+      "/content/4/content/0": "text",
+      "/content/5": "paragraph",
+      "/content/5/content/0": "text",
+      "/content/6": "bulletList",
+      "/content/6/content/0": "listItem",
+      "/content/6/content/0/content/0": "paragraph",
+      "/content/6/content/0/content/0/content/0": "text",
+      "/content/6/content/1": "listItem",
+      "/content/6/content/1/content/0": "paragraph",
+      "/content/6/content/1/content/0/content/0": "text",
+      "/content/7": "blockquote",
+      "/content/7/content/0": "paragraph",
+      "/content/7/content/0/content/0": "text",
+      "/content/8": "heading",
+      "/content/8/content/0": "text",
+      "/content/9": "paragraph",
+      "/content/9/content/0": "text"
+    },
+    "scope_resolution_failed": true,
+    "full_page_fetch": true,
+    "fallback_reason": "no_scope_selectors",
+    "full_page_adf_bytes": 1238
+  }
+}

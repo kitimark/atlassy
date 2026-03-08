@@ -1,0 +1,31 @@
+{
+  "request_id": "v4-autodiscover-p2-prose",
+  "page_id": "131387",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "auto-discovery validation text v4 p2 prose"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "Pattern B paragraph after table for scoped prose pairing."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/3/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/3/content/0/text",
+        "markdown": "auto-discovery validation text v4 p2 prose"
+      }
+    ]
+  }
+}

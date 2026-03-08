@@ -1,0 +1,57 @@
+{
+  "request_id": "v4-autodiscover-p1",
+  "page_id": "131373",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "Sandbox prose update v4 2026-03-08T18:20Z"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Pattern A introduction paragraph two keeps body text available for discovery."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Pattern A introduction paragraph three increases section depth."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3"
+    ],
+    "allowed_scope_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3"
+    ],
+    "edit_intent": "auto-discovery validation v4"
+  }
+}
