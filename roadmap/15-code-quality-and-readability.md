@@ -138,6 +138,14 @@ Pipeline has 50+ deep imports from all three leaf crates. Restructuring leaf cra
 
 Refactor `atlassy-pipeline` into focused modules while keeping `lib.rs` as facade/API surface. Coupling is star-shaped: the orchestrator is the hub; individual states never call each other. Data flows linearly through `StateEnvelope<*Output>` structs.
 
+State functions are extracted as free functions with explicit dependency parameters, not as methods on `Orchestrator`. Each state function receives only the dependencies it needs (`&ArtifactStore`, `&RunRequest`, `&mut StateTracker`, and for fetch/publish only, `&mut C`). The orchestrator's `run_internal()` calls these functions and threads data between them.
+
+#### Prerequisite: ErrorCode enum in atlassy-contracts
+
+Before pipeline extraction begins, convert the 12 `&str` error code constants in `atlassy-contracts/src/constants.rs` to an `ErrorCode` enum with `Display`/`Serialize` impls that produce identical string representations. Update `PipelineError::Hard.code` from `String` to `ErrorCode`. CLI temporarily uses `.to_string()` on the enum where it previously consumed the `String` directly. This ensures `error_map.rs` is born with typed error codes rather than cementing string-based codes into a new module.
+
+This is a backwards-compatible leaf change in an already-modularized crate (Phase 1 complete). Pulled forward from Phase 4 item 2 to avoid moving code known to be structurally wrong.
+
 #### Target module shape (indicative)
 
 | Module | ~Lines | Complexity | Notes |
@@ -155,7 +163,7 @@ Refactor `atlassy-pipeline` into focused modules while keeping `lib.rs` as facad
 | `states/verify` | 70 | Easy | Self-contained verification |
 | `states/publish` | 90 | Easy-Medium | Needs `&mut client` for retry logic |
 | `orchestrator` | 130 | Medium-Hard | Hub; extract last after all states are moved out |
-| `util` | 20 | Easy | Shared helpers: `meta()`, `estimate_tokens()`, `compute_section_bytes()`, `add_duration_suffix()` |
+| `util` | ~40 | Easy | Shared helpers: `meta()`, `estimate_tokens()`, `compute_section_bytes()`, `add_duration_suffix()` |
 
 #### Recommended extraction order
 
@@ -165,6 +173,12 @@ Refactor `atlassy-pipeline` into focused modules while keeping `lib.rs` as facad
 4. Individual `states/*` modules (each depends on `error_map` + external crates)
 5. `util` (shared helpers used by orchestrator)
 6. `orchestrator` (last — imports everything else)
+
+#### Design decisions
+
+- **Free functions over split impl blocks.** State methods on `Orchestrator` are Feature Envious (refactoring.guru: Move Method) — they primarily operate on their input parameters, not on `self`. Only 2 of 9 states use `self.client`. Extracting as free functions makes dependencies explicit and each state independently testable.
+- **No parameter object / context struct.** Shared parameters (`artifact_store`, `request`, `tracker`) are passed individually. `client` is only needed by fetch and publish states, so bundling all four into a shared context would widen every state's dependency surface unnecessarily (refactoring.guru: avoid Speculative Generality).
+- **State skeleton as convention, not abstraction.** All state functions follow a consistent transition/persist/return pattern (~5 lines of boilerplate). This is kept as readable convention rather than formalized via trait or macro. The boilerplate is small, the types vary per state, and the consistency is self-documenting. Noted as optional future cleanup if state count grows.
 
 #### Test distribution
 
@@ -241,17 +255,17 @@ Current `src/tests.rs` (13 tests) and `src/test_helpers.rs` distribute into new 
 
 ### Phase 4: Error Taxonomy + Verification Consistency — size S-M
 
-Replace string-based hard-error mapping with typed mapping where practical. 17 production mapping points across 4 categories (see baseline).
+Replace remaining string-based hard-error mapping with typed mapping. The `ErrorCode` enum in `atlassy-contracts` was already created as a Phase 2 prerequisite, reducing the remaining work to eliminating string-sniffing at error construction sites and typed classification in the CLI.
 
 #### Priority targets
 
-1. **`to_hard_error()` in `atlassy-pipeline/src/lib.rs:1496-1514`** (highest priority).
-   - Currently sniffs error messages via `.contains("out of scope")`, `.contains("table") && .contains("shape")`, etc. to assign error codes.
+1. **`to_hard_error()` in `atlassy-pipeline/src/error_map.rs`** (highest priority).
+   - Currently sniffs error messages via `.contains("out of scope")`, `.contains("table") && .contains("shape")`, etc. to select `ErrorCode` variants.
    - Ordering of checks matters: `"out of scope"` must be checked before bare `"scope"` or errors are misclassified.
    - Any upstream wording change silently reclassifies errors.
-   - Replace with typed error variants that carry the error code at construction site, not at classification site.
-2. **Error code constants in `atlassy-contracts/src/lib.rs:9-20`**: convert 12 `&str` constants to an enum with `Display`/`Serialize` impls. `PipelineError::Hard.code` becomes the enum type instead of `String`.
-3. **`classify_run_from_summary()` in `atlassy-cli/src/main.rs:1920-2034`**: convert 7 string-literal error class assignments to a typed `ErrorClass` enum.
+   - Replace with typed `AdfError` variants that carry the error code at construction site, not at classification site.
+2. ~~**Error code constants in `atlassy-contracts`**~~ — completed as Phase 2 prerequisite (see Phase 2: Prerequisite: ErrorCode enum).
+3. **`classify_run_from_summary()` in `atlassy-cli`**: convert 7 string-literal error class assignments to a typed `ErrorClass` enum. Replace `.to_string()` bridge introduced in Phase 2 prerequisite with direct enum matching.
 4. **Downstream consumers** (runbook routing, risk deltas, failure summaries): update to match on typed enums instead of string comparisons.
 
 #### Acceptance criteria
@@ -259,6 +273,7 @@ Replace string-based hard-error mapping with typed mapping where practical. 17 p
 - Error classification is deterministic and explicit.
 - No regression in existing hard-error test coverage.
 - `to_hard_error()` no longer uses substring matching on error messages.
+- CLI matches on `ErrorCode` and `ErrorClass` enums directly, not via `.to_string()` or `.as_deref()`.
 
 ## Phase Sequencing Constraints
 
@@ -268,7 +283,9 @@ Replace string-based hard-error mapping with typed mapping where practical. 17 p
 | 1+3 (leaf crates + CLI) | Yes, with coordination | Medium | CLI imports ~20 symbols from contracts + confluence |
 | 2+3 (pipeline + CLI) | Yes, with coordination | Low | CLI uses only 4 pipeline public symbols |
 
-Required execution order: **1 → 2 (can overlap with 3) → 3 → 4**.
+Required execution order: **1 → 2 prereq (ErrorCode enum) → 2 (can overlap with 3) → 3 → 4**.
+
+The Phase 2 prerequisite (ErrorCode enum in `atlassy-contracts`) must land before pipeline extraction begins. It touches only the already-modularized contracts crate and is backwards-compatible — CLI uses `.to_string()` as a temporary bridge. This does not conflict with Phase 1 completion.
 
 Phase 2 (pipeline) and Phase 3 (CLI) can overlap if the pipeline's 4-symbol public API (`Orchestrator`, `PipelineError`, `RunMode`, `RunRequest`) is frozen before CLI work begins.
 
