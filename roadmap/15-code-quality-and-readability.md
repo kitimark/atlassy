@@ -11,24 +11,25 @@ The program targets source structure and test architecture, not feature expansio
 
 ## Current State (2026-03-09)
 
-Phases 1-3 complete (leaf crate modularization, ErrorCode enum, pipeline modularization, CLI modularization). Phase 4 remains.
+All phases complete (1-4): leaf crate modularization, ErrorCode enum, pipeline modularization, CLI modularization, error taxonomy.
 
 - No remaining monolithic hotspots.
-- Modularized crates (Phases 1-3):
+- Modularized crates (Phases 1-4):
   - `crates/atlassy-adf` — 6 modules (scope, path, index, patch, table_guard, bootstrap); `lib.rs` is 94-line facade; inline tests in scope/path/index
   - `crates/atlassy-contracts` — 3 modules (constants, types, validation); `lib.rs` is 10-line barrel; inline tests in constants/validation; `ErrorCode` is a 12-variant enum with `as_str()`/`Display`/`Serialize` impls
   - `crates/atlassy-confluence` — 3 modules (live, stub, types); `lib.rs` is 7-line barrel; inline tests in live; `src/tests.rs` removed
   - `crates/atlassy-pipeline` — 14 modules (6 infrastructure + 9 states via `states/`); `lib.rs` is 58-line facade with `RunMode`/`RunRequest` defined inline; inline tests in `state_tracker.rs`, `util.rs`
-  - `crates/atlassy-cli` — 22 source files across 4 module groups (commands/4, batch/3, readiness/4, top-level/5 + 3 `mod.rs` + `cli_args.rs`); `main.rs` is 110-line entrypoint (Clap dispatch only); `lib.rs` is 19-line facade with selective re-exports; inline tests in `commands/run.rs`
+  - `crates/atlassy-cli` — 22 source files across 4 module groups (commands/4, batch/3, readiness/4, top-level/5 + 3 `mod.rs` + `cli_args.rs`); `main.rs` is 110-line entrypoint (Clap dispatch only); `lib.rs` is 19-line facade with selective re-exports; inline tests in `commands/run.rs`, `types.rs`
 - Test placement:
-  - Inline `#[cfg(test)] mod tests` in 9 files: `adf/scope.rs`, `adf/path.rs`, `adf/index.rs`, `contracts/constants.rs`, `contracts/validation.rs`, `confluence/live.rs`, `pipeline/state_tracker.rs`, `pipeline/util.rs`, `cli/commands/run.rs`
+  - Inline `#[cfg(test)] mod tests` in 10 files: `adf/scope.rs`, `adf/path.rs`, `adf/index.rs`, `contracts/constants.rs`, `contracts/validation.rs`, `confluence/live.rs`, `pipeline/state_tracker.rs`, `pipeline/util.rs`, `cli/commands/run.rs`, `cli/types.rs`
   - No external `src/tests.rs` files remain in any crate
   - Integration tests in `tests/` across 4 crates; CLI integration tests (`batch_report.rs`, `readiness.rs`) import via `use atlassy_cli::*` (enabled by `lib.rs` extraction)
-- Error classification — remaining string-based points (15 in CLI, 0 in pipeline):
+- Error classification — fully typed across both layers:
   - Pipeline layer (TYPED): `to_hard_error()` pattern-matches on `AdfError` variants → `ErrorCode` enum; `PipelineError::Hard.code` is `ErrorCode`, not `String`
-  - CLI layer (UNTYPED): `classify_run_from_summary()` in `batch/report.rs` — 7 string-literal `error_class` assignments (`"io"`, `"pipeline_hard"`, `"telemetry_incomplete"`, etc.) + 3 CLI-only `error_code` strings (`ERR_SUMMARY_MISSING`, `ERR_TELEMETRY_INCOMPLETE`, `ERR_PROVENANCE_MISMATCH`) with no `ErrorCode` enum variant
-  - CLI downstream: 4 `.as_deref() == Some("...")` comparisons (runbooks, decision_packet) + 6 in tests
-  - Wire format: `RunSummary.error_codes: Vec<String>` — pipeline writes `ErrorCode` variants via `.to_string()`, CLI reads via `.as_str()` comparisons
+  - CLI layer (TYPED): `ErrorClass` enum (6 variants) and `DiagnosticCode` enum (4 variants) in `types.rs`; `classify_run_from_summary()` in `batch/report.rs` uses typed enum values at all 7 assignment sites; zero string-literal `error_class`/`error_code` assignments in production code
+  - CLI downstream: zero `.as_deref() == Some("...")` comparisons for error classification; test assertions use direct enum equality (`diag.error_class == Some(ErrorClass::RetryPolicy)`)
+  - Wire format: `RunSummary.error_codes: Vec<String>` — pipeline writes `ErrorCode` variants via `.to_string()`, CLI reads via `.as_str()` comparisons; custom `Serialize`/`Deserialize` impls on `ErrorClass` and `DiagnosticCode` preserve flat-string wire format
+- Open items (non-blocking): 10 modules with private helpers lack inline `#[cfg(test)]` blocks — see consolidated list at end of Phase 4
 
 ## Scope
 
@@ -218,7 +219,7 @@ Current `src/tests.rs` (3 tests) distributes into new modules:
 - 14 modules created: `state_tracker`, `error_map`, `artifact_store`, `orchestrator`, `util`, `states/mod` + 9 state modules (`fetch`, `classify`, `extract_prose`, `md_assist_edit`, `adf_table_edit`, `merge_candidates`, `patch`, `verify`, `publish`)
 - `src/tests.rs` removed; tests inlined in `state_tracker.rs` (1 test) and `util.rs` (2 tests)
 - Integration parity held: `tests/pipeline_integration.rs` unchanged and green
-- Open item: 4 state modules (`classify`, `md_assist_edit`, `adf_table_edit`, `merge_candidates`) have private helpers without inline `#[cfg(test)]` blocks; does not block Phase 3
+- Open item: 4 state modules (`classify`, `md_assist_edit`, `adf_table_edit`, `merge_candidates`) have private helpers without inline `#[cfg(test)]` blocks; consolidated in Phase 4 completion summary
 
 ### Phase 3: CLI Modularization — COMPLETE
 
@@ -284,13 +285,13 @@ Current `src/tests.rs` (13 tests) and `src/test_helpers.rs` distribute into new 
 - 22 source files across 4 module groups: `commands/` (4: `run`, `run_batch`, `run_readiness`, `create_subpage`), `batch/` (3: `report`, `kpi`, `safety`), `readiness/` (4: `evidence`, `gates`, `runbooks`, `decision_packet`), top-level (5: `types`, `fixtures`, `provenance`, `manifest`, `io`) + 3 `mod.rs` files + `cli_args.rs`
 - `src/tests.rs` (573 lines, 13 tests) and `src/test_helpers.rs` (19 lines) removed; tests distributed to inline blocks and integration tests
 - Integration tests (`batch_report.rs`, `readiness.rs`) import via `use atlassy_cli::*` (binary crate constraint resolved by `lib.rs` extraction); `live_runtime_startup.rs` unchanged (binary-level test)
-- Open item: only `commands/run.rs` has inline `#[cfg(test)]` block; remaining modules with private logic lack inline unit tests; does not block Phase 4
+- Open item: `commands/run.rs` and `types.rs` have inline `#[cfg(test)]` blocks (`types.rs` added during Phase 4); remaining modules with private logic lack inline unit tests
 
-### Phase 4: Error Taxonomy — size S-M
+### Phase 4: Error Taxonomy — COMPLETE
 
-Replace remaining string-based error classification in the CLI with typed enums. The pipeline layer is already fully typed (Phase 2 prerequisite). The remaining work is at the CLI diagnostic layer, which has 15 string-based classification points.
+Replaced remaining string-based error classification in the CLI with typed enums. The pipeline layer was already fully typed (Phase 2 prerequisite). This phase addressed the 15 string-based classification points at the CLI diagnostic layer.
 
-This phase depends on Phase 3 (CLI modularization) because `ErrorClass` and `DiagnosticCode` live in the CLI `types` module created during Phase 3.
+This phase depended on Phase 3 (CLI modularization) because `ErrorClass` and `DiagnosticCode` live in the CLI `types` module created during Phase 3.
 
 #### Two-layer error taxonomy
 
@@ -299,7 +300,7 @@ The codebase has two distinct error classification layers that must not be confl
 | Layer | Location | Purpose | Status |
 |---|---|---|---|
 | Pipeline `ErrorCode` | `atlassy-contracts` | What went wrong during pipeline execution (12 variants) | TYPED (Phase 2 prereq) |
-| CLI diagnostic classification | `atlassy-cli` | What went wrong with the run from an operational perspective (6 classes + 3 CLI-only codes) | UNTYPED (this phase) |
+| CLI diagnostic classification | `atlassy-cli` | What went wrong with the run from an operational perspective (6 classes + 3 CLI-only codes) | TYPED |
 
 A run can succeed at the pipeline level but fail at the CLI level (e.g., telemetry incomplete, provenance mismatch). The two layers describe different concerns and should remain separate types.
 
@@ -352,6 +353,18 @@ Optional future cleanup after Phase 4 core: add `Deserialize` impl with unknown-
 - No raw `"ERR_*"` string literals in CLI production code outside serde impls.
 - `BatchRunDiagnostic` serialization produces identical JSON output (wire-compatible).
 
+#### Completion summary
+
+- `ErrorClass` enum (6 variants: `Io`, `TelemetryIncomplete`, `ProvenanceIncomplete`, `RetryPolicy`, `RuntimeUnmappedHard`, `PipelineHard`) in `types.rs` with `as_str()`, `from_str()`, custom `Serialize`/`Deserialize` impls; const `ALL` array; rejects unknown variants at deserialization
+- `DiagnosticCode` enum (4 variants: `Pipeline(ErrorCode)`, `SummaryMissing`, `TelemetryIncomplete`, `ProvenanceMismatch`) in `types.rs` with `as_str()`, `from_str()`, custom `Serialize`/`Deserialize` impls; `Pipeline(ErrorCode)` wrapper bridges the two-layer taxonomy; `from_str()` falls back to `ErrorCode::ALL` for pipeline codes
+- `classify_run_from_summary` in `batch/report.rs` uses typed enum values at all 7 assignment sites; zero string-literal `error_class`/`error_code` assignments remain in production code
+- All `.as_deref() == Some("...")` patterns for error classification eliminated; test assertions use direct enum equality (e.g., `diag.error_class == Some(ErrorClass::RetryPolicy)`)
+- `BatchRunDiagnostic` fields changed from `Option<String>` to `Option<ErrorClass>` and `Option<DiagnosticCode>`; wire format preserved via custom serde impls
+- `types.rs` gained inline `#[cfg(test)] mod tests` block for serde round-trip and unknown-variant rejection tests
+- Open items (non-blocking): 10 modules with private helpers lack inline `#[cfg(test)]` blocks:
+  - Pipeline (4): `states/classify.rs` (3 helpers), `states/md_assist_edit.rs` (1), `states/adf_table_edit.rs` (1), `states/merge_candidates.rs` (1)
+  - CLI (6): `batch/kpi.rs` (7 helpers), `readiness/gates.rs` (3), `readiness/decision_packet.rs` (2), `readiness/evidence.rs` (2), `readiness/runbooks.rs` (1), `provenance.rs` (2)
+
 ## Phase Sequencing Constraints
 
 | Phase | Status | Depends On |
@@ -360,11 +373,9 @@ Optional future cleanup after Phase 4 core: add `Deserialize` impl with unknown-
 | Phase 2 prereq (ErrorCode enum) | **COMPLETE** | Phase 1 |
 | Phase 2 (pipeline) | **COMPLETE** | Phase 1, Phase 2 prereq |
 | Phase 3 (CLI) | **COMPLETE** | Can overlap with Phase 2 |
-| Phase 4 (error taxonomy) | Pending | Phase 3 (ErrorClass/DiagnosticCode live in CLI `types` module) |
+| Phase 4 (error taxonomy) | **COMPLETE** | Phase 3 (ErrorClass/DiagnosticCode live in CLI `types` module) |
 
-Remaining execution order: **4**.
-
-Phase 4 depends on Phase 3 because the `ErrorClass` and `DiagnosticCode` enums belong in the CLI `types` module created during Phase 3. Phase 3 is now complete; `BatchRunDiagnostic` lives in `types.rs` and is ready for typed field migration.
+All phases complete. No remaining execution order.
 
 ## Quality Gates
 
