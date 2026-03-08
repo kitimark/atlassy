@@ -27,6 +27,7 @@ This folder contains design and delivery planning for Atlassy.
 - `12-page-lifecycle-expansion-plan.md`
 - `13-ci-and-automation.md`
 - `14-target-path-auto-discovery.md`
+- `15-code-quality-and-readability.md`
 
 ## Working Rules
 
