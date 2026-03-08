@@ -5,7 +5,7 @@ Define scoped ADF retrieval, fallback behavior, and deterministic node-path inde
 ## Requirements
 
 ### Requirement: Scoped fetch by selector with bounded fallback
-The fetch state SHALL resolve provided scope selectors (heading or block identifier) to determine `allowed_scope_paths` and MUST return the full page ADF as `scoped_adf`. When a heading selector matches, `allowed_scope_paths` SHALL include the heading path and all subsequent sibling content paths until the next heading at equal or higher level (or end of content array). The fetch state MUST avoid marking the request as failed unless scope resolution itself errors.
+The fetch state SHALL resolve provided scope selectors (heading or block identifier) to determine `allowed_scope_paths` and MUST return the full page ADF as `scoped_adf`. Heading selectors SHALL use exact text equality to match heading content. When a heading selector matches, `allowed_scope_paths` SHALL include the heading path and all subsequent sibling content paths until the next heading at equal or higher level (or end of content array). The fetch state MUST avoid marking the request as failed unless scope resolution itself errors.
 
 #### Scenario: Scope selector resolves successfully
 - **WHEN** a valid scope selector matches content on the page
@@ -31,6 +31,42 @@ The fetch state SHALL resolve provided scope selectors (heading or block identif
 #### Scenario: Scope selector does not resolve
 - **WHEN** no provided scope selector can be resolved
 - **THEN** fetch sets `scope_resolution_failed` to `true` and records an explicit fallback reason for full-page retrieval
+
+#### Scenario: Heading selector uses exact text match
+- **WHEN** a heading selector `heading:X` is provided
+- **THEN** the selector matches only headings whose collected text content is exactly equal to `X`
+- **AND** headings whose text contains `X` as a substring but is not equal to `X` SHALL NOT match
+
+#### Scenario: Heading selector does not match substring
+- **WHEN** a heading selector `heading:View` is provided and the document contains a heading titled "Overview"
+- **THEN** the heading "Overview" SHALL NOT match
+- **AND** scope resolution falls back to full-page scope with a fallback reason
+
+#### Scenario: Duplicate headings match all instances
+- **WHEN** a heading selector matches multiple headings with identical text at the same level
+- **THEN** `allowed_scope_paths` contains the union of all matched heading sections, deduplicated and sorted
+
+### Requirement: Block selector matches by attribute ID
+The scope resolver SHALL support `block:` selectors that match nodes by `attrs.id` or `attrs.localId` attribute values. Block selectors SHALL use exact string equality for matching.
+
+#### Scenario: Block selector matches attrs.id
+- **WHEN** a `block:X` selector is provided and the document contains a node with `attrs.id` equal to `X`
+- **THEN** the node path is included in `allowed_scope_paths`
+
+#### Scenario: Block selector matches attrs.localId
+- **WHEN** a `block:X` selector is provided and the document contains a node with `attrs.localId` equal to `X`
+- **THEN** the node path is included in `allowed_scope_paths`
+
+#### Scenario: Block selector does not match
+- **WHEN** a `block:X` selector is provided and no node in the document has `attrs.id` or `attrs.localId` equal to `X`
+- **THEN** scope resolution falls back to full-page scope with a fallback reason
+
+### Requirement: Scope utility function is publicly accessible
+The `atlassy-adf` crate SHALL expose `is_within_allowed_scope` as a public function so that downstream crates can perform scope filtering on node paths against `allowed_scope_paths`.
+
+#### Scenario: Pipeline crate uses scope check
+- **WHEN** `atlassy-pipeline` needs to filter nodes by scope before processing
+- **THEN** it references `is_within_allowed_scope` from `atlassy-adf` instead of reimplementing the logic
 
 ### Requirement: Fetch output includes version and allowed scope paths
 The fetch output MUST include the source `page_version`, an `allowed_scope_paths` list that defines the mutation boundary for downstream patch and verify checks, and `full_page_adf_bytes` recording the serialized byte size of the full-page ADF before scope resolution.
