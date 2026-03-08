@@ -13,10 +13,7 @@ use atlassy_adf::{
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
     AdfTableEditInput, AdfTableEditOutput, ClassifyInput, ClassifyOutput, ContractError,
-    Diagnostics, ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_CONFLICT_RETRY_EXHAUSTED,
-    ERR_LOCKED_NODE_MUTATION, ERR_OUT_OF_SCOPE_MUTATION, ERR_ROUTE_VIOLATION, ERR_RUNTIME_BACKEND,
-    ERR_RUNTIME_UNMAPPED_HARD, ERR_SCHEMA_INVALID, ERR_TABLE_SHAPE_CHANGE,
-    ERR_TARGET_DISCOVERY_FAILED, EnvelopeMeta, ErrorInfo, ExtractProseInput, ExtractProseOutput,
+    Diagnostics, EnvelopeMeta, ErrorCode, ErrorInfo, ExtractProseInput, ExtractProseOutput,
     FetchInput, FetchOutput, MarkdownBlock, MarkdownMapEntry, MdAssistEditInput,
     MdAssistEditOutput, MergeCandidatesInput, MergeCandidatesOutput, PatchInput, PatchOp,
     PatchOutput, PipelineState, ProseChangeCandidate, ProvenanceStamp, PublishInput, PublishOutput,
@@ -82,7 +79,7 @@ pub enum PipelineError {
     #[error("pipeline hard error in `{state}`: {code} ({message})")]
     Hard {
         state: PipelineState,
-        code: String,
+        code: ErrorCode,
         message: String,
     },
 }
@@ -253,11 +250,11 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         run_summary.locked_node_mutation = run_summary
             .error_codes
             .iter()
-            .any(|code| code == ERR_LOCKED_NODE_MUTATION);
+            .any(|code| code == ErrorCode::LockedNodeMutation.as_str());
         run_summary.out_of_scope_mutation = run_summary
             .error_codes
             .iter()
-            .any(|code| code == ERR_OUT_OF_SCOPE_MUTATION);
+            .any(|code| code == ErrorCode::OutOfScopeMutation.as_str());
         run_summary.telemetry_complete = validate_run_summary_telemetry(&run_summary).is_ok();
 
         self.artifact_store
@@ -296,7 +293,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     PipelineState::Fetch,
                     PipelineError::Hard {
                         state: PipelineState::Fetch,
-                        code: ERR_BOOTSTRAP_REQUIRED.to_string(),
+                        code: ErrorCode::BootstrapRequired,
                         message:
                             "page is effectively empty; use --bootstrap-empty-page to bootstrap"
                                 .to_string(),
@@ -309,7 +306,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     PipelineState::Fetch,
                     PipelineError::Hard {
                         state: PipelineState::Fetch,
-                        code: ERR_BOOTSTRAP_INVALID_STATE.to_string(),
+                        code: ErrorCode::BootstrapInvalidState,
                         message: "page is not empty; --bootstrap-empty-page is not valid for non-empty pages".to_string(),
                     },
                 ));
@@ -432,8 +429,16 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 .diagnostics
                 .errors
                 .first()
-                .map(|error| error.code.clone())
-                .unwrap_or_else(|| ERR_SCHEMA_INVALID.to_string());
+                .map(|error| match error.code.as_str() {
+                    code if code == ErrorCode::TableShapeChange.as_str() => {
+                        ErrorCode::TableShapeChange
+                    }
+                    code if code == ErrorCode::OutOfScopeMutation.as_str() => {
+                        ErrorCode::OutOfScopeMutation
+                    }
+                    _ => ErrorCode::SchemaInvalid,
+                })
+                .unwrap_or(ErrorCode::SchemaInvalid);
             return Err(PipelineError::Hard {
                 state: PipelineState::Verify,
                 code: primary_code,
@@ -468,10 +473,10 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             summary.failure_state = Some(PipelineState::Publish);
             summary
                 .error_codes
-                .push(ERR_CONFLICT_RETRY_EXHAUSTED.to_string());
+                .push(ErrorCode::ConflictRetryExhausted.to_string());
             return Err(PipelineError::Hard {
                 state: PipelineState::Publish,
-                code: ERR_CONFLICT_RETRY_EXHAUSTED.to_string(),
+                code: ErrorCode::ConflictRetryExhausted,
                 message: "publish failed after retry".to_string(),
             });
         }
@@ -728,7 +733,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     )
                     .map_err(|error| PipelineError::Hard {
                         state: PipelineState::MdAssistEdit,
-                        code: ERR_TARGET_DISCOVERY_FAILED.to_string(),
+                        code: ErrorCode::TargetDiscoveryFailed,
                         message: error.to_string(),
                     })?;
                     summary.discovered_target_path = Some(discovered_path.clone());
@@ -851,7 +856,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     )
                     .map_err(|error| PipelineError::Hard {
                         state: PipelineState::AdfTableEdit,
-                        code: ERR_TARGET_DISCOVERY_FAILED.to_string(),
+                        code: ErrorCode::TargetDiscoveryFailed,
                         message: error.to_string(),
                     })?;
                     summary.discovered_target_path = Some(discovered_path.clone());
@@ -874,7 +879,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 if *operation != TableOperation::CellTextUpdate {
                     return Err(PipelineError::Hard {
                         state: PipelineState::AdfTableEdit,
-                        code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+                        code: ErrorCode::TableShapeChange,
                         message: format!(
                             "forbidden table operation requested: {} at {}",
                             operation.as_str(),
@@ -965,7 +970,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 if prose_path == table_path {
                     return Err(PipelineError::Hard {
                         state: PipelineState::MergeCandidates,
-                        code: ERR_ROUTE_VIOLATION.to_string(),
+                        code: ErrorCode::RouteViolation,
                         message: format!(
                             "merge collision: duplicate changed path across routes `{prose_path}`"
                         ),
@@ -974,7 +979,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 if paths_overlap(prose_path, table_path) {
                     return Err(PipelineError::Hard {
                         state: PipelineState::MergeCandidates,
-                        code: ERR_ROUTE_VIOLATION.to_string(),
+                        code: ErrorCode::RouteViolation,
                         message: format!(
                             "cross-route conflict: prose path `{prose_path}` overlaps table path `{table_path}`"
                         ),
@@ -1002,7 +1007,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             {
                 return Err(PipelineError::Hard {
                     state: PipelineState::MergeCandidates,
-                    code: ERR_ROUTE_VIOLATION.to_string(),
+                    code: ErrorCode::RouteViolation,
                     message: format!(
                         "table candidate path `{table_path}` overlaps locked structural boundary"
                     ),
@@ -1127,7 +1132,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
         let mut diagnostics = Diagnostics::default();
         let verify_result = if request.force_verify_fail {
             diagnostics.errors.push(ErrorInfo {
-                code: ERR_SCHEMA_INVALID.to_string(),
+                code: ErrorCode::SchemaInvalid.to_string(),
                 message: "forced verify failure".to_string(),
                 recovery: "fix candidate payload".to_string(),
             });
@@ -1141,7 +1146,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                 ) && !is_table_cell_text_path(path, &fetch.payload.node_path_index))
         }) {
             diagnostics.errors.push(ErrorInfo {
-                code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+                code: ErrorCode::TableShapeChange.to_string(),
                 message: format!("forbidden table shape or attribute mutation at `{path}`"),
                 recovery: "limit table updates to cell text paths only".to_string(),
             });
@@ -1151,7 +1156,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             &input.payload.allowed_scope_paths,
         ) {
             diagnostics.errors.push(ErrorInfo {
-                code: ERR_OUT_OF_SCOPE_MUTATION.to_string(),
+                code: ErrorCode::OutOfScopeMutation.to_string(),
                 message: error.to_string(),
                 recovery: "restrict changes to allowed_scope_paths".to_string(),
             });
@@ -1227,7 +1232,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     Err(ConfluenceError::Conflict(_)) => {
                         let mut diagnostics = Diagnostics::default();
                         diagnostics.errors.push(ErrorInfo {
-                            code: ERR_CONFLICT_RETRY_EXHAUSTED.to_string(),
+                            code: ErrorCode::ConflictRetryExhausted.to_string(),
                             message: "conflict after scoped retry".to_string(),
                             recovery: "return reviewer artifact".to_string(),
                         });
@@ -1277,7 +1282,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
     ) -> PipelineError {
         summary.failure_state = Some(state);
         if let PipelineError::Hard { code, .. } = &error {
-            summary.error_codes.push(code.clone());
+            summary.error_codes.push(code.to_string());
         }
         error
     }
@@ -1309,14 +1314,14 @@ fn project_prose_candidate(
         .cloned()
         .ok_or_else(|| PipelineError::Hard {
             state: PipelineState::MdAssistEdit,
-            code: ERR_ROUTE_VIOLATION.to_string(),
+            code: ErrorCode::RouteViolation,
             message: format!("target path `{canonical_path}` is not mapped to editable prose"),
         })?;
 
     if canonical_path == mapped_root || canonical_path.ends_with("/type") {
         return Err(PipelineError::Hard {
             state: PipelineState::MdAssistEdit,
-            code: ERR_SCHEMA_INVALID.to_string(),
+            code: ErrorCode::SchemaInvalid,
             message: format!(
                 "target path `{canonical_path}` violates prose boundary or top-level type constraints"
             ),
@@ -1349,7 +1354,7 @@ fn project_table_candidate(
     ) {
         return Err(PipelineError::Hard {
             state: PipelineState::AdfTableEdit,
-            code: ERR_ROUTE_VIOLATION.to_string(),
+            code: ErrorCode::RouteViolation,
             message: format!("target path `{canonical_path}` is not in table route"),
         });
     }
@@ -1359,7 +1364,7 @@ fn project_table_candidate(
     {
         return Err(PipelineError::Hard {
             state: PipelineState::AdfTableEdit,
-            code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+            code: ErrorCode::TableShapeChange,
             message: format!(
                 "target path `{canonical_path}` is not an allowed table cell text update path"
             ),
@@ -1376,7 +1381,7 @@ fn project_table_candidate(
     validate_table_candidates(std::slice::from_ref(&candidate), allowed_ops).map_err(|error| {
         PipelineError::Hard {
             state: PipelineState::AdfTableEdit,
-            code: ERR_TABLE_SHAPE_CHANGE.to_string(),
+            code: ErrorCode::TableShapeChange,
             message: error.to_string(),
         }
     })?;
@@ -1472,44 +1477,43 @@ fn confluence_error_to_hard_error(
     match error {
         ConfluenceError::Conflict(page_id) => PipelineError::Hard {
             state: source_state,
-            code: ERR_CONFLICT_RETRY_EXHAUSTED.to_string(),
+            code: ErrorCode::ConflictRetryExhausted,
             message: format!("version conflict on page: {page_id}"),
         },
         ConfluenceError::NotFound(page_id) => PipelineError::Hard {
             state: source_state,
-            code: ERR_RUNTIME_BACKEND.to_string(),
+            code: ErrorCode::RuntimeBackend,
             message: format!("page not found in runtime backend: {page_id}"),
         },
         ConfluenceError::Transport(message) => PipelineError::Hard {
             state: source_state,
-            code: ERR_RUNTIME_BACKEND.to_string(),
+            code: ErrorCode::RuntimeBackend,
             message,
         },
         ConfluenceError::NotImplemented => PipelineError::Hard {
             state: source_state,
-            code: ERR_RUNTIME_UNMAPPED_HARD.to_string(),
+            code: ErrorCode::RuntimeUnmappedHard,
             message: "runtime backend operation is not implemented".to_string(),
         },
     }
 }
 
-fn to_hard_error(source_state: PipelineState, error: impl std::fmt::Display) -> PipelineError {
+fn to_hard_error(source_state: PipelineState, error: AdfError) -> PipelineError {
     let message = error.to_string();
-    let code = if message.contains("out of scope") {
-        ERR_OUT_OF_SCOPE_MUTATION
-    } else if message.contains("table") && message.contains("shape") {
-        ERR_TABLE_SHAPE_CHANGE
-    } else if message.contains("whole-body rewrite") {
-        ERR_ROUTE_VIOLATION
-    } else if message.contains("scope") {
-        atlassy_contracts::ERR_SCOPE_MISS
-    } else {
-        ERR_SCHEMA_INVALID
+    let code = match error {
+        AdfError::OutOfScope(_) => ErrorCode::OutOfScopeMutation,
+        AdfError::WholeBodyRewriteDisallowed => ErrorCode::RouteViolation,
+        AdfError::ScopeResolutionFailed => ErrorCode::ScopeMiss,
+        AdfError::InvalidSelector(_)
+        | AdfError::InvalidPath(_)
+        | AdfError::DuplicatePath(_)
+        | AdfError::MappingIntegrity(_)
+        | AdfError::TargetDiscoveryFailed { .. } => ErrorCode::SchemaInvalid,
     };
 
     PipelineError::Hard {
         state: source_state,
-        code: code.to_string(),
+        code,
         message,
     }
 }

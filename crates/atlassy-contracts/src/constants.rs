@@ -1,18 +1,72 @@
+use serde::Serialize;
+
 pub const CONTRACT_VERSION: &str = "1.0.0";
 pub const PIPELINE_VERSION: &str = "v1";
 
-pub const ERR_SCOPE_MISS: &str = "ERR_SCOPE_MISS";
-pub const ERR_ROUTE_VIOLATION: &str = "ERR_ROUTE_VIOLATION";
-pub const ERR_SCHEMA_INVALID: &str = "ERR_SCHEMA_INVALID";
-pub const ERR_OUT_OF_SCOPE_MUTATION: &str = "ERR_OUT_OF_SCOPE_MUTATION";
-pub const ERR_LOCKED_NODE_MUTATION: &str = "ERR_LOCKED_NODE_MUTATION";
-pub const ERR_TABLE_SHAPE_CHANGE: &str = "ERR_TABLE_SHAPE_CHANGE";
-pub const ERR_CONFLICT_RETRY_EXHAUSTED: &str = "ERR_CONFLICT_RETRY_EXHAUSTED";
-pub const ERR_RUNTIME_BACKEND: &str = "ERR_RUNTIME_BACKEND";
-pub const ERR_RUNTIME_UNMAPPED_HARD: &str = "ERR_RUNTIME_UNMAPPED_HARD";
-pub const ERR_BOOTSTRAP_REQUIRED: &str = "ERR_BOOTSTRAP_REQUIRED";
-pub const ERR_BOOTSTRAP_INVALID_STATE: &str = "ERR_BOOTSTRAP_INVALID_STATE";
-pub const ERR_TARGET_DISCOVERY_FAILED: &str = "ERR_TARGET_DISCOVERY_FAILED";
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ErrorCode {
+    ScopeMiss,
+    RouteViolation,
+    SchemaInvalid,
+    OutOfScopeMutation,
+    LockedNodeMutation,
+    TableShapeChange,
+    ConflictRetryExhausted,
+    RuntimeBackend,
+    RuntimeUnmappedHard,
+    BootstrapRequired,
+    BootstrapInvalidState,
+    TargetDiscoveryFailed,
+}
+
+impl ErrorCode {
+    pub const ALL: [Self; 12] = [
+        Self::ScopeMiss,
+        Self::RouteViolation,
+        Self::SchemaInvalid,
+        Self::OutOfScopeMutation,
+        Self::LockedNodeMutation,
+        Self::TableShapeChange,
+        Self::ConflictRetryExhausted,
+        Self::RuntimeBackend,
+        Self::RuntimeUnmappedHard,
+        Self::BootstrapRequired,
+        Self::BootstrapInvalidState,
+        Self::TargetDiscoveryFailed,
+    ];
+
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::ScopeMiss => "ERR_SCOPE_MISS",
+            Self::RouteViolation => "ERR_ROUTE_VIOLATION",
+            Self::SchemaInvalid => "ERR_SCHEMA_INVALID",
+            Self::OutOfScopeMutation => "ERR_OUT_OF_SCOPE_MUTATION",
+            Self::LockedNodeMutation => "ERR_LOCKED_NODE_MUTATION",
+            Self::TableShapeChange => "ERR_TABLE_SHAPE_CHANGE",
+            Self::ConflictRetryExhausted => "ERR_CONFLICT_RETRY_EXHAUSTED",
+            Self::RuntimeBackend => "ERR_RUNTIME_BACKEND",
+            Self::RuntimeUnmappedHard => "ERR_RUNTIME_UNMAPPED_HARD",
+            Self::BootstrapRequired => "ERR_BOOTSTRAP_REQUIRED",
+            Self::BootstrapInvalidState => "ERR_BOOTSTRAP_INVALID_STATE",
+            Self::TargetDiscoveryFailed => "ERR_TARGET_DISCOVERY_FAILED",
+        }
+    }
+}
+
+impl std::fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl Serialize for ErrorCode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
 
 pub const FLOW_BASELINE: &str = "baseline";
 pub const FLOW_OPTIMIZED: &str = "optimized";
@@ -23,3 +77,47 @@ pub const PATTERN_C: &str = "C";
 
 pub const RUNTIME_STUB: &str = "stub";
 pub const RUNTIME_LIVE: &str = "live";
+
+#[cfg(test)]
+mod tests {
+    use super::ErrorCode;
+
+    #[test]
+    fn as_str_returns_expected_values_for_all_error_codes() {
+        let cases = [
+            (ErrorCode::ScopeMiss, "ERR_SCOPE_MISS"),
+            (ErrorCode::RouteViolation, "ERR_ROUTE_VIOLATION"),
+            (ErrorCode::SchemaInvalid, "ERR_SCHEMA_INVALID"),
+            (ErrorCode::OutOfScopeMutation, "ERR_OUT_OF_SCOPE_MUTATION"),
+            (ErrorCode::LockedNodeMutation, "ERR_LOCKED_NODE_MUTATION"),
+            (ErrorCode::TableShapeChange, "ERR_TABLE_SHAPE_CHANGE"),
+            (
+                ErrorCode::ConflictRetryExhausted,
+                "ERR_CONFLICT_RETRY_EXHAUSTED",
+            ),
+            (ErrorCode::RuntimeBackend, "ERR_RUNTIME_BACKEND"),
+            (ErrorCode::RuntimeUnmappedHard, "ERR_RUNTIME_UNMAPPED_HARD"),
+            (ErrorCode::BootstrapRequired, "ERR_BOOTSTRAP_REQUIRED"),
+            (
+                ErrorCode::BootstrapInvalidState,
+                "ERR_BOOTSTRAP_INVALID_STATE",
+            ),
+            (
+                ErrorCode::TargetDiscoveryFailed,
+                "ERR_TARGET_DISCOVERY_FAILED",
+            ),
+        ];
+
+        assert_eq!(cases.len(), ErrorCode::ALL.len());
+        for (code, expected) in cases {
+            assert_eq!(code.as_str(), expected);
+        }
+    }
+
+    #[test]
+    fn display_matches_as_str_for_all_error_codes() {
+        for code in ErrorCode::ALL {
+            assert_eq!(code.to_string(), code.as_str());
+        }
+    }
+}

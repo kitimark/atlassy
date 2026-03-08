@@ -7,8 +7,7 @@ use atlassy_confluence::{
     StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    ContractError, ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_RUNTIME_BACKEND,
-    ERR_TABLE_SHAPE_CHANGE, FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, PipelineState,
+    ContractError, ErrorCode, FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, PipelineState,
     ProvenanceStamp, RUNTIME_STUB, TableOperation,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
@@ -133,7 +132,7 @@ fn assert_hard_error(error: PipelineError, state: PipelineState, code: &str) {
             ..
         } => {
             assert_eq!(got_state, state);
-            assert_eq!(got_code, code);
+            assert_eq!(got_code.as_str(), code);
         }
         other => panic!("unexpected error: {other:?}"),
     }
@@ -349,7 +348,11 @@ fn publish_transport_error_maps_to_runtime_backend_publish_failure() {
     let error = orchestrator
         .run(request)
         .expect_err("publish transport failure should be hard error");
-    assert_hard_error(error, PipelineState::Publish, ERR_RUNTIME_BACKEND);
+    assert_hard_error(
+        error,
+        PipelineState::Publish,
+        ErrorCode::RuntimeBackend.as_str(),
+    );
     assert_eq!(orchestrator.client().publish_attempts(), 1);
 
     let run_dir = temp.path().join("artifacts").join("run-live-publish-400");
@@ -360,7 +363,7 @@ fn publish_transport_error_maps_to_runtime_backend_publish_failure() {
     assert_eq!(summary["failure_state"], serde_json::json!("publish"));
     assert_eq!(
         summary["error_codes"],
-        serde_json::json!([ERR_RUNTIME_BACKEND])
+        serde_json::json!([ErrorCode::RuntimeBackend.as_str()])
     );
 }
 
@@ -613,7 +616,11 @@ fn forbidden_row_operation_fails_with_table_shape_error() {
     let error = orchestrator
         .run(request)
         .expect_err("forbidden row add should fail");
-    assert_hard_error(error, PipelineState::AdfTableEdit, ERR_TABLE_SHAPE_CHANGE);
+    assert_hard_error(
+        error,
+        PipelineState::AdfTableEdit,
+        ErrorCode::TableShapeChange.as_str(),
+    );
     assert_eq!(orchestrator.client().publish_attempts(), 0);
 }
 
@@ -633,7 +640,11 @@ fn forbidden_table_attr_operation_fails_with_table_shape_error() {
     let error = orchestrator
         .run(request)
         .expect_err("forbidden attr update should fail");
-    assert_hard_error(error, PipelineState::AdfTableEdit, ERR_TABLE_SHAPE_CHANGE);
+    assert_hard_error(
+        error,
+        PipelineState::AdfTableEdit,
+        ErrorCode::TableShapeChange.as_str(),
+    );
 }
 
 #[test]
@@ -651,7 +662,11 @@ fn verify_blocks_synthetic_table_shape_drift() {
     let error = orchestrator
         .run(request)
         .expect_err("shape drift should fail at verify");
-    assert_hard_error(error, PipelineState::Verify, ERR_TABLE_SHAPE_CHANGE);
+    assert_hard_error(
+        error,
+        PipelineState::Verify,
+        ErrorCode::TableShapeChange.as_str(),
+    );
     assert_eq!(orchestrator.client().publish_attempts(), 0);
 }
 
@@ -754,7 +769,11 @@ fn bootstrap_empty_page_without_flag_fails_with_err_bootstrap_required() {
     let error = orchestrator
         .run(request)
         .expect_err("empty page without bootstrap flag should fail");
-    assert_hard_error(error, PipelineState::Fetch, ERR_BOOTSTRAP_REQUIRED);
+    assert_hard_error(
+        error,
+        PipelineState::Fetch,
+        ErrorCode::BootstrapRequired.as_str(),
+    );
 
     // Verify summary records empty_page_detected = true
     let run_dir = temp.path().join("artifacts").join("run-bootstrap-no-flag");
@@ -799,7 +818,11 @@ fn bootstrap_non_empty_page_with_flag_fails_with_err_bootstrap_invalid_state() {
     let error = orchestrator
         .run(request)
         .expect_err("non-empty page with bootstrap flag should fail");
-    assert_hard_error(error, PipelineState::Fetch, ERR_BOOTSTRAP_INVALID_STATE);
+    assert_hard_error(
+        error,
+        PipelineState::Fetch,
+        ErrorCode::BootstrapInvalidState.as_str(),
+    );
 
     // Verify summary records empty_page_detected = false
     let run_dir = temp

@@ -14,7 +14,7 @@ fn live_startup_errors_map_to_runtime_backend_hard_error() {
             message,
         } => {
             assert_eq!(state, PipelineState::Fetch);
-            assert_eq!(code, ERR_RUNTIME_BACKEND);
+            assert_eq!(code, ErrorCode::RuntimeBackend);
             assert!(message.contains("live runtime startup failure"));
             assert!(message.contains("missing ATLASSY_CONFLUENCE_API_TOKEN"));
         }
@@ -189,7 +189,7 @@ fn unmapped_live_runtime_hard_error_is_reported_deterministically() {
         serde_json::from_str(&fs::read_to_string(&summary_path).expect("summary should exist"))
             .expect("summary should deserialize");
     summary_json["success"] = serde_json::json!(false);
-    summary_json["error_codes"] = serde_json::json!([ERR_RUNTIME_UNMAPPED_HARD]);
+    summary_json["error_codes"] = serde_json::json!([ErrorCode::RuntimeUnmappedHard.as_str()]);
     summary_json["failure_state"] = serde_json::json!("publish");
     fs::write(
         &summary_path,
@@ -218,7 +218,7 @@ fn unmapped_live_runtime_hard_error_is_reported_deterministically() {
 
     assert!(rebuilt.diagnostics.iter().any(|diag| {
         diag.error_class.as_deref() == Some("runtime_unmapped_hard")
-            && diag.error_code.as_deref() == Some(ERR_RUNTIME_UNMAPPED_HARD)
+            && diag.error_code.as_deref() == Some(ErrorCode::RuntimeUnmappedHard.as_str())
     }));
 }
 

@@ -8,10 +8,8 @@ use atlassy_confluence::{
     ConfluenceClient, ConfluenceError, LiveConfluenceClient, StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    ERR_BOOTSTRAP_INVALID_STATE, ERR_BOOTSTRAP_REQUIRED, ERR_LOCKED_NODE_MUTATION,
-    ERR_OUT_OF_SCOPE_MUTATION, ERR_RUNTIME_BACKEND, ERR_RUNTIME_UNMAPPED_HARD,
-    ERR_TABLE_SHAPE_CHANGE, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A, PATTERN_B, PATTERN_C,
-    PIPELINE_VERSION, PipelineState, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
+    ErrorCode, FLOW_BASELINE, FLOW_OPTIMIZED, PATTERN_A, PATTERN_B, PATTERN_C, PIPELINE_VERSION,
+    PipelineState, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
     validate_provenance_stamp, validate_run_summary_telemetry,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest};
@@ -608,7 +606,7 @@ fn main() -> Result<(), DynError> {
 fn map_live_startup_error(error: ConfluenceError) -> PipelineError {
     PipelineError::Hard {
         state: PipelineState::Fetch,
-        code: ERR_RUNTIME_BACKEND.to_string(),
+        code: ErrorCode::RuntimeBackend,
         message: format!("live runtime startup failure: {error}"),
     }
 }
@@ -998,7 +996,9 @@ fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist 
     let has_bootstrap_required_failure = evidence.summaries.values().any(|s| {
         s.empty_page_detected
             && !s.success
-            && s.error_codes.iter().any(|c| c == ERR_BOOTSTRAP_REQUIRED)
+            && s.error_codes
+                .iter()
+                .any(|c| c == ErrorCode::BootstrapRequired.as_str())
     });
     let has_bootstrap_success = evidence
         .summaries
@@ -1009,7 +1009,7 @@ fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist 
             && !s.success
             && s.error_codes
                 .iter()
-                .any(|c| c == ERR_BOOTSTRAP_INVALID_STATE)
+                .any(|c| c == ErrorCode::BootstrapInvalidState.as_str())
     });
     let has_create_subpage_evidence = evidence.manifest.batch.lifecycle_create_subpage_validated;
     let gate_7_pass = has_bootstrap_required_failure
@@ -1971,7 +1971,7 @@ fn classify_run_from_summary(
             if summary
                 .error_codes
                 .iter()
-                .any(|code| code == ERR_RUNTIME_UNMAPPED_HARD)
+                .any(|code| code == ErrorCode::RuntimeUnmappedHard.as_str())
             {
                 return BatchRunDiagnostic {
                     run_id: run.run_id.clone(),
@@ -1980,7 +1980,7 @@ fn classify_run_from_summary(
                     flow: run.flow.clone(),
                     status: "failed".to_string(),
                     error_class: Some("runtime_unmapped_hard".to_string()),
-                    error_code: Some(ERR_RUNTIME_UNMAPPED_HARD.to_string()),
+                    error_code: Some(ErrorCode::RuntimeUnmappedHard.to_string()),
                     message: Some("unmapped hard failure from live runtime requires explicit taxonomy mapping".to_string()),
                 };
             }
@@ -2078,7 +2078,7 @@ fn assess_safety(summaries: &BTreeMap<String, RunSummary>) -> SafetyAssessment {
         if summary
             .error_codes
             .iter()
-            .any(|code| code == ERR_LOCKED_NODE_MUTATION)
+            .any(|code| code == ErrorCode::LockedNodeMutation.as_str())
             || summary.locked_node_mutation
         {
             locked.push(run_id.clone());
@@ -2086,14 +2086,14 @@ fn assess_safety(summaries: &BTreeMap<String, RunSummary>) -> SafetyAssessment {
         if summary
             .error_codes
             .iter()
-            .any(|code| code == ERR_OUT_OF_SCOPE_MUTATION)
+            .any(|code| code == ErrorCode::OutOfScopeMutation.as_str())
         {
             out_of_scope.push(run_id.clone());
         }
         if summary
             .error_codes
             .iter()
-            .any(|code| code == ERR_TABLE_SHAPE_CHANGE)
+            .any(|code| code == ErrorCode::TableShapeChange.as_str())
         {
             table_shape.push(run_id.clone());
         }
