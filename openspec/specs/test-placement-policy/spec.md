@@ -20,13 +20,26 @@ Production source files (`src/lib.rs`, `src/main.rs`) SHALL NOT contain `mod tes
 - **WHEN** `crates/atlassy-confluence/src/live.rs` contains a `#[cfg(test)] mod tests { ... }` block
 - **THEN** those tests call only private methods of `LiveConfluenceClient` defined in that same file
 
+#### Scenario: Pipeline src/tests.rs no longer exists
+- **WHEN** `crates/atlassy-pipeline/src/` is listed after modularization
+- **THEN** no `tests.rs` file exists
+- **THEN** the 3 tests previously in `src/tests.rs` reside in inline `#[cfg(test)] mod tests` blocks within `state_tracker.rs` (1 test) and `util.rs` (2 tests)
+
+#### Scenario: Pipeline lib.rs has no test module declaration
+- **WHEN** `crates/atlassy-pipeline/src/lib.rs` is inspected after modularization
+- **THEN** it does NOT contain `#[cfg(test)] mod tests;`
+
 ### Requirement: Tests requiring private access SHALL reside under src/
 
 Tests that call private (non-`pub`) functions, methods, or types SHALL be placed in dedicated test files or `#[cfg(test)]` blocks under `src/` within the same crate. For facade crates with domain modules, tests for a module's private methods MAY reside in a `#[cfg(test)] mod tests { ... }` block within that module file, using `use super::*;` to access the module's private items.
 
 #### Scenario: Pipeline tests access private compute_section_bytes
 - **WHEN** `atlassy-pipeline` tests call the private `compute_section_bytes` function
-- **THEN** those tests reside in `crates/atlassy-pipeline/src/tests.rs`
+- **THEN** those tests reside in a `#[cfg(test)] mod tests` block within `crates/atlassy-pipeline/src/util.rs`
+
+#### Scenario: Pipeline state_tracker test accesses transition enforcement
+- **WHEN** `atlassy-pipeline` tests validate `StateTracker` transition enforcement behavior
+- **THEN** those tests reside in a `#[cfg(test)] mod tests` block within `crates/atlassy-pipeline/src/state_tracker.rs`
 
 #### Scenario: Confluence live module tests access private build methods
 - **WHEN** `atlassy-confluence` tests call private `LiveConfluenceClient::build_publish_payload` or `build_create_payload`
@@ -136,7 +149,7 @@ No item's visibility SHALL be changed from private to `pub` or `pub(crate)` sole
 
 #### Scenario: Private function stays private after extraction
 - **WHEN** `compute_section_bytes` in `atlassy-pipeline` is private before extraction
-- **THEN** it remains private after extraction (tests access it via `src/tests.rs` using `use super::*`)
+- **THEN** it remains private after extraction (tests access it via inline `#[cfg(test)] mod tests` in `util.rs` using `use super::*`)
 
 #### Scenario: Binary crate items stay private after extraction
 - **WHEN** `BatchReport`, `map_live_startup_error`, and other CLI internals are private before extraction
