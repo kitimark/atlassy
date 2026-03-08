@@ -50,6 +50,8 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 
 ## Target Paths
 
+> **Note**: Once `roadmap/14-target-path-auto-discovery.md` is implemented, `target_path` values are auto-discovered at runtime by the pipeline. The paths below become a reference baseline for validating auto-discovery output, not a required input to manifests. See `qa/manifests/kpi-revalidation-auto-discovery.example.json` for the auto-discovery manifest format.
+
 Discovered during Phase 2 scoped fetch spike at commit `0e69067`.
 
 | Page | Prose Target Path | Table Cell Target Path | Notes |
@@ -58,7 +60,9 @@ Discovered during Phase 2 scoped fetch spike at commit `0e69067`.
 | P2 | `/content/1/content/0/text` (Overview), `/content/4/content/0/text` (Data) | `/content/5/content/1/content/1/content/0/content/0/text` ("0 percent" cell) | Table at `/content/5` |
 | P3 | `/content/1/content/0/text` (Context), `/content/5/content/0/text` (Notes), `/content/9/content/0/text` (References) | N/A | Expand at `/content/3`, panel at `/content/7`, rule at `/content/10` |
 
-## Scoped Fetch Spike Results
+## Scoped Fetch Spike Results (pre-section-extraction fix)
+
+> **Note**: These results are from the pre-fix scope resolver (commit `0e69067`) which returned only the heading node, not the full section. Post-fix results (commit `86cf652`+) will show larger `scoped_adf_bytes` and lower `context_reduction_ratio` because the scoped ADF now includes the full heading section. Re-run the scoped fetch spike to update these values.
 
 | Page | Full ADF Bytes | Scoped ADF Bytes | Context Reduction | Scope Resolution |
 |------|---------------|-----------------|-------------------|------------------|

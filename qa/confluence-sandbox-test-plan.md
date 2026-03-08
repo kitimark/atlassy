@@ -330,6 +330,49 @@ If any scoped fetch unexpectedly matches multiple headings or the wrong heading 
 
 Do not proceed to the KPI batch until all three pages pass the scoped fetch spike.
 
+#### Auto-discovery validation (requires `roadmap/14-target-path-auto-discovery.md`)
+
+Once target path auto-discovery is implemented, validate that the pipeline can auto-select targets without manual `jq` path discovery.
+
+Run a scoped prose update with `--target-path` omitted:
+
+```bash
+cargo run -p atlassy-cli -- run \
+  --request-id "spike-autodiscover-p1" \
+  --page-id "$P1_PAGE_ID" \
+  --edit-intent "auto-discovery validation" \
+  --scope "heading:Introduction" \
+  --mode no-op --force-verify-fail \
+  --runtime-backend live --artifacts-dir "$ARTIFACTS_DIR"
+```
+
+Check that auto-discovery resolved a target:
+
+```bash
+jq '{discovered_target_path,scope_resolution_failed,allowed_scope_paths}' \
+  "artifacts/spike-autodiscover-p1/summary.json"
+```
+
+Pass criteria:
+
+- `discovered_target_path` is non-null and points to a valid text node within the heading section.
+- `scope_resolution_failed: false`.
+- `allowed_scope_paths` includes the heading and its section content nodes (not just the heading node).
+
+Repeat for P2 (prose and table cell routes) and P3. For P2, also validate table cell auto-discovery:
+
+```bash
+cargo run -p atlassy-cli -- run \
+  --request-id "spike-autodiscover-p2-table" \
+  --page-id "$P2_PAGE_ID" \
+  --edit-intent "auto-discovery table validation" \
+  --scope "heading:Data" \
+  --mode no-op --force-verify-fail \
+  --runtime-backend live --artifacts-dir "$ARTIFACTS_DIR"
+```
+
+Compare `discovered_target_path` against the manually discovered paths in `qa/manifests/sandbox-page-inventory.md` to verify consistency.
+
 ## Step 3: Live Scoped Prose Update
 
 ```bash
@@ -586,12 +629,14 @@ Requires: KPI Experiment Page Setup completed, Step 2b per-page scoped fetch spi
 
 - Runs are paired by `(page_id, pattern, edit_intent_hash)`.
 - Each pair has exactly one baseline and one optimized run.
-- Same edit intent text within a pair; `target_path` and `new_value` from Phase 2 spike.
+- Same edit intent text within a pair; `new_value` distinguishes baseline from optimized.
 - Alternate baseline/optimized order across pairs to reduce order bias.
 
 ### Write Manifest
 
-Write the manifest as `qa/manifests/kpi-revalidation-batch.json` using the run matrix above. Replace `REPLACE_WITH_*` placeholders with real page IDs, target paths, and edit intent hashes from the page inventory.
+**With auto-discovery** (requires `roadmap/14-target-path-auto-discovery.md`): Use `qa/manifests/kpi-revalidation-auto-discovery.example.json` as the template. Omit `target_path` from all entries. The pipeline auto-discovers valid text nodes within each heading section at runtime. Optionally set `target_index` to target a specific text node.
+
+**Without auto-discovery** (legacy): Use `qa/manifests/kpi-revalidation-batch.json` with explicit `target_path` values. Replace `REPLACE_WITH_*` placeholders with real page IDs, target paths, and edit intent hashes from the page inventory. Run the `jq` path discovery step in Step 2b first.
 
 Reference template: `qa/manifests/scoped-poc-experiment.example.json`.
 
@@ -619,6 +664,26 @@ jq '{success,publish_result,context_reduction_ratio,scoped_adf_bytes,full_page_a
 ```
 
 Optimized runs should show `context_reduction_ratio > 0` and `scope_resolution_failed: false`. Baseline runs should show `context_reduction_ratio: 0` and `full_page_fetch: true`.
+
+#### Auto-discovery spot-check (requires `roadmap/14-target-path-auto-discovery.md`)
+
+If using auto-discovery manifests (no `target_path` fields), verify the pipeline resolved targets correctly:
+
+```bash
+# Check discovered target for an optimized prose run
+jq '{discovered_target_path,success,publish_result}' \
+  "artifacts/kpi-a-opt-01/summary.json"
+
+# Check discovered target for a table cell run
+jq '{discovered_target_path,success,publish_result}' \
+  "artifacts/kpi-b-opt-02/summary.json"
+```
+
+Pass criteria:
+
+- `discovered_target_path` is non-null for all auto-discovery runs.
+- Discovered paths are within `allowed_scope_paths` for the corresponding heading section.
+- Runs succeed and publish (not blocked by scope or schema errors).
 
 ### Evaluate Readiness
 
@@ -728,6 +793,7 @@ cp artifacts/batch/decision.packet.json "qa/evidence/$(date -u +%F)-kpi-revalida
 - `structural_preservation`: 100% for in-scope runs (no locked-node mutation).
 - `conflict_rate`: < 10% with no run exceeding one scoped retry.
 - `publish_latency`: optimized median < 3000 ms, p90 non-regressive vs baseline.
+- If using auto-discovery: `discovered_target_path` is non-null and within scope for all auto-discovery runs.
 - Evidence bundle committed with clean provenance (`git_dirty: false`).
 - Investigation report written with KPI results, pattern breakdown, and recommendation.
 

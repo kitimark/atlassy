@@ -8,7 +8,8 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 - `qa/manifests/live-sandbox-smoke.example.json`: example batch manifest for live smoke validation.
 - `qa/manifests/scoped-poc-experiment.example.json`: example paired baseline/optimized manifest for revised scoped KPI evaluation.
 - `qa/manifests/sandbox-page-inventory.md`: page ID inventory and structural characteristics for KPI experiment pages.
-- `qa/manifests/kpi-revalidation-batch.json`: 18-run paired baseline/optimized manifest for KPI revalidation (patterns A, B, C).
+- `qa/manifests/kpi-revalidation-batch.json`: 18-run paired baseline/optimized manifest for KPI revalidation (patterns A, B, C) with explicit `target_path` fields.
+- `qa/manifests/kpi-revalidation-auto-discovery.example.json`: same 18-run structure but with `target_path` omitted (requires `roadmap/14-target-path-auto-discovery.md` implementation).
 - `qa/scripts/setup-confluence-env.sh`: interactive setup for live sandbox environment variables (run via `make qa-setup`).
 - `qa/scripts/check-env.sh`: non-interactive environment and connectivity validation (run `make qa-check` before QA execution).
 - `qa/.env.local`: local credentials file written by setup script (git-ignored, never commit).
