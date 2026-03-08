@@ -1,0 +1,158 @@
+{
+  "request_id": "kpi-v2-c-base-03",
+  "page_id": "131227",
+  "state": "patch",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "patch_ops": [
+      {
+        "op": "replace",
+        "path": "/content/0/content/0/text",
+        "value": "KPI-v2 baseline C3 prose update"
+      }
+    ],
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "KPI-v2 baseline C3 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline C1 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "The expand macro and info panel below are locked_structural nodes. Headings and paragraphs around them are editable_prose.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "title": "Locked Expand Section"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "This content is inside an expand macro. The expand node itself is locked_structural, though this inner paragraph is classified as editable_prose.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            },
+            {
+              "content": [
+                {
+                  "text": "The verifier must confirm that no locked-node mutation occurs when editing adjacent prose sections.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "expand"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "KPI-v2 optimized C2 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline C2 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "The scope selector heading:Notes should isolate this section while leaving the expand macro and panel untouched.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "This info panel is a locked_structural wrapper. Its inner paragraph is editable_prose, but the panel node itself must not be mutated by adjacent edits.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "References",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline C3 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "content": [
+            {
+              "text": "The horizontal rule above is classified as locked_structural in the current codebase, despite being listed as editable_prose in the spec. See ideas/2026-03-route-classification-drift.md.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "patch_ops_bytes": 95
+  }
+}

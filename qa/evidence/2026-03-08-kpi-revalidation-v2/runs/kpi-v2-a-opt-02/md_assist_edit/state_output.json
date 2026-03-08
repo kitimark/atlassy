@@ -1,0 +1,71 @@
+{
+  "request_id": "kpi-v2-a-opt-02",
+  "page_id": "65934",
+  "state": "md_assist_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/4",
+        "markdown": "KPI-v2 optimized A2 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "KPI baseline A2 prose update"
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Scoped fetch should reduce context to a single heading sectionBaseline runs use empty scope selectors for full-page fetchOptimized runs use explicit heading selectors for targeted retrievalAll nodes on this page classify as editable_prose"
+      },
+      {
+        "md_block_id": "/content/6/content/0",
+        "markdown": "Scoped fetch should reduce context to a single heading section"
+      },
+      {
+        "md_block_id": "/content/6/content/0/content/0",
+        "markdown": "Scoped fetch should reduce context to a single heading section"
+      },
+      {
+        "md_block_id": "/content/6/content/1",
+        "markdown": "Baseline runs use empty scope selectors for full-page fetch"
+      },
+      {
+        "md_block_id": "/content/6/content/1/content/0",
+        "markdown": "Baseline runs use empty scope selectors for full-page fetch"
+      },
+      {
+        "md_block_id": "/content/6/content/2",
+        "markdown": "Optimized runs use explicit heading selectors for targeted retrieval"
+      },
+      {
+        "md_block_id": "/content/6/content/2/content/0",
+        "markdown": "Optimized runs use explicit heading selectors for targeted retrieval"
+      },
+      {
+        "md_block_id": "/content/6/content/3",
+        "markdown": "All nodes on this page classify as editable_prose"
+      },
+      {
+        "md_block_id": "/content/6/content/3/content/0",
+        "markdown": "All nodes on this page classify as editable_prose"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "Context reduction ratio should be measurably positive when scoping to a single heading section on this page. The target band is 70-90% for optimized runs."
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "markdown": "Context reduction ratio should be measurably positive when scoping to a single heading section on this page. The target band is 70-90% for optimized runs."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/4/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/4/content/0/text",
+        "markdown": "KPI-v2 optimized A2 scoped prose update"
+      }
+    ]
+  }
+}

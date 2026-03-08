@@ -1,0 +1,259 @@
+{
+  "request_id": "kpi-v2-b-opt-03",
+  "page_id": "98323",
+  "state": "classify",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "KPI-v2 baseline B3 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline B1 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Scoped retrieval by heading should demonstrate context reduction even with mixed node types present on the page.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Data",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline B3 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "layout": "default"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "KPI-v2 optimized B2 scoped table cell update",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableHeader"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Baseline",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableHeader"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Target",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableHeader"
+                }
+              ],
+              "type": "tableRow"
+            },
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Context Reduction",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "KPI baseline B2 table cell update",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "70 to 90 percent",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            },
+            {
+              "content": [
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Edit Success Rate",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Pending measurement",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                },
+                {
+                  "attrs": {
+                    "colspan": 1,
+                    "rowspan": 1
+                  },
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "Above 95 percent",
+                          "type": "text"
+                        }
+                      ],
+                      "type": "paragraph"
+                    }
+                  ],
+                  "type": "tableCell"
+                }
+              ],
+              "type": "tableRow"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "content": [
+            {
+              "text": "Table cells above are targetable for scoped table cell text updates in Pattern B experiments. The table should classify as table_adf while surrounding prose classifies as editable_prose.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    }
+  }
+}

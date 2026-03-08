@@ -1,0 +1,99 @@
+{
+  "request_id": "kpi-v2-a-base-01",
+  "page_id": "65934",
+  "state": "md_assist_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "KPI-v2 baseline A1 prose update"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI baseline A1 prose update"
+      },
+      {
+        "md_block_id": "/content/10",
+        "markdown": "Results from paired baseline and optimized runs on this page will establish the first real context_reduction_ratio measurements for the revised KPI framework."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "The content is designed to test scoped heading selectors against a page that contains only editable prose nodes, with no tables or locked structural blocks."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Scoped retrieval of a single heading section should yield a measurable context reduction compared to fetching the entire page body."
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Details"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "KPI baseline A2 prose update"
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Scoped fetch should reduce context to a single heading sectionBaseline runs use empty scope selectors for full-page fetchOptimized runs use explicit heading selectors for targeted retrievalAll nodes on this page classify as editable_prose"
+      },
+      {
+        "md_block_id": "/content/6/content/0",
+        "markdown": "Scoped fetch should reduce context to a single heading section"
+      },
+      {
+        "md_block_id": "/content/6/content/0/content/0",
+        "markdown": "Scoped fetch should reduce context to a single heading section"
+      },
+      {
+        "md_block_id": "/content/6/content/1",
+        "markdown": "Baseline runs use empty scope selectors for full-page fetch"
+      },
+      {
+        "md_block_id": "/content/6/content/1/content/0",
+        "markdown": "Baseline runs use empty scope selectors for full-page fetch"
+      },
+      {
+        "md_block_id": "/content/6/content/2",
+        "markdown": "Optimized runs use explicit heading selectors for targeted retrieval"
+      },
+      {
+        "md_block_id": "/content/6/content/2/content/0",
+        "markdown": "Optimized runs use explicit heading selectors for targeted retrieval"
+      },
+      {
+        "md_block_id": "/content/6/content/3",
+        "markdown": "All nodes on this page classify as editable_prose"
+      },
+      {
+        "md_block_id": "/content/6/content/3/content/0",
+        "markdown": "All nodes on this page classify as editable_prose"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "Context reduction ratio should be measurably positive when scoping to a single heading section on this page. The target band is 70-90% for optimized runs."
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "markdown": "Context reduction ratio should be measurably positive when scoping to a single heading section on this page. The target band is 70-90% for optimized runs."
+      },
+      {
+        "md_block_id": "/content/8",
+        "markdown": "Summary"
+      },
+      {
+        "md_block_id": "/content/9",
+        "markdown": "KPI baseline A3 prose update"
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/0/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/0/content/0/text",
+        "markdown": "KPI-v2 baseline A1 prose update"
+      }
+    ]
+  }
+}

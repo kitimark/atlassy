@@ -1,0 +1,809 @@
+{
+  "total_runs": 18,
+  "succeeded_runs": 18,
+  "failed_runs": 0,
+  "status": "failed",
+  "telemetry_complete": true,
+  "retry_policy_ok": true,
+  "provenance": {
+    "git_commit_sha": "888772c0d8eec5ba3e64840e300200e8f1a50e61",
+    "git_dirty": false,
+    "pipeline_version": "v1",
+    "runtime_mode": "live"
+  },
+  "diagnostics": [
+    {
+      "run_id": "kpi-v2-c-base-01",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-c-opt-01",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-c-base-02",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-c-opt-02",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-c-base-03",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-c-opt-03",
+      "page_id": "131227",
+      "pattern": "C",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-a-base-01",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-a-opt-01",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-a-base-02",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-a-opt-02",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-a-base-03",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-a-opt-03",
+      "page_id": "65934",
+      "pattern": "A",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-b-base-01",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-b-opt-01",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-b-base-02",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-b-opt-02",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-b-base-03",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "baseline",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    },
+    {
+      "run_id": "kpi-v2-b-opt-03",
+      "page_id": "98323",
+      "pattern": "B",
+      "flow": "optimized",
+      "status": "ok",
+      "error_class": null,
+      "error_code": null,
+      "message": null
+    }
+  ],
+  "artifact_index_path": "artifacts/batch/artifact-index.json",
+  "drift": {
+    "scoped_fetch_parity": true,
+    "publish_conflict_parity": true,
+    "error_payload_parity": true,
+    "unresolved_material_drift": false
+  },
+  "scenario_coverage": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "missing_scenario_ids": [],
+    "complete": true
+  },
+  "safety": {
+    "locked_node_violation_runs": [],
+    "out_of_scope_violation_runs": [],
+    "table_shape_violation_runs": [],
+    "safety_failed": false
+  },
+  "gate_checks": [
+    {
+      "name": "telemetry_complete",
+      "target": "all run summaries include required KPI telemetry",
+      "pass": true
+    },
+    {
+      "name": "provenance_complete",
+      "target": "all decision-grade outputs include valid provenance",
+      "pass": true
+    },
+    {
+      "name": "paired_matrix_complete",
+      "target": "all (page_id, pattern, edit_intent_hash) keys have baseline and optimized runs",
+      "pass": true
+    },
+    {
+      "name": "retry_policy",
+      "target": "no run exceeds one scoped retry",
+      "pass": true
+    },
+    {
+      "name": "drift_resolved",
+      "target": "live-vs-stub parity checks are resolved",
+      "pass": true
+    },
+    {
+      "name": "scenario_coverage",
+      "target": "required scenario IDs are covered",
+      "pass": true
+    },
+    {
+      "name": "safety_gates",
+      "target": "no locked-node, out-of-scope, or table-shape violations",
+      "pass": true
+    }
+  ],
+  "kpi": {
+    "global_rollup": {
+      "scope": "global",
+      "pair_count": 9,
+      "metrics": [
+        {
+          "kpi": "context_reduction_ratio",
+          "baseline": {
+            "count": 9,
+            "median": 0.0,
+            "p90": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "optimized": {
+            "count": 9,
+            "median": 18.189768255356363,
+            "p90": 81.77083333333334,
+            "min": 0.0,
+            "max": 81.77083333333334
+          },
+          "delta_absolute": 18.189768255356,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "scoped_section_tokens",
+          "baseline": {
+            "count": 9,
+            "median": 522.0,
+            "p90": 573.75,
+            "min": 466.75,
+            "max": 573.75
+          },
+          "optimized": {
+            "count": 9,
+            "median": 467.75,
+            "p90": 562.25,
+            "min": 96.25,
+            "max": 562.25
+          },
+          "delta_absolute": -54.25,
+          "delta_relative": -0.103927203065
+        },
+        {
+          "kpi": "edit_success_rate",
+          "baseline": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "optimized": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "delta_absolute": 0.0,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "structural_preservation",
+          "baseline": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "optimized": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "delta_absolute": 0.0,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "conflict_rate",
+          "baseline": {
+            "count": 1,
+            "median": 0.0,
+            "p90": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "optimized": {
+            "count": 1,
+            "median": 0.0,
+            "p90": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "delta_absolute": 0.0,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "publish_latency",
+          "baseline": {
+            "count": 9,
+            "median": 1737.0,
+            "p90": 2589.0,
+            "min": 1527.0,
+            "max": 2589.0
+          },
+          "optimized": {
+            "count": 9,
+            "median": 1739.0,
+            "p90": 2623.0,
+            "min": 1538.0,
+            "max": 2623.0
+          },
+          "delta_absolute": 2.0,
+          "delta_relative": 0.001151410478
+        }
+      ]
+    },
+    "pattern_rollups": [
+      {
+        "scope": "A",
+        "pair_count": 3,
+        "metrics": [
+          {
+            "kpi": "context_reduction_ratio",
+            "baseline": {
+              "count": 3,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 49.519230769230774,
+              "p90": 81.77083333333334,
+              "min": 0.0,
+              "max": 81.77083333333334
+            },
+            "delta_absolute": 49.519230769231,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "scoped_section_tokens",
+            "baseline": {
+              "count": 3,
+              "median": 522.0,
+              "p90": 528.0,
+              "min": 515.25,
+              "max": 528.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 262.5,
+              "p90": 520.0,
+              "min": 96.25,
+              "max": 520.0
+            },
+            "delta_absolute": -259.5,
+            "delta_relative": -0.497126436782
+          },
+          {
+            "kpi": "edit_success_rate",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "structural_preservation",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "conflict_rate",
+            "baseline": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "publish_latency",
+            "baseline": {
+              "count": 3,
+              "median": 1806.0,
+              "p90": 2589.0,
+              "min": 1610.0,
+              "max": 2589.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 2115.0,
+              "p90": 2623.0,
+              "min": 1665.0,
+              "max": 2623.0
+            },
+            "delta_absolute": 309.0,
+            "delta_relative": 0.171096345515
+          }
+        ]
+      },
+      {
+        "scope": "B",
+        "pair_count": 3,
+        "metrics": [
+          {
+            "kpi": "context_reduction_ratio",
+            "baseline": {
+              "count": 3,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 17.83996501967643,
+              "p90": 18.189768255356363,
+              "min": 0.0,
+              "max": 18.189768255356363
+            },
+            "delta_absolute": 17.839965019676,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "scoped_section_tokens",
+            "baseline": {
+              "count": 3,
+              "median": 564.25,
+              "p90": 573.75,
+              "min": 556.5,
+              "max": 573.75
+            },
+            "optimized": {
+              "count": 3,
+              "median": 469.75,
+              "p90": 562.25,
+              "min": 467.75,
+              "max": 562.25
+            },
+            "delta_absolute": -94.5,
+            "delta_relative": -0.167478954364
+          },
+          {
+            "kpi": "edit_success_rate",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "structural_preservation",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "conflict_rate",
+            "baseline": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "publish_latency",
+            "baseline": {
+              "count": 3,
+              "median": 1737.0,
+              "p90": 1817.0,
+              "min": 1647.0,
+              "max": 1817.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 1594.0,
+              "p90": 1739.0,
+              "min": 1538.0,
+              "max": 1739.0
+            },
+            "delta_absolute": -143.0,
+            "delta_relative": -0.082325849165
+          }
+        ]
+      },
+      {
+        "scope": "C",
+        "pair_count": 3,
+        "metrics": [
+          {
+            "kpi": "context_reduction_ratio",
+            "baseline": {
+              "count": 3,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 68.05922792173453,
+              "p90": 77.6103896103896,
+              "min": 0.0,
+              "max": 77.6103896103896
+            },
+            "delta_absolute": 68.059227921735,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "scoped_section_tokens",
+            "baseline": {
+              "count": 3,
+              "median": 474.75,
+              "p90": 481.25,
+              "min": 466.75,
+              "max": 481.25
+            },
+            "optimized": {
+              "count": 3,
+              "median": 151.0,
+              "p90": 472.75,
+              "min": 107.75,
+              "max": 472.75
+            },
+            "delta_absolute": -323.75,
+            "delta_relative": -0.681937862033
+          },
+          {
+            "kpi": "edit_success_rate",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "structural_preservation",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "conflict_rate",
+            "baseline": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "publish_latency",
+            "baseline": {
+              "count": 3,
+              "median": 1733.0,
+              "p90": 2302.0,
+              "min": 1527.0,
+              "max": 2302.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 1743.0,
+              "p90": 1746.0,
+              "min": 1646.0,
+              "max": 1746.0
+            },
+            "delta_absolute": 10.0,
+            "delta_relative": 0.00577034045
+          }
+        ]
+      }
+    ],
+    "checks": [
+      {
+        "name": "context_reduction_ratio",
+        "target": "optimized median >= 70%",
+        "pass": false
+      },
+      {
+        "name": "edit_success_rate",
+        "target": "optimized median > 95%",
+        "pass": true
+      },
+      {
+        "name": "structural_preservation",
+        "target": "optimized median = 100%",
+        "pass": true
+      },
+      {
+        "name": "conflict_rate",
+        "target": "optimized median < 10%",
+        "pass": true
+      },
+      {
+        "name": "publish_latency",
+        "target": "optimized median < 3000 ms and p90 <= baseline",
+        "pass": false
+      }
+    ]
+  },
+  "recommendation": {
+    "decision": "iterate",
+    "rationale": [
+      "kpi target missed: context_reduction_ratio (optimized median >= 70%)",
+      "kpi target missed: publish_latency (optimized median < 3000 ms and p90 <= baseline)"
+    ],
+    "outliers": [
+      {
+        "run_id": "kpi-v2-a-opt-03",
+        "kpi": "publish_latency",
+        "value": 2623.0
+      },
+      {
+        "run_id": "kpi-v2-a-base-03",
+        "kpi": "publish_latency",
+        "value": 2589.0
+      },
+      {
+        "run_id": "kpi-v2-c-base-01",
+        "kpi": "publish_latency",
+        "value": 2302.0
+      },
+      {
+        "run_id": "kpi-v2-a-base-01",
+        "kpi": "context_reduction_ratio",
+        "value": 0.0
+      },
+      {
+        "run_id": "kpi-v2-a-base-02",
+        "kpi": "context_reduction_ratio",
+        "value": 0.0
+      },
+      {
+        "run_id": "kpi-v2-a-base-03",
+        "kpi": "context_reduction_ratio",
+        "value": 0.0
+      }
+    ],
+    "regressions": []
+  }
+}

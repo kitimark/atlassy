@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-v2-c-base-01",
+  "page_id": "131227",
+  "state": "adf_table_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "table_candidates": [],
+    "table_changed_paths": [],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "request_id": "kpi-v2-a-base-01",
+  "page_id": "65934",
+  "state": "publish",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "KPI-v2 baseline A1 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline A1 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "The content is designed to test scoped heading selectors against a page that contains only editable prose nodes, with no tables or locked structural blocks.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Scoped retrieval of a single heading section should yield a measurable context reduction compared to fetching the entire page body.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Details",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline A2 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Scoped fetch should reduce context to a single heading section",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Baseline runs use empty scope selectors for full-page fetch",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Optimized runs use explicit heading selectors for targeted retrieval",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "All nodes on this page classify as editable_prose",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            }
+          ],
+          "type": "bulletList"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Context reduction ratio should be measurably positive when scoping to a single heading section on this page. The target band is 70-90% for optimized runs.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "blockquote"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Summary",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI baseline A3 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Results from paired baseline and optimized runs on this page will establish the first real context_reduction_ratio measurements for the revised KPI framework.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 6
+  }
+}

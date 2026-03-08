@@ -1,0 +1,12 @@
+{
+  "request_id": "kpi-v2-b-base-03",
+  "page_id": "98323",
+  "state": "merge_candidates",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "prose_changed_paths": [
+      "/content/0/content/0/text"
+    ],
+    "table_changed_paths": []
+  }
+}

@@ -18,7 +18,10 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Investigations
 
 - Naming convention: `YYYY-MM-DD-<topic>.md`.
-- Latest: `qa/investigations/2026-03-08-kpi-revalidation.md`.
+- Latest: `qa/investigations/2026-03-08-kpi-revalidation-v2.md`.
+- Prior: `qa/investigations/2026-03-08-kpi-revalidation.md`.
+- Prior: `qa/investigations/2026-03-08-scoped-extract-prose-scope-miss.md`.
+- Prior: `qa/investigations/2026-03-08-auto-discovery-minimal-page.md`.
 - Prior: `qa/investigations/2026-03-07-lifecycle-subpage-bootstrap-validation.md`.
 - Prior clean validation: `qa/investigations/2026-03-07-live-confluence-clean-validation.md`.
 - Prior fix validation: `qa/investigations/2026-03-07-live-confluence-fix-validation.md`.
@@ -28,7 +31,8 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Evidence
 
 - Commit handoff-ready evidence bundles under `qa/evidence/YYYY-MM-DD-<topic>/`.
-- Latest bundle: `qa/evidence/2026-03-08-kpi-revalidation/`.
+- Latest bundle: `qa/evidence/2026-03-08-kpi-revalidation-v2/`.
+- Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation/`.
 - Prior bundle: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.
 - Prior clean validation bundle: `qa/evidence/2026-03-07-live-confluence-clean-validation/`.
 - Prior fix validation bundle: `qa/evidence/2026-03-07-live-confluence-fix-validation/`.
