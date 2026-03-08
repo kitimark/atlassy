@@ -64,3 +64,16 @@ The scope resolver SHALL expand heading selector matches to include the full hea
 #### Scenario: Heading level defaults to 6 when missing
 - **WHEN** a heading node lacks an `attrs.level` attribute
 - **THEN** section expansion treats it as level 6 and stops at the next heading of any level
+
+### Requirement: Editable prose types constant
+The `atlassy-adf` crate SHALL expose a public constant `EDITABLE_PROSE_TYPES` containing the 7-type prose whitelist: `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `blockquote`, `codeBlock`. This constant SHALL be the single source of truth for editable prose type classification across all crates.
+
+#### Scenario: Constant is accessible from pipeline crate
+
+- **WHEN** `atlassy-pipeline` needs the prose type whitelist for `route_for_node()`
+- **THEN** it references `EDITABLE_PROSE_TYPES` from `atlassy-adf` instead of an inline match pattern
+
+#### Scenario: Constant matches existing route classification
+
+- **WHEN** `route_for_node()` is refactored to use `EDITABLE_PROSE_TYPES`
+- **THEN** the route classification behavior is identical to the previous inline match pattern for all 7 types
