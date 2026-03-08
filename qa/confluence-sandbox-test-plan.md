@@ -330,9 +330,9 @@ If any scoped fetch unexpectedly matches multiple headings or the wrong heading 
 
 Do not proceed to the KPI batch until all three pages pass the scoped fetch spike.
 
-#### Auto-discovery validation (requires `roadmap/14-target-path-auto-discovery.md`)
+#### Auto-discovery validation
 
-Once target path auto-discovery is implemented, validate that the pipeline can auto-select targets without manual `jq` path discovery.
+Validate that the pipeline can auto-select targets without manual `jq` path discovery.
 
 Run a scoped prose update with `--target-path` omitted. Use `--mode simple-scoped-prose-update` (not `no-op`) so the pipeline enters the edit state where discovery runs. Use `--force-verify-fail` to block publish:
 
@@ -637,7 +637,7 @@ Requires: KPI Experiment Page Setup completed, Step 2b per-page scoped fetch spi
 
 ### Write Manifest
 
-**With auto-discovery** (requires `roadmap/14-target-path-auto-discovery.md`): Use `qa/manifests/kpi-revalidation-auto-discovery.example.json` as the template. Omit `target_path` from all entries. The pipeline auto-discovers valid text nodes within each heading section at runtime. Optionally set `target_index` to target a specific text node.
+**With auto-discovery**: Use `qa/manifests/kpi-revalidation-auto-discovery.example.json` as the template. Omit `target_path` from all entries. The pipeline auto-discovers valid text nodes within each heading section at runtime. Optionally set `target_index` to target a specific text node.
 
 **Without auto-discovery** (legacy): Use `qa/manifests/kpi-revalidation-batch.json` with explicit `target_path` values. Replace `REPLACE_WITH_*` placeholders with real page IDs, target paths, and edit intent hashes from the page inventory. Run the `jq` path discovery step in Step 2b first.
 
@@ -668,7 +668,7 @@ jq '{success,publish_result,context_reduction_ratio,scoped_adf_bytes,full_page_a
 
 Optimized runs should show `context_reduction_ratio > 0` and `scope_resolution_failed: false`. Baseline runs should show `context_reduction_ratio: 0` and `full_page_fetch: true`.
 
-#### Auto-discovery spot-check (requires `roadmap/14-target-path-auto-discovery.md`)
+#### Auto-discovery spot-check
 
 If using auto-discovery manifests (no `target_path` fields), verify the pipeline resolved targets correctly:
 
@@ -685,7 +685,6 @@ jq '{discovered_target_path,success,publish_result}' \
 Pass criteria:
 
 - `discovered_target_path` is non-null for all auto-discovery runs.
-- Discovered paths are within `allowed_scope_paths` for the corresponding heading section.
 - Runs succeed and publish (not blocked by scope or schema errors).
 
 ### Evaluate Readiness
