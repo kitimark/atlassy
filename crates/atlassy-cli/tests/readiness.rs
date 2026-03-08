@@ -62,7 +62,7 @@ fn readiness_checklist_is_deterministic_and_blocks_on_mandatory_failures() {
 }
 
 #[test]
-fn runbook_generation_includes_metadata_and_unknown_fallback() {
+fn runbook_generation_includes_metadata_and_rejects_unknown_failure_class() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
     execute_batch_from_manifest_file(
         &fixture_path("batch_retry_breach_manifest.json"),
@@ -118,18 +118,12 @@ fn runbook_generation_includes_metadata_and_unknown_fallback() {
     )
     .expect("report should be written");
 
-    let unknown_readiness = generate_readiness_outputs_from_artifacts(unknown_temp.path())
-        .expect("readiness outputs should be generated");
+    let err = generate_readiness_outputs_from_artifacts(unknown_temp.path())
+        .expect_err("unknown failure classes should fail deserialization");
     assert!(
-        unknown_readiness
-            .runbook_bundle
-            .sections
-            .iter()
-            .any(|section| {
-                section.fallback && section.failure_class == "unknown:mystery_class"
-            })
+        err.to_string().contains("mystery_class"),
+        "unexpected error: {err}"
     );
-    assert!(unknown_readiness.runbook_bundle.blocked);
 }
 
 #[test]

@@ -80,7 +80,7 @@ fn incomplete_telemetry_blocks_kpi_report_generation() {
         report
             .diagnostics
             .iter()
-            .any(|diag| diag.error_class.as_deref() == Some("telemetry_incomplete"))
+            .any(|diag| diag.error_class == Some(ErrorClass::TelemetryIncomplete))
     );
 }
 
@@ -95,8 +95,8 @@ fn retry_limit_breach_is_reported_as_batch_failure() {
 
     assert!(!report.retry_policy_ok);
     assert!(report.diagnostics.iter().any(|diag| {
-        diag.error_class.as_deref() == Some("retry_policy")
-            && diag.error_code.as_deref() == Some("ERR_CONFLICT_RETRY_EXHAUSTED")
+        diag.error_class == Some(ErrorClass::RetryPolicy)
+            && diag.error_code == Some(DiagnosticCode::Pipeline(ErrorCode::ConflictRetryExhausted))
     }));
 }
 
@@ -151,8 +151,8 @@ fn provenance_mismatch_blocks_decision_grade_kpi_claims() {
             .any(|check| { check.name == "provenance_complete" && !check.pass })
     );
     assert!(rebuilt.diagnostics.iter().any(|diag| {
-        diag.error_class.as_deref() == Some("provenance_incomplete")
-            && diag.error_code.as_deref() == Some("ERR_PROVENANCE_MISMATCH")
+        diag.error_class == Some(ErrorClass::ProvenanceIncomplete)
+            && diag.error_code == Some(DiagnosticCode::ProvenanceMismatch)
     }));
 }
 
@@ -202,8 +202,8 @@ fn unmapped_live_runtime_hard_error_is_reported_deterministically() {
     .expect("rebuild should succeed");
 
     assert!(rebuilt.diagnostics.iter().any(|diag| {
-        diag.error_class.as_deref() == Some("runtime_unmapped_hard")
-            && diag.error_code.as_deref() == Some(ErrorCode::RuntimeUnmappedHard.as_str())
+        diag.error_class == Some(ErrorClass::RuntimeUnmappedHard)
+            && diag.error_code == Some(DiagnosticCode::Pipeline(ErrorCode::RuntimeUnmappedHard))
     }));
 }
 

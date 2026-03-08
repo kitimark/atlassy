@@ -1,59 +1,86 @@
 use std::collections::BTreeSet;
 
-use crate::{BatchReport, ReadinessChecklist, RunbookBundle, RunbookSection};
+use crate::{BatchReport, ErrorClass, ReadinessChecklist, RunbookBundle, RunbookSection};
 
 pub(crate) fn build_operator_runbooks(
     report: &BatchReport,
     checklist: &ReadinessChecklist,
 ) -> RunbookBundle {
     let mut sections = Vec::new();
+    let mut diagnostic_sections = BTreeSet::new();
 
-    if report.diagnostics.iter().any(|diag| {
-        diag.error_class.as_deref() == Some("pipeline_hard")
-            && diag
-                .message
-                .as_deref()
-                .is_some_and(|message| message.contains("`verify`"))
-    }) {
-        sections.push(known_runbook_section(
-            "verify_hard_failure",
-            "high",
-            "qa_owner",
-            "engineering_owner",
-            "recurs for two consecutive batches or blocks all optimized runs",
-            vec![
-                "inspect verify diagnostics for schema, scope, and route violations",
-                "capture offending paths and create regression fixtures",
-                "rerun affected scenario IDs before resuming batch",
-            ],
-            vec![
-                "artifacts/<run_id>/verify/diagnostics.json",
-                "artifacts/<run_id>/summary.json",
-            ],
-        ));
-    }
-
-    if report
-        .diagnostics
-        .iter()
-        .any(|diag| diag.error_class.as_deref() == Some("retry_policy"))
-    {
-        sections.push(known_runbook_section(
-            "retry_exhaustion",
-            "high",
-            "engineering_owner",
-            "release_reviewer",
-            "any run exceeds one scoped retry",
-            vec![
-                "stop the batch and preserve publish diagnostics",
-                "review scoped rebase behavior and conflict surface",
-                "resume only after retry policy compliance is restored",
-            ],
-            vec![
-                "artifacts/<run_id>/publish/diagnostics.json",
-                "artifacts/batch/report.json",
-            ],
-        ));
+    for diag in &report.diagnostics {
+        match diag.error_class {
+            Some(ErrorClass::PipelineHard) => {
+                if diag
+                    .message
+                    .as_deref()
+                    .is_some_and(|message| message.contains("`verify`"))
+                    && diagnostic_sections.insert("verify_hard_failure")
+                {
+                    sections.push(known_runbook_section(
+                        "verify_hard_failure",
+                        "high",
+                        "qa_owner",
+                        "engineering_owner",
+                        "recurs for two consecutive batches or blocks all optimized runs",
+                        vec![
+                            "inspect verify diagnostics for schema, scope, and route violations",
+                            "capture offending paths and create regression fixtures",
+                            "rerun affected scenario IDs before resuming batch",
+                        ],
+                        vec![
+                            "artifacts/<run_id>/verify/diagnostics.json",
+                            "artifacts/<run_id>/summary.json",
+                        ],
+                    ));
+                }
+            }
+            Some(ErrorClass::RetryPolicy) => {
+                if diagnostic_sections.insert("retry_exhaustion") {
+                    sections.push(known_runbook_section(
+                        "retry_exhaustion",
+                        "high",
+                        "engineering_owner",
+                        "release_reviewer",
+                        "any run exceeds one scoped retry",
+                        vec![
+                            "stop the batch and preserve publish diagnostics",
+                            "review scoped rebase behavior and conflict surface",
+                            "resume only after retry policy compliance is restored",
+                        ],
+                        vec![
+                            "artifacts/<run_id>/publish/diagnostics.json",
+                            "artifacts/batch/report.json",
+                        ],
+                    ));
+                }
+            }
+            Some(ErrorClass::TelemetryIncomplete) => {
+                if diagnostic_sections.insert("telemetry_incomplete") {
+                    sections.push(known_runbook_section(
+                        "telemetry_incomplete",
+                        "high",
+                        "data_metrics_owner",
+                        "engineering_owner",
+                        "required telemetry fields are missing from any run",
+                        vec![
+                            "mark affected runs non-evaluable",
+                            "repair telemetry emission and rerun paired keys",
+                            "rebuild aggregate report and readiness outputs",
+                        ],
+                        vec![
+                            "artifacts/<run_id>/summary.json",
+                            "artifacts/batch/report.json",
+                        ],
+                    ));
+                }
+            }
+            Some(ErrorClass::Io)
+            | Some(ErrorClass::ProvenanceIncomplete)
+            | Some(ErrorClass::RuntimeUnmappedHard)
+            | None => {}
+        }
     }
 
     if report.safety.safety_failed {
@@ -89,72 +116,6 @@ pub(crate) fn build_operator_runbooks(
             ],
             vec!["artifacts/batch/report.json"],
         ));
-    }
-
-    if report
-        .diagnostics
-        .iter()
-        .any(|diag| diag.error_class.as_deref() == Some("telemetry_incomplete"))
-    {
-        sections.push(known_runbook_section(
-            "telemetry_incomplete",
-            "high",
-            "data_metrics_owner",
-            "engineering_owner",
-            "required telemetry fields are missing from any run",
-            vec![
-                "mark affected runs non-evaluable",
-                "repair telemetry emission and rerun paired keys",
-                "rebuild aggregate report and readiness outputs",
-            ],
-            vec![
-                "artifacts/<run_id>/summary.json",
-                "artifacts/batch/report.json",
-            ],
-        ));
-    }
-
-    let known_classes = sections
-        .iter()
-        .map(|section| section.failure_class.clone())
-        .collect::<BTreeSet<_>>();
-
-    for diag in &report.diagnostics {
-        if let Some(class) = &diag.error_class {
-            let mapped = matches!(
-                class.as_str(),
-                "pipeline_hard" | "retry_policy" | "telemetry_incomplete"
-            ) || (class == "pipeline_hard"
-                && diag
-                    .message
-                    .as_deref()
-                    .is_some_and(|message| message.contains("`verify`")));
-
-            if !mapped {
-                let fallback_name = format!("unknown:{class}");
-                if !known_classes.contains(&fallback_name)
-                    && !sections
-                        .iter()
-                        .any(|section| section.failure_class == fallback_name)
-                {
-                    sections.push(RunbookSection {
-                        failure_class: fallback_name,
-                        severity: "high".to_string(),
-                        primary_owner_role: "engineering_owner".to_string(),
-                        escalation_owner_role: "release_reviewer".to_string(),
-                        escalation_trigger: "unmapped failure class observed in diagnostics"
-                            .to_string(),
-                        triage_steps: vec![
-                            "route the failure to manual review".to_string(),
-                            "define deterministic runbook mapping before next sign-off".to_string(),
-                        ],
-                        evidence_checks: vec!["artifacts/batch/report.json".to_string()],
-                        fallback: true,
-                        blocks_signoff: true,
-                    });
-                }
-            }
-        }
     }
 
     if sections.is_empty() {

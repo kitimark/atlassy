@@ -13,9 +13,9 @@ use crate::io::load_run_summary;
 use crate::manifest::observed_scenario_ids;
 use crate::provenance::{provenance_matches, summary_telemetry_complete};
 use crate::{
-    BatchArtifactIndex, BatchArtifactMetadata, BatchReport, BatchRunDiagnostic, DynError,
-    FailureClassSummary, GateCheck, ManifestRunEntry, RunArtifactIndexEntry, RunManifest,
-    RunbookBundle, StateArtifactIndexEntry,
+    BatchArtifactIndex, BatchArtifactMetadata, BatchReport, BatchRunDiagnostic, DiagnosticCode,
+    DynError, ErrorClass, FailureClassSummary, GateCheck, ManifestRunEntry, RunArtifactIndexEntry,
+    RunManifest, RunbookBundle, StateArtifactIndexEntry,
 };
 
 pub fn rebuild_batch_report_from_artifacts(
@@ -236,8 +236,8 @@ pub(crate) fn classify_run_from_summary(
             pattern: run.pattern.clone(),
             flow: run.flow.clone(),
             status: "failed".to_string(),
-            error_class: Some("io".to_string()),
-            error_code: Some("ERR_SUMMARY_MISSING".to_string()),
+            error_class: Some(ErrorClass::Io),
+            error_code: Some(DiagnosticCode::SummaryMissing),
             message: Some("run summary artifact is missing".to_string()),
         },
         Some(summary) => {
@@ -248,8 +248,8 @@ pub(crate) fn classify_run_from_summary(
                     pattern: run.pattern.clone(),
                     flow: run.flow.clone(),
                     status: "failed".to_string(),
-                    error_class: Some("telemetry_incomplete".to_string()),
-                    error_code: Some("ERR_TELEMETRY_INCOMPLETE".to_string()),
+                    error_class: Some(ErrorClass::TelemetryIncomplete),
+                    error_code: Some(DiagnosticCode::TelemetryIncomplete),
                     message: Some(error.to_string()),
                 };
             }
@@ -261,8 +261,8 @@ pub(crate) fn classify_run_from_summary(
                     pattern: run.pattern.clone(),
                     flow: run.flow.clone(),
                     status: "failed".to_string(),
-                    error_class: Some("provenance_incomplete".to_string()),
-                    error_code: Some("ERR_PROVENANCE_MISMATCH".to_string()),
+                    error_class: Some(ErrorClass::ProvenanceIncomplete),
+                    error_code: Some(DiagnosticCode::ProvenanceMismatch),
                     message: Some(
                         "run summary provenance does not match batch provenance".to_string(),
                     ),
@@ -276,8 +276,8 @@ pub(crate) fn classify_run_from_summary(
                     pattern: run.pattern.clone(),
                     flow: run.flow.clone(),
                     status: "failed".to_string(),
-                    error_class: Some("retry_policy".to_string()),
-                    error_code: Some("ERR_CONFLICT_RETRY_EXHAUSTED".to_string()),
+                    error_class: Some(ErrorClass::RetryPolicy),
+                    error_code: Some(DiagnosticCode::Pipeline(ErrorCode::ConflictRetryExhausted)),
                     message: Some("retry-count exceeded one scoped retry maximum".to_string()),
                 };
             }
@@ -293,8 +293,8 @@ pub(crate) fn classify_run_from_summary(
                     pattern: run.pattern.clone(),
                     flow: run.flow.clone(),
                     status: "failed".to_string(),
-                    error_class: Some("runtime_unmapped_hard".to_string()),
-                    error_code: Some(ErrorCode::RuntimeUnmappedHard.to_string()),
+                    error_class: Some(ErrorClass::RuntimeUnmappedHard),
+                    error_code: Some(DiagnosticCode::Pipeline(ErrorCode::RuntimeUnmappedHard)),
                     message: Some("unmapped hard failure from live runtime requires explicit taxonomy mapping".to_string()),
                 };
             }
@@ -306,8 +306,8 @@ pub(crate) fn classify_run_from_summary(
                     pattern: run.pattern.clone(),
                     flow: run.flow.clone(),
                     status: "failed".to_string(),
-                    error_class: Some("telemetry_incomplete".to_string()),
-                    error_code: Some("ERR_TELEMETRY_INCOMPLETE".to_string()),
+                    error_class: Some(ErrorClass::TelemetryIncomplete),
+                    error_code: Some(DiagnosticCode::TelemetryIncomplete),
                     message: Some("run summary is invalid for KPI aggregation".to_string()),
                 };
             }
@@ -331,8 +331,14 @@ pub(crate) fn classify_run_from_summary(
                 pattern: run.pattern.clone(),
                 flow: run.flow.clone(),
                 status: "failed".to_string(),
-                error_class: Some("pipeline_hard".to_string()),
-                error_code: summary.error_codes.first().cloned(),
+                error_class: Some(ErrorClass::PipelineHard),
+                error_code: summary.error_codes.first().and_then(|code| {
+                    ErrorCode::ALL
+                        .iter()
+                        .copied()
+                        .find(|candidate| candidate.as_str() == code)
+                        .map(DiagnosticCode::Pipeline)
+                }),
                 message: summary
                     .failure_state
                     .map(|state| format!("pipeline failed in state `{}`", state.as_str())),
@@ -347,8 +353,8 @@ pub(crate) fn summarize_failure_classes(
 ) -> Vec<FailureClassSummary> {
     let mut counts = BTreeMap::new();
     for diag in &report.diagnostics {
-        if let Some(class) = &diag.error_class {
-            *counts.entry(class.clone()).or_insert(0usize) += 1;
+        if let Some(class) = diag.error_class {
+            *counts.entry(class.as_str().to_string()).or_insert(0usize) += 1;
         }
     }
 

@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 use std::error::Error;
 
-use atlassy_contracts::{ProvenanceStamp, RUNTIME_STUB, RunSummary};
-use serde::{Deserialize, Serialize};
+use atlassy_contracts::{ErrorCode, ProvenanceStamp, RUNTIME_STUB, RunSummary};
+use serde::de::Error as DeError;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub const REQUIRED_SCENARIO_IDS: [&str; 10] = [
     "S-001", "S-002", "S-003", "S-004", "S-005", "S-006", "S-007", "S-008", "S-009", "S-010",
@@ -104,6 +105,145 @@ pub enum ManifestMode {
     SimpleScopedTableCellUpdate,
 }
 
+const ERROR_CLASS_STRINGS: [&str; 6] = [
+    "io",
+    "telemetry_incomplete",
+    "provenance_incomplete",
+    "retry_policy",
+    "runtime_unmapped_hard",
+    "pipeline_hard",
+];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ErrorClass {
+    Io,
+    TelemetryIncomplete,
+    ProvenanceIncomplete,
+    RetryPolicy,
+    RuntimeUnmappedHard,
+    PipelineHard,
+}
+
+impl ErrorClass {
+    pub const ALL: [Self; 6] = [
+        Self::Io,
+        Self::TelemetryIncomplete,
+        Self::ProvenanceIncomplete,
+        Self::RetryPolicy,
+        Self::RuntimeUnmappedHard,
+        Self::PipelineHard,
+    ];
+
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Io => "io",
+            Self::TelemetryIncomplete => "telemetry_incomplete",
+            Self::ProvenanceIncomplete => "provenance_incomplete",
+            Self::RetryPolicy => "retry_policy",
+            Self::RuntimeUnmappedHard => "runtime_unmapped_hard",
+            Self::PipelineHard => "pipeline_hard",
+        }
+    }
+
+    fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "io" => Some(Self::Io),
+            "telemetry_incomplete" => Some(Self::TelemetryIncomplete),
+            "provenance_incomplete" => Some(Self::ProvenanceIncomplete),
+            "retry_policy" => Some(Self::RetryPolicy),
+            "runtime_unmapped_hard" => Some(Self::RuntimeUnmappedHard),
+            "pipeline_hard" => Some(Self::PipelineHard),
+            _ => None,
+        }
+    }
+}
+
+impl Serialize for ErrorClass {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for ErrorClass {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        Self::from_str(&value).ok_or_else(|| DeError::unknown_variant(&value, &ERROR_CLASS_STRINGS))
+    }
+}
+
+const DIAGNOSTIC_CODE_CLI_STRINGS: [&str; 3] = [
+    "ERR_SUMMARY_MISSING",
+    "ERR_TELEMETRY_INCOMPLETE",
+    "ERR_PROVENANCE_MISMATCH",
+];
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DiagnosticCode {
+    Pipeline(ErrorCode),
+    SummaryMissing,
+    TelemetryIncomplete,
+    ProvenanceMismatch,
+}
+
+impl DiagnosticCode {
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Pipeline(code) => code.as_str(),
+            Self::SummaryMissing => "ERR_SUMMARY_MISSING",
+            Self::TelemetryIncomplete => "ERR_TELEMETRY_INCOMPLETE",
+            Self::ProvenanceMismatch => "ERR_PROVENANCE_MISMATCH",
+        }
+    }
+
+    fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "ERR_SUMMARY_MISSING" => Some(Self::SummaryMissing),
+            "ERR_TELEMETRY_INCOMPLETE" => Some(Self::TelemetryIncomplete),
+            "ERR_PROVENANCE_MISMATCH" => Some(Self::ProvenanceMismatch),
+            _ => ErrorCode::ALL
+                .iter()
+                .copied()
+                .find(|code| code.as_str() == value)
+                .map(Self::Pipeline),
+        }
+    }
+}
+
+impl Serialize for DiagnosticCode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for DiagnosticCode {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        Self::from_str(&value).ok_or_else(|| {
+            DeError::unknown_variant(
+                &value,
+                &[
+                    DIAGNOSTIC_CODE_CLI_STRINGS[0],
+                    DIAGNOSTIC_CODE_CLI_STRINGS[1],
+                    DIAGNOSTIC_CODE_CLI_STRINGS[2],
+                    "ERR_* from ErrorCode::ALL",
+                ],
+            )
+        })
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct BatchRunDiagnostic {
     pub run_id: String,
@@ -111,8 +251,8 @@ pub struct BatchRunDiagnostic {
     pub pattern: String,
     pub flow: String,
     pub status: String,
-    pub error_class: Option<String>,
-    pub error_code: Option<String>,
+    pub error_class: Option<ErrorClass>,
+    pub error_code: Option<DiagnosticCode>,
     pub message: Option<String>,
 }
 
@@ -389,4 +529,77 @@ fn default_runtime_mode() -> String {
 
 fn default_manifest_timestamp() -> String {
     "1970-01-01T00:00:00Z".to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DiagnosticCode, ErrorClass};
+    use atlassy_contracts::ErrorCode;
+
+    #[test]
+    fn error_class_round_trips_with_stable_strings() {
+        for (class, expected_json) in [
+            (ErrorClass::Io, "\"io\""),
+            (ErrorClass::TelemetryIncomplete, "\"telemetry_incomplete\""),
+            (
+                ErrorClass::ProvenanceIncomplete,
+                "\"provenance_incomplete\"",
+            ),
+            (ErrorClass::RetryPolicy, "\"retry_policy\""),
+            (ErrorClass::RuntimeUnmappedHard, "\"runtime_unmapped_hard\""),
+            (ErrorClass::PipelineHard, "\"pipeline_hard\""),
+        ] {
+            let encoded = serde_json::to_string(&class).expect("error class should serialize");
+            assert_eq!(encoded, expected_json);
+
+            let decoded: ErrorClass =
+                serde_json::from_str(&encoded).expect("error class should deserialize");
+            assert_eq!(decoded, class);
+        }
+    }
+
+    #[test]
+    fn diagnostic_code_round_trips_with_flat_strings() {
+        for (code, expected_json) in [
+            (DiagnosticCode::SummaryMissing, "\"ERR_SUMMARY_MISSING\""),
+            (
+                DiagnosticCode::TelemetryIncomplete,
+                "\"ERR_TELEMETRY_INCOMPLETE\"",
+            ),
+            (
+                DiagnosticCode::ProvenanceMismatch,
+                "\"ERR_PROVENANCE_MISMATCH\"",
+            ),
+        ] {
+            let encoded = serde_json::to_string(&code).expect("diagnostic code should serialize");
+            assert_eq!(encoded, expected_json);
+
+            let decoded: DiagnosticCode =
+                serde_json::from_str(&encoded).expect("diagnostic code should deserialize");
+            assert_eq!(decoded, code);
+        }
+
+        for error_code in ErrorCode::ALL {
+            let code = DiagnosticCode::Pipeline(error_code);
+            let encoded = serde_json::to_string(&code).expect("pipeline code should serialize");
+            assert_eq!(encoded, format!("\"{}\"", error_code.as_str()));
+
+            let decoded: DiagnosticCode =
+                serde_json::from_str(&encoded).expect("pipeline code should deserialize");
+            assert_eq!(decoded, code);
+        }
+
+        let scope_miss: DiagnosticCode =
+            serde_json::from_str("\"ERR_SCOPE_MISS\"").expect("scope miss should deserialize");
+        assert_eq!(scope_miss, DiagnosticCode::Pipeline(ErrorCode::ScopeMiss));
+
+        assert!(
+            serde_json::from_str::<DiagnosticCode>(r#"{"Pipeline":"ERR_SCOPE_MISS"}"#).is_err(),
+            "tagged structure should not deserialize"
+        );
+        assert!(
+            serde_json::from_str::<DiagnosticCode>("\"ERR_UNKNOWN\"").is_err(),
+            "unknown diagnostic code should fail"
+        );
+    }
 }

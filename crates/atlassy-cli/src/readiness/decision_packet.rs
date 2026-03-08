@@ -1,12 +1,14 @@
 use std::fs;
 use std::path::Path;
 
+use atlassy_contracts::ErrorCode;
+
 use crate::batch::summarize_failure_classes;
 use crate::io::load_required_json;
 use crate::readiness::load_readiness_evidence;
 use crate::{
-    BatchReport, DecisionPacket, DynError, ReadinessChecklist, ReadinessEvidence, ReadinessOutputs,
-    RiskStatusDelta, RunbookBundle,
+    BatchReport, DecisionPacket, DiagnosticCode, DynError, ReadinessChecklist, ReadinessEvidence,
+    ReadinessOutputs, RiskStatusDelta, RunbookBundle,
 };
 
 pub(crate) fn build_risk_status_deltas(report: &BatchReport) -> Vec<RiskStatusDelta> {
@@ -58,10 +60,12 @@ pub(crate) fn build_risk_status_deltas(report: &BatchReport) -> Vec<RiskStatusDe
             "R-006",
             "Schema-invalid candidate payloads",
             "high",
-            !report
-                .diagnostics
-                .iter()
-                .any(|diag| diag.error_code.as_deref() == Some("ERR_SCHEMA_INVALID")),
+            !report.diagnostics.iter().any(|diag| {
+                matches!(
+                    diag.error_code,
+                    Some(DiagnosticCode::Pipeline(ErrorCode::SchemaInvalid))
+                )
+            }),
             "verify diagnostics error codes",
         ),
         risk_delta(
