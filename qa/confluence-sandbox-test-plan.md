@@ -11,8 +11,10 @@ Run Atlassy end-to-end against real Confluence sandbox pages with explicit safet
 - Includes scoped-selector validation for revised KPI experiments.
 - Focuses on sandbox validation, not production release sign-off.
 
-Latest investigation:
+Latest investigations:
 
+- `qa/investigations/2026-03-08-scoped-extract-prose-scope-miss.md`
+- `qa/investigations/2026-03-08-auto-discovery-minimal-page.md`
 - `qa/investigations/2026-03-07-lifecycle-subpage-bootstrap-validation.md`
 
 ## Preconditions
