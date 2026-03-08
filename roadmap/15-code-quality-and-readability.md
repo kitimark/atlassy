@@ -11,18 +11,18 @@ The program targets source structure and test architecture, not feature expansio
 
 ## Current State (2026-03-09)
 
-Phase 1 (leaf crate modularization) and Phase 2 prerequisite (ErrorCode enum) are complete. Phases 2-4 remain.
+Phases 1-2 complete (leaf crate modularization, ErrorCode enum, pipeline modularization). Phases 3-4 remain.
 
-- Remaining monolithic hotspots:
+- Remaining monolithic hotspot:
   - `crates/atlassy-cli/src/main.rs` (2,780 lines) — all CLI logic in one file
-  - `crates/atlassy-pipeline/src/lib.rs` (1,534 lines) — orchestrator + 9 state methods + helpers
-- Modularized crates (Phase 1 complete):
+- Modularized crates (Phases 1-2):
   - `crates/atlassy-adf` — 6 modules (scope, path, index, patch, table_guard, bootstrap); `lib.rs` is 94-line facade; inline tests in scope/path/index
   - `crates/atlassy-contracts` — 3 modules (constants, types, validation); `lib.rs` is 10-line barrel; inline tests in constants/validation; `ErrorCode` is a 12-variant enum with `as_str()`/`Display`/`Serialize` impls
   - `crates/atlassy-confluence` — 3 modules (live, stub, types); `lib.rs` is 7-line barrel; inline tests in live; `src/tests.rs` removed
+  - `crates/atlassy-pipeline` — 14 modules (6 infrastructure + 9 states via `states/`); `lib.rs` is 58-line facade with `RunMode`/`RunRequest` defined inline; inline tests in `state_tracker.rs`, `util.rs`
 - Test placement:
-  - Inline `#[cfg(test)] mod tests` in 5 files: `adf/scope.rs`, `adf/path.rs`, `adf/index.rs`, `contracts/constants.rs`, `contracts/validation.rs`, `confluence/live.rs`
-  - External `src/tests.rs` files remain in: `atlassy-cli` (573 lines, 13 tests) + `src/test_helpers.rs` (19 lines), `atlassy-pipeline` (56 lines, 3 tests)
+  - Inline `#[cfg(test)] mod tests` in 8 files: `adf/scope.rs`, `adf/path.rs`, `adf/index.rs`, `contracts/constants.rs`, `contracts/validation.rs`, `confluence/live.rs`, `pipeline/state_tracker.rs`, `pipeline/util.rs`
+  - External `src/tests.rs` files remain in: `atlassy-cli` (573 lines, 13 tests) + `src/test_helpers.rs` (19 lines)
   - Integration tests in `tests/` across 4 crates (unchanged)
 - Error classification — remaining string-based points (15 in CLI, 0 in pipeline):
   - Pipeline layer (TYPED): `to_hard_error()` pattern-matches on `AdfError` variants → `ErrorCode` enum; `PipelineError::Hard.code` is `ErrorCode`, not `String`
@@ -149,7 +149,7 @@ Pipeline has 50+ deep imports from all three leaf crates. Restructuring leaf cra
 - `atlassy-confluence`: 3 modules (live, stub, types); `lib.rs` is 7-line barrel; inline `#[cfg(test)] mod tests` in live; `src/tests.rs` removed (was public-API-only, covered by integration tests)
 - Integration tests in `tests/` unchanged across all three crates
 
-### Phase 2: Pipeline Modularization — size M
+### Phase 2: Pipeline Modularization — COMPLETE
 
 Refactor `atlassy-pipeline` into focused modules while keeping `lib.rs` as facade/API surface. Coupling is star-shaped: the orchestrator is the hub; individual states never call each other. Data flows linearly through `StateEnvelope<*Output>` structs.
 
@@ -211,6 +211,14 @@ Current `src/tests.rs` (3 tests) distributes into new modules:
 - Each new module with private logic includes inline `#[cfg(test)] mod tests { ... }`.
 - State order and semantics remain unchanged.
 - Integration parity holds in `crates/atlassy-pipeline/tests/pipeline_integration.rs`.
+
+#### Completion summary
+
+- `lib.rs` reduced from 1,534 to 58 lines; facade re-exports `ArtifactStore`, `PipelineError`, `Orchestrator`, `StateTracker`; `RunMode` and `RunRequest` defined inline
+- 14 modules created: `state_tracker`, `error_map`, `artifact_store`, `orchestrator`, `util`, `states/mod` + 9 state modules (`fetch`, `classify`, `extract_prose`, `md_assist_edit`, `adf_table_edit`, `merge_candidates`, `patch`, `verify`, `publish`)
+- `src/tests.rs` removed; tests inlined in `state_tracker.rs` (1 test) and `util.rs` (2 tests)
+- Integration parity held: `tests/pipeline_integration.rs` unchanged and green
+- Open item: 4 state modules (`classify`, `md_assist_edit`, `adf_table_edit`, `merge_candidates`) have private helpers without inline `#[cfg(test)]` blocks; does not block Phase 3
 
 ### Phase 3: CLI Modularization — size L
 
@@ -341,11 +349,11 @@ Optional future cleanup after Phase 4 core: add `Deserialize` impl with unknown-
 |---|---|---|
 | Phase 1 (leaf crates) | **COMPLETE** | — |
 | Phase 2 prereq (ErrorCode enum) | **COMPLETE** | Phase 1 |
-| Phase 2 (pipeline) | Pending | Phase 1, Phase 2 prereq |
+| Phase 2 (pipeline) | **COMPLETE** | Phase 1, Phase 2 prereq |
 | Phase 3 (CLI) | Pending | Can overlap with Phase 2 |
 | Phase 4 (error taxonomy) | Pending | Phase 3 (ErrorClass/DiagnosticCode live in CLI `types` module) |
 
-Remaining execution order: **2 (can overlap with 3) → 3 → 4**.
+Remaining execution order: **3 → 4**.
 
 Phase 2 (pipeline) and Phase 3 (CLI) can overlap if the pipeline's 4-symbol public API (`Orchestrator`, `PipelineError`, `RunMode`, `RunRequest`) is frozen before CLI work begins. The CLI uses exactly these 4 symbols (verified: `main.rs` line 15), does not reach into pipeline internals, and reconstructs batch diagnostics from persisted `RunSummary` artifacts rather than the pipeline return value.
 
