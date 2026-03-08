@@ -171,3 +171,225 @@ fn expand_heading_to_section(adf: &Value, heading_path: &str) -> Vec<String> {
 
     section_paths
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn heading_level_extracts_from_attrs() {
+        let heading = json!({"type": "heading", "attrs": {"level": 2}});
+        assert_eq!(heading_level(&heading), 2);
+    }
+
+    #[test]
+    fn heading_level_defaults_to_six_when_attrs_missing() {
+        let heading = json!({"type": "heading"});
+        assert_eq!(heading_level(&heading), 6);
+    }
+
+    #[test]
+    fn heading_level_defaults_to_six_when_out_of_range() {
+        let heading = json!({"type": "heading", "attrs": {"level": 7}});
+        assert_eq!(heading_level(&heading), 6);
+    }
+
+    #[test]
+    fn find_heading_paths_matches_exact_heading_text() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "Exact Match"}]
+                },
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "Exact Match Extra"}]
+                }
+            ]
+        });
+
+        assert_eq!(
+            find_heading_paths(&adf, "Exact Match", String::new()),
+            vec!["/content/0".to_string()]
+        );
+    }
+
+    #[test]
+    fn find_heading_paths_returns_empty_when_not_found() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "Something Else"}]
+                }
+            ]
+        });
+
+        assert!(find_heading_paths(&adf, "Missing", String::new()).is_empty());
+    }
+
+    #[test]
+    fn find_heading_paths_recurses_into_nested_content() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "expand",
+                    "content": [
+                        {
+                            "type": "heading",
+                            "attrs": {"level": 3},
+                            "content": [{"type": "text", "text": "Nested Heading"}]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        assert_eq!(
+            find_heading_paths(&adf, "Nested Heading", String::new()),
+            vec!["/content/0/content/0".to_string()]
+        );
+    }
+
+    #[test]
+    fn find_block_paths_matches_attrs_id() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"id": "block-1"},
+                    "content": [{"type": "text", "text": "Body"}]
+                }
+            ]
+        });
+
+        assert_eq!(
+            find_block_paths(&adf, "block-1", String::new()),
+            vec!["/content/0".to_string()]
+        );
+    }
+
+    #[test]
+    fn find_block_paths_matches_attrs_local_id() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"localId": "local-1"},
+                    "content": [{"type": "text", "text": "Body"}]
+                }
+            ]
+        });
+
+        assert_eq!(
+            find_block_paths(&adf, "local-1", String::new()),
+            vec!["/content/0".to_string()]
+        );
+    }
+
+    #[test]
+    fn find_block_paths_returns_empty_when_not_found() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"id": "other"},
+                    "content": [{"type": "text", "text": "Body"}]
+                }
+            ]
+        });
+
+        assert!(find_block_paths(&adf, "missing", String::new()).is_empty());
+    }
+
+    #[test]
+    fn expand_heading_to_section_includes_until_same_level_heading() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "Section"}]
+                },
+                {"type": "paragraph", "content": [{"type": "text", "text": "A"}]},
+                {
+                    "type": "heading",
+                    "attrs": {"level": 3},
+                    "content": [{"type": "text", "text": "Subsection"}]
+                },
+                {"type": "paragraph", "content": [{"type": "text", "text": "B"}]},
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "Next"}]
+                }
+            ]
+        });
+
+        assert_eq!(
+            expand_heading_to_section(&adf, "/content/0"),
+            vec![
+                "/content/0".to_string(),
+                "/content/1".to_string(),
+                "/content/2".to_string(),
+                "/content/3".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn expand_heading_to_section_returns_empty_for_non_content_paths() {
+        let adf = json!({"type": "doc", "content": []});
+        assert!(expand_heading_to_section(&adf, "/attrs/title").is_empty());
+    }
+
+    #[test]
+    fn expand_heading_to_section_returns_empty_for_nested_heading_paths() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "Heading"}]
+                }
+            ]
+        });
+
+        assert!(expand_heading_to_section(&adf, "/content/0/content/0").is_empty());
+    }
+
+    #[test]
+    fn full_page_resolution_sets_fallback_fields_and_reason() {
+        let adf = json!({"type": "doc", "version": 1, "content": []});
+
+        let resolution =
+            full_page_resolution(&adf, Some("scope_selector_not_found".to_string())).unwrap();
+
+        assert_eq!(resolution.scoped_adf, adf);
+        assert_eq!(resolution.allowed_scope_paths, vec!["/".to_string()]);
+        assert!(resolution.scope_resolution_failed);
+        assert!(resolution.full_page_fetch);
+        assert_eq!(
+            resolution.fallback_reason,
+            Some("scope_selector_not_found".to_string())
+        );
+        assert_eq!(
+            resolution.node_path_index.get("/"),
+            Some(&"doc".to_string())
+        );
+    }
+}

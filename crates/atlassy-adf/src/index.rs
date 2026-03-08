@@ -84,3 +84,66 @@ pub(crate) fn collect_text(value: &Value) -> String {
     }
     text
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn collect_text_extracts_text_from_text_nodes() {
+        let value = json!({"type": "text", "text": "Hello"});
+        assert_eq!(collect_text(&value), "Hello");
+    }
+
+    #[test]
+    fn collect_text_concatenates_nested_text() {
+        let value = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "text", "text": "Hello"},
+                        {"type": "text", "text": " "},
+                        {"type": "text", "text": "world"}
+                    ]
+                },
+                {
+                    "type": "heading",
+                    "attrs": {"level": 2},
+                    "content": [{"type": "text", "text": "!"}]
+                }
+            ]
+        });
+
+        assert_eq!(collect_text(&value), "Hello world!");
+    }
+
+    #[test]
+    fn collect_text_returns_empty_for_non_text_nodes() {
+        let value = json!({"type": "paragraph", "attrs": {"localId": "abc"}});
+        assert_eq!(collect_text(&value), "");
+    }
+
+    #[test]
+    fn build_node_path_index_handles_empty_doc() {
+        let value = json!({});
+        let index = build_node_path_index(&value).unwrap();
+        assert!(index.is_empty());
+    }
+
+    #[test]
+    fn build_node_path_index_detects_duplicate_paths() {
+        let value = json!({
+            "type": "doc",
+            "": {"type": "paragraph"}
+        });
+
+        assert_eq!(
+            build_node_path_index(&value),
+            Err(AdfError::DuplicatePath("/".to_string()))
+        );
+    }
+}

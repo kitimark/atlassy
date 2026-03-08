@@ -244,3 +244,57 @@ fn is_within_scope(path: &str, allowed_scope_paths: &[String]) -> bool {
                 .is_some_and(|suffix| suffix.starts_with('/'))
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_valid_git_sha_accepts_40_char_hex() {
+        let sha = "0123456789abcdef0123456789abcdef01234567";
+        assert!(is_valid_git_sha(sha));
+    }
+
+    #[test]
+    fn is_valid_git_sha_rejects_wrong_length() {
+        let sha = "0123456789abcdef0123456789abcdef0123456";
+        assert!(!is_valid_git_sha(sha));
+    }
+
+    #[test]
+    fn is_valid_git_sha_rejects_non_hex() {
+        let sha = "g123456789abcdef0123456789abcdef01234567";
+        assert!(!is_valid_git_sha(sha));
+    }
+
+    #[test]
+    fn is_valid_git_sha_rejects_empty() {
+        assert!(!is_valid_git_sha(""));
+    }
+
+    #[test]
+    fn is_within_scope_allows_all_when_root_is_allowed() {
+        assert!(is_within_scope(
+            "/any/path",
+            &["/".to_string(), "/content/1".to_string()]
+        ));
+    }
+
+    #[test]
+    fn is_within_scope_allows_exact_match() {
+        assert!(is_within_scope("/content/1", &["/content/1".to_string()]));
+    }
+
+    #[test]
+    fn is_within_scope_allows_prefix_with_slash_boundary() {
+        assert!(is_within_scope(
+            "/content/1/attrs/id",
+            &["/content/1".to_string()]
+        ));
+    }
+
+    #[test]
+    fn is_within_scope_rejects_non_prefix_overlap() {
+        assert!(!is_within_scope("/content/10", &["/content/1".to_string()]));
+    }
+}

@@ -99,3 +99,79 @@ pub(crate) fn parent_path(path: &str) -> Option<String> {
     }
     Some(parent.to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use std::cmp::Ordering;
+
+    use super::*;
+
+    #[test]
+    fn compare_path_segments_orders_numeric_segments_numerically() {
+        assert_eq!(
+            compare_path_segments("/content/2", "/content/10"),
+            Ordering::Less
+        );
+    }
+
+    #[test]
+    fn compare_path_segments_orders_prefix_shorter_first() {
+        assert_eq!(
+            compare_path_segments("/content/2", "/content/2/0"),
+            Ordering::Less
+        );
+    }
+
+    #[test]
+    fn compare_path_segments_reports_equal_for_identical_paths() {
+        assert_eq!(
+            compare_path_segments("/content/2", "/content/2"),
+            Ordering::Equal
+        );
+    }
+
+    #[test]
+    fn is_json_pointer_accepts_slash_prefixed_paths() {
+        assert!(is_json_pointer("/content/0"));
+    }
+
+    #[test]
+    fn is_json_pointer_rejects_non_slash_prefixed_paths() {
+        assert!(!is_json_pointer("content/0"));
+    }
+
+    #[test]
+    fn is_json_pointer_rejects_empty_string() {
+        assert!(!is_json_pointer(""));
+    }
+
+    #[test]
+    fn escape_pointer_segment_escapes_tilde() {
+        assert_eq!(escape_pointer_segment("a~b"), "a~0b");
+    }
+
+    #[test]
+    fn escape_pointer_segment_escapes_slash() {
+        assert_eq!(escape_pointer_segment("a/b"), "a~1b");
+    }
+
+    #[test]
+    fn escape_pointer_segment_keeps_clean_segments() {
+        assert_eq!(escape_pointer_segment("clean"), "clean");
+    }
+
+    #[test]
+    fn parent_path_returns_none_for_root() {
+        assert_eq!(parent_path("/"), None);
+    }
+
+    #[test]
+    fn parent_path_returns_parent_for_nested_path() {
+        assert_eq!(parent_path("/content/0"), Some("/content".to_string()));
+    }
+
+    #[test]
+    fn parent_path_returns_root_for_single_segment() {
+        assert_eq!(parent_path("/content"), Some("/".to_string()));
+    }
+}

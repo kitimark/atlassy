@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::*;
+use atlassy_confluence::{ConfluenceClient, ConfluenceError, StubConfluenceClient, StubPage};
 
 #[test]
 fn stub_create_page_inserts_into_store() {
