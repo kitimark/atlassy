@@ -15,15 +15,17 @@ The program targets source structure and test architecture, not feature expansio
   - `crates/atlassy-cli/src/main.rs` (3380 lines)
   - `crates/atlassy-pipeline/src/lib.rs` (1587 lines)
   - `crates/atlassy-adf/src/lib.rs` (1408 lines)
-- Test placement is mixed (counts are `#[test]` functions, not files):
-  - `#[test]` functions in `src/**`: 77 (across 5 files)
-  - `#[test]` functions in `tests/**`: 30 (across 2 files)
-- Embedded `mod tests { ... }` blocks exist in large production files:
-  - `crates/atlassy-cli/src/main.rs`
-  - `crates/atlassy-pipeline/src/lib.rs`
-  - `crates/atlassy-adf/src/lib.rs`
-  - `crates/atlassy-contracts/src/lib.rs`
-  - `crates/atlassy-confluence/src/lib.rs`
+- Test placement (counts are `#[test]` functions, not files):
+  - `#[test]` functions in `src/**`: 20 (across 4 files in 3 crates)
+  - `#[test]` functions in `tests/**`: 80 (across 8 files in 4 crates)
+- Test module declarations in source files:
+  - `crates/atlassy-cli/src/main.rs` — `#[cfg(test)] mod tests;` → external `src/tests.rs` (13 tests) + `src/test_helpers.rs`
+  - `crates/atlassy-pipeline/src/lib.rs` — `#[cfg(test)] mod tests;` → external `src/tests.rs` (3 tests)
+  - `crates/atlassy-confluence/src/lib.rs` — `#[cfg(test)] mod tests;` → external `src/tests.rs` (3 tests, public API only)
+  - `crates/atlassy-confluence/src/live.rs` — inline `mod tests { ... }` (4 tests, tests private methods)
+- Crates with no inline tests (all tests in `tests/`):
+  - `crates/atlassy-adf` (43 tests across 5 files)
+  - `crates/atlassy-contracts` (8 tests in 1 file)
 - Error classification includes 17 brittle string-based mapping points in production code:
   - `to_hard_error()` in `atlassy-pipeline/src/lib.rs:1496-1514` — 5 `.contains()` checks on stringified error messages to assign error codes (highest fragility)
   - `classify_run_from_summary()` in `atlassy-cli/src/main.rs:1920-2034` — 7 string-literal error class assignments (`"io"`, `"pipeline_hard"`, `"telemetry_incomplete"`, etc.)
@@ -35,7 +37,7 @@ The program targets source structure and test architecture, not feature expansio
 ### In Scope
 
 - Refactor for module clarity and smaller responsibility boundaries.
-- Extract automated tests out of production logic files.
+- Enforce single-responsibility modules where inline unit tests are naturally right-sized.
 - Preserve behavior and output contracts while restructuring.
 - Strengthen deterministic error taxonomy and verification consistency.
 - Keep existing quality gates (`fmt`, `clippy`, `test`) as mandatory pass conditions.
@@ -65,52 +67,37 @@ The program targets source structure and test architecture, not feature expansio
 
 ## Test Architecture Standard
 
-### Placement Policy (default)
+Follows [Rust Book Ch. 11-3: Test Organization](https://doc.rust-lang.org/book/ch11-03-test-organization.html).
 
-- Private/unit tests:
-  - keep in dedicated test files under `src` (for private access when needed)
-  - do not keep large test bodies inline in production logic files
-- Integration/black-box tests:
-  - keep under `crates/*/tests/`
-- Fixtures:
-  - keep under `crates/*/tests/fixtures/` (or existing fixture locations)
+### Unit Tests (Rust Book Default)
 
-### Structural Rule
+- Inline `#[cfg(test)] mod tests { ... }` in each source file.
+- Access private items via `use super::*`.
+- If a test block grows too large, the fix is to split the production module (single responsibility), not to extract tests to a separate file.
 
-- Production files may contain at most thin test module declarations (for example `#[cfg(test)] mod tests;`).
-- Production logic files should not contain long inline `mod tests { ... }` bodies.
+### Integration Tests
+
+- `crates/*/tests/*.rs` — each file is compiled as its own crate, public API only.
+- No `#[cfg(test)]` annotation needed (Cargo handles it).
+- Shared test helpers go in `tests/common/mod.rs` (not `tests/common.rs`) to avoid Cargo treating them as test crates.
+
+### Fixtures
+
+- `crates/*/tests/fixtures/` (or existing fixture locations).
+
+### Binary Crate Constraint
+
+- Binary crates (`main.rs` without `lib.rs`) cannot be integration-tested via `use` — the Rust compiler does not produce a linkable library.
+- Solution: keep `main.rs` as thin CLI dispatch; push logic into `lib.rs` modules so integration tests can `use` the crate.
 
 ### API Surface Rule
 
 - Do not widen public API visibility solely for tests.
-- Prefer private/unit tests in `src` test files when internal access is required.
+- Inline `mod tests` gives private access via `use super::*` — no visibility widening needed.
 
 ## Refactor Program
 
-### Phase 1: Test Extraction First (behavior-preserving) — size S
-
-Move inline tests from production logic files into dedicated test files.
-
-#### Per-crate target
-
-- `atlassy-adf`:
-  - split tests into domain files (scope resolution, target discovery, patch ops, emptiness/bootstrap)
-- `atlassy-contracts`:
-  - move contract/invariant tests into dedicated test files
-- `atlassy-confluence`:
-  - move payload/stub behavior tests into dedicated test files
-- `atlassy-pipeline`:
-  - move core invariant unit tests out of `src/lib.rs`; keep integration suite in `tests/pipeline_integration.rs`
-- `atlassy-cli`:
-  - move inline tests out of `src/main.rs`; keep process-level CLI tests in `tests/`
-
-#### Acceptance criteria
-
-- No long inline test bodies remain in production logic files.
-- Existing test behavior is preserved.
-- `cargo test --workspace` remains green.
-
-### Phase 2: ADF / Contracts / Confluence Modularization — size S
+### Phase 1: ADF / Contracts / Confluence Modularization — size S
 
 Reduce mixed concerns in leaf crates. These crates have zero workspace dependencies, so refactoring them is self-contained and unblocks later phases.
 
@@ -136,12 +123,18 @@ Pipeline has 50+ deep imports from all three leaf crates. Restructuring leaf cra
 - `atlassy-contracts`: split constants/types/validation
 - `atlassy-confluence`: split trait/live/stub/payload handling
 
+#### Test expectations
+
+- Each new module includes inline `#[cfg(test)] mod tests { ... }` for unit tests covering its private logic.
+- Existing integration tests in `tests/` remain unchanged.
+- `atlassy-confluence`: move `src/tests.rs` to `tests/` (it only tests public API via `StubConfluenceClient`); `live.rs` inline tests stay (they test private methods `build_publish_payload` and `build_create_payload`).
+
 #### Acceptance criteria
 
 - Clear module boundaries with minimal cross-module coupling.
 - Existing contract validations and runtime behavior preserved.
 
-### Phase 3: Pipeline Modularization — size M
+### Phase 2: Pipeline Modularization — size M
 
 Refactor `atlassy-pipeline` into focused modules while keeping `lib.rs` as facade/API surface. Coupling is star-shaped: the orchestrator is the hub; individual states never call each other. Data flows linearly through `StateEnvelope<*Output>` structs.
 
@@ -173,15 +166,27 @@ Refactor `atlassy-pipeline` into focused modules while keeping `lib.rs` as facad
 5. `util` (shared helpers used by orchestrator)
 6. `orchestrator` (last — imports everything else)
 
+#### Test distribution
+
+Current `src/tests.rs` (3 tests) distributes into new modules:
+
+- `StateTracker` out-of-order test → inline in `state_tracker.rs` (or move to `tests/` since `StateTracker` is public API)
+- `compute_section_bytes` tests (2) → inline in `util.rs` (private function, must stay in `src/`)
+- `src/tests.rs` is removed after distribution.
+
 #### Acceptance criteria
 
 - `src/lib.rs` is a thin facade re-exporting `Orchestrator`, `PipelineError`, `RunMode`, `RunRequest`, `StateTracker`.
+- `src/tests.rs` no longer exists; tests live inline in their respective modules.
+- Each new module with private logic includes inline `#[cfg(test)] mod tests { ... }`.
 - State order and semantics remain unchanged.
 - Integration parity holds in `crates/atlassy-pipeline/tests/pipeline_integration.rs`.
 
-### Phase 4: CLI Modularization — size L
+### Phase 3: CLI Modularization — size L
 
 Refactor `atlassy-cli` so `main.rs` is thin dispatch only. No shared mutable state exists — all functions are pure or perform I/O through parameters.
+
+Extract `src/lib.rs` alongside `src/main.rs` to resolve the binary crate testing constraint (see Test Architecture Standard). Without `lib.rs`, Rust cannot produce a linkable library, so integration tests in `tests/` cannot `use atlassy_cli::*`. Current `src/tests.rs` (13 tests) and `src/test_helpers.rs` access ~15 private functions/structs via `use super::*` — these must distribute into new modules as inline `#[cfg(test)] mod tests { ... }` blocks.
 
 #### Target module shape (indicative)
 
@@ -203,6 +208,7 @@ Refactor `atlassy-cli` so `main.rs` is thin dispatch only. No shared mutable sta
 | `types` | 360 | Medium | 30+ struct/enum definitions used across modules — must extract early |
 | `manifest` | 130 | Easy | `validate_manifest`, `normalize_manifest`, `run_mode_from_manifest` |
 | `io` | 30 | Easy | `load_required_json`, `load_run_summary` |
+| `lib` | ~30 | Easy | Facade: re-exports all modules so `tests/` can `use atlassy_cli::*` |
 
 #### Recommended extraction order
 
@@ -217,13 +223,23 @@ Refactor `atlassy-cli` so `main.rs` is thin dispatch only. No shared mutable sta
 9. `commands/*` (glue layer — extract last)
 10. Slim `main.rs` to CLI parsing + dispatch (~120 lines)
 
+#### Test distribution
+
+Current `src/tests.rs` (13 tests) and `src/test_helpers.rs` distribute into new modules:
+
+- Each module gets inline `#[cfg(test)] mod tests { ... }` for its private logic.
+- `src/tests.rs` and `src/test_helpers.rs` are removed after distribution.
+- Integration tests in `tests/` can now `use atlassy_cli::*` to test public API (enabled by `lib.rs` extraction).
+
 #### Acceptance criteria
 
 - `src/main.rs` becomes entrypoint + CLI arg parsing only.
+- `src/lib.rs` exists and re-exports module API.
+- `src/tests.rs` and `src/test_helpers.rs` no longer exist; tests are inline in their modules.
 - Batch/readiness outputs remain schema-compatible.
 - Existing CLI integration tests remain green.
 
-### Phase 5: Error Taxonomy + Verification Consistency — size S-M
+### Phase 4: Error Taxonomy + Verification Consistency — size S-M
 
 Replace string-based hard-error mapping with typed mapping where practical. 17 production mapping points across 4 categories (see baseline).
 
@@ -248,13 +264,13 @@ Replace string-based hard-error mapping with typed mapping where practical. 17 p
 
 | Phase pair | Parallel? | Risk | Reason |
 |---|---|---|---|
-| 2+3 (leaf crates + pipeline) | **No** | Critical | Pipeline has 50+ deep imports from all three leaf crates |
-| 2+4 (leaf crates + CLI) | Yes, with coordination | Medium | CLI imports ~20 symbols from contracts + confluence |
-| 3+4 (pipeline + CLI) | Yes, with coordination | Low | CLI uses only 4 pipeline public symbols |
+| 1+2 (leaf crates + pipeline) | **No** | Critical | Pipeline has 50+ deep imports from all three leaf crates |
+| 1+3 (leaf crates + CLI) | Yes, with coordination | Medium | CLI imports ~20 symbols from contracts + confluence |
+| 2+3 (pipeline + CLI) | Yes, with coordination | Low | CLI uses only 4 pipeline public symbols |
 
-Required execution order: **1 → 2 → 3 (can overlap with 4) → 4 → 5**.
+Required execution order: **1 → 2 (can overlap with 3) → 3 → 4**.
 
-Phase 3 (pipeline) and Phase 4 (CLI) can overlap if the pipeline's 4-symbol public API (`Orchestrator`, `PipelineError`, `RunMode`, `RunRequest`) is frozen before CLI work begins.
+Phase 2 (pipeline) and Phase 3 (CLI) can overlap if the pipeline's 4-symbol public API (`Orchestrator`, `PipelineError`, `RunMode`, `RunRequest`) is frozen before CLI work begins.
 
 ## Quality Gates
 
@@ -264,13 +280,14 @@ Mandatory on each phase:
 - `cargo clippy --workspace --all-targets -- -D warnings`
 - `cargo test --workspace`
 
-Mandatory after Phase 1:
+Mandatory on each phase (test architecture):
 
-- CI check that prevents large inline `mod tests { ... }` blocks in production files (locks in test extraction gains).
+- Each new module includes inline `#[cfg(test)] mod tests { ... }` for unit tests.
+- Integration tests in `tests/` use public API only — no `pub(crate)` backdoors for test access.
 
 ## Done Criteria
 
-- Test placement policy is fully applied across crates.
+- Test placement follows Rust Book Ch. 11-3: inline `#[cfg(test)] mod tests` for unit tests, `tests/` for integration tests.
 - Entrypoints/facades are thin and responsibility boundaries are clear.
 - Monolithic files are broken into focused modules.
 - Error mapping is typed/deterministic where feasible.
@@ -284,12 +301,14 @@ Mandatory after Phase 1:
 - Risk: accidental behavior drift during file moves/refactor.
   - Mitigation: phase-by-phase migration with parity checks after every phase.
 - Risk: API visibility expansion for test access.
-  - Mitigation: prefer private/unit tests in dedicated `src` test files.
+  - Mitigation: inline `mod tests` gives private access via `use super::*`; no visibility widening needed.
+- Risk: binary crate constraint blocks CLI integration testing.
+  - Mitigation: Phase 3 extracts `lib.rs` alongside `main.rs`, enabling `tests/` to `use atlassy_cli::*`.
 - Risk: schema drift in batch/readiness outputs.
   - Mitigation: keep compatibility checks in test fixtures and rebuild/parity tests.
 - Risk: phase ordering violation causing cross-crate breakage.
   - Mitigation: respect dependency graph (leaf crates before pipeline before CLI). See Phase Sequencing Constraints.
-- Risk: silent error reclassification during Phase 5 typed-error migration.
+- Risk: silent error reclassification during Phase 4 typed-error migration.
   - Mitigation: preserve existing test assertions as regression guards; add typed-error round-trip tests before removing string-based paths.
 
 ## Cross-References
