@@ -334,7 +334,7 @@ Do not proceed to the KPI batch until all three pages pass the scoped fetch spik
 
 Once target path auto-discovery is implemented, validate that the pipeline can auto-select targets without manual `jq` path discovery.
 
-Run a scoped prose update with `--target-path` omitted:
+Run a scoped prose update with `--target-path` omitted. Use `--mode simple-scoped-prose-update` (not `no-op`) so the pipeline enters the edit state where discovery runs. Use `--force-verify-fail` to block publish:
 
 ```bash
 cargo run -p atlassy-cli -- run \
@@ -342,7 +342,9 @@ cargo run -p atlassy-cli -- run \
   --page-id "$P1_PAGE_ID" \
   --edit-intent "auto-discovery validation" \
   --scope "heading:Introduction" \
-  --mode no-op --force-verify-fail \
+  --mode simple-scoped-prose-update \
+  --new-value "auto-discovery validation text" \
+  --force-verify-fail \
   --runtime-backend live --artifacts-dir "$ARTIFACTS_DIR"
 ```
 
@@ -367,7 +369,9 @@ cargo run -p atlassy-cli -- run \
   --page-id "$P2_PAGE_ID" \
   --edit-intent "auto-discovery table validation" \
   --scope "heading:Data" \
-  --mode no-op --force-verify-fail \
+  --mode simple-scoped-table-cell-update \
+  --new-value "auto-discovery table validation text" \
+  --force-verify-fail \
   --runtime-backend live --artifacts-dir "$ARTIFACTS_DIR"
 ```
 

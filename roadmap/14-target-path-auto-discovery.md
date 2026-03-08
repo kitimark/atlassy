@@ -62,15 +62,17 @@ pub enum TargetRoute {
 
 **Algorithm:**
 
-1. Collect all paths in `node_path_index` where node type is `"text"`.
+1. Collect all paths in `node_path_index` where node type is `"text"`. These are node paths (e.g., `/content/1/content/0`), not property paths.
 2. Filter to paths within `allowed_scope_paths` (reuse existing `is_within_allowed_scope`).
-3. Filter by route:
-   - `Prose`: exclude paths where `is_table_cell_text_path()` returns true. The parent must be within an `editable_prose` route (check ancestors against the 7-type prose whitelist: `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `blockquote`, `codeBlock`).
-   - `TableCell`: include only paths where `is_table_cell_text_path()` returns true.
+3. Filter by route using `path_has_ancestor_type()` on node paths:
+   - `Prose`: exclude paths where `path_has_ancestor_type(path, index, &["table", "tableRow", "tableCell"])` is true. Include only paths where `path_has_ancestor_type(path, index, EDITABLE_PROSE_TYPES)` is true.
+   - `TableCell`: include only paths where `path_has_ancestor_type(path, index, &["table", "tableRow", "tableCell"])` is true.
 4. Sort paths lexicographically (deterministic ordering by document position).
-5. Construct the property path by appending `/text` to the node path.
-6. Index into the sorted list at `target_index`.
+5. Index into the sorted list at `target_index`.
+6. Construct the property path by appending `/text` to the selected node path.
 7. If index is out of bounds, return `AdfError::TargetDiscoveryFailed`.
+
+> **Note**: Step 3 uses `path_has_ancestor_type()` directly instead of `is_table_cell_text_path()`. The latter requires paths ending in `/text` (property paths), but at this point in the algorithm we are working with node paths from `node_path_index` which do not have the `/text` suffix. The property path is constructed after selection in step 6.
 
 ### Data availability
 
@@ -85,6 +87,21 @@ All inputs to the discovery function are already materialized by the pipeline be
 
 No new pipeline state is needed. Discovery runs inside the existing edit states when `target_path` is `None`.
 
+### Shared prose whitelist constant
+
+The discovery function's route filter (algorithm step 3) checks ancestors against the 7-type prose whitelist. This list currently exists only as a match pattern inside `route_for_node()` in `crates/atlassy-pipeline/src/lib.rs`. Since `discover_target_path()` lives in `crates/atlassy-adf/src/lib.rs`, the whitelist must be accessible from both crates.
+
+New public constant in `crates/atlassy-adf/src/lib.rs`:
+
+```rust
+pub const EDITABLE_PROSE_TYPES: &[&str] = &[
+    "paragraph", "heading", "bulletList", "orderedList",
+    "listItem", "blockquote", "codeBlock",
+];
+```
+
+`route_for_node()` in `atlassy-pipeline` should reference `EDITABLE_PROSE_TYPES` instead of its inline match pattern, establishing a single source of truth.
+
 ### Pipeline integration
 
 The discovery call is inserted into `project_prose_candidate()` and `project_table_candidate()` in `crates/atlassy-pipeline/src/lib.rs`, before canonicalization:
@@ -96,8 +113,15 @@ if target_path is None:
         allowed_scope_paths,
         route,       // Prose or TableCell based on RunMode variant
         target_index // from RunRequest, default 0
-    )?
+    )
+    .map_err(|e| PipelineError::Hard {
+        state: current_pipeline_state,       // MdAssistEdit or AdfTableEdit
+        code: ERR_TARGET_DISCOVERY_FAILED,
+        message: e.to_string(),
+    })?
 ```
+
+**`target_index` placement**: Add `pub target_index: usize` to `RunRequest` (default `0`). It is set from `ManifestRunEntry.target_index` (batch mode) or `--target-index` (CLI mode). The field is only consulted when `target_path` is `None` in the active `RunMode` variant.
 
 After discovery, the resolved path flows through the existing canonicalization, scope check, and patch logic unchanged.
 
@@ -114,24 +138,34 @@ TargetDiscoveryFailed {
 }
 ```
 
-Maps to `ERR_TARGET_DISCOVERY_FAILED` in `to_hard_error()` (`crates/atlassy-pipeline/src/lib.rs`).
+**Error routing**: Discovery errors are mapped to `ERR_TARGET_DISCOVERY_FAILED` via explicit `map_err` at the call site in each edit state function, not through the generic `to_hard_error()` string matcher. This is necessary because:
+
+1. `to_hard_error()` uses substring matching on the error message. The `TargetDiscoveryFailed` message contains "scope", which would incorrectly match `ERR_SCOPE_MISS` before falling through to the intended code.
+2. The `From<AdfError> for PipelineError` impl hardcodes `PipelineState::Patch`, but discovery errors originate in `MdAssistEdit` or `AdfTableEdit`. Explicit `map_err` attaches the correct state.
+
+`ERR_TARGET_DISCOVERY_FAILED` is a new constant in `crates/atlassy-contracts/src/lib.rs`.
 
 **Design decision**: no silent fallback. If auto-discovery finds no valid target in scope, the run fails with a clear error. This prevents masking scope misconfiguration or empty sections.
 
 ### `RunMode` changes
 
-In `crates/atlassy-pipeline/src/lib.rs`, change `target_path` from `String` to `Option<String>` in all relevant variants:
+In `crates/atlassy-pipeline/src/lib.rs`, change `target_path` from `String` to `Option<String>` in the two route-specific variants:
 
 ```rust
 pub enum RunMode {
     NoOp,
-    SimpleScopedUpdate { target_path: Option<String>, new_value: Value },
+    SimpleScopedUpdate { target_path: String, new_value: Value },
     SimpleScopedProseUpdate { target_path: Option<String>, markdown: String },
     SimpleScopedTableCellUpdate { target_path: Option<String>, text: String },
+    ForbiddenTableOperation { target_path: String, operation: TableOperation },
+    SyntheticRouteConflict { prose_path: String, table_path: String },
+    SyntheticTableShapeDrift { path: String },
 }
 ```
 
 When `Some(path)` is provided, current behavior is preserved (explicit path, no discovery). When `None`, auto-discovery is triggered.
+
+> **Variant scope**: Only `SimpleScopedProseUpdate` and `SimpleScopedTableCellUpdate` support auto-discovery. `SimpleScopedUpdate` keeps `target_path: String` because it sends the path to both prose and table route projections — auto-discovery would be ambiguous without a known route. `ForbiddenTableOperation`, `SyntheticRouteConflict`, and `SyntheticTableShapeDrift` are test/synthetic variants with deliberately-crafted paths that should not be auto-discovered.
 
 ### Manifest format
 
@@ -183,6 +217,8 @@ When `Some(path)` is provided, current behavior is preserved (explicit path, no 
 }
 ```
 
+**Baseline run behavior**: Runs with empty `scope_selectors` fall back to full-page scope. Auto-discovery against full-page scope returns the first (or Nth) text node on the entire page. For KPI experiments, this means all baseline runs on the same page discover the same target node (absent differing `target_index` values). This is acceptable for KPI measurement (pipeline performance metrics, not content targeting) but differs from the legacy behavior where each baseline run explicitly targeted a different section's path.
+
 ### CLI changes
 
 The `--target-path` CLI argument is already optional. When omitted, pass `None` through to `RunMode` instead of defaulting. Add `--target-index <N>` optional argument for CLI single-run usage.
@@ -209,11 +245,15 @@ Add `discovered_target_path: Option<String>` to the run summary output. When aut
 - `discover_target_path()` function exists in `atlassy-adf` and is public.
 - `TargetRoute` enum exists in `atlassy-adf` and is public.
 - `AdfError::TargetDiscoveryFailed` variant exists with route, index, and found fields.
-- `RunMode` variants accept `Option<String>` for `target_path`.
-- `project_prose_candidate()` calls discovery when `target_path` is `None`.
-- `project_table_candidate()` calls discovery when `target_path` is `None`.
-- `to_hard_error()` maps `TargetDiscoveryFailed` to `ERR_TARGET_DISCOVERY_FAILED`.
+- `EDITABLE_PROSE_TYPES` constant exists in `atlassy-adf` and is public.
+- `route_for_node()` in `atlassy-pipeline` references `EDITABLE_PROSE_TYPES` (no inline whitelist duplication).
+- `ERR_TARGET_DISCOVERY_FAILED` constant exists in `atlassy-contracts`.
+- `RunMode::SimpleScopedProseUpdate` and `RunMode::SimpleScopedTableCellUpdate` accept `Option<String>` for `target_path`.
+- `run_md_assist_edit_state()` calls discovery when `target_path` is `None` with explicit `map_err` to `ERR_TARGET_DISCOVERY_FAILED`.
+- `run_adf_table_edit_state()` calls discovery when `target_path` is `None` with explicit `map_err` to `ERR_TARGET_DISCOVERY_FAILED`.
+- `RunRequest` has `target_index: usize` field (default `0`).
 - `ManifestRunEntry` has `target_index: Option<u32>` field.
+- `ManifestRunEntry.timestamp` has `#[serde(default)]` (optional in manifests).
 - `run_mode_from_manifest()` passes `None` when `target_path` is absent (no defaults).
 - `--target-index` CLI argument is available.
 - `discovered_target_path` appears in run summary output when auto-discovery is used.

@@ -62,6 +62,8 @@ Discovered during Phase 2 scoped fetch spike at commit `0e69067`.
 
 ## Scoped Fetch Spike Results (pre-section-extraction fix)
 
+> **Staleness**: Pages P1/P2/P3 advanced to version 6 during the 2026-03-08 KPI revalidation (baseline runs modified content). Target paths and scoped fetch metrics below were captured at commit `0e69067` before the section extraction fix (`expand_heading_to_section`) and before baseline publishes modified page content. Re-run the scoped fetch spike to refresh these values. Once `roadmap/14-target-path-auto-discovery.md` is implemented, auto-discovery eliminates this re-discovery step entirely.
+
 > **Note**: These results are from the pre-fix scope resolver (commit `0e69067`) which returned only the heading node, not the full section. Post-fix results (commit `86cf652`+) will show larger `scoped_adf_bytes` and lower `context_reduction_ratio` because the scoped ADF now includes the full heading section. Re-run the scoped fetch spike to update these values.
 
 | Page | Full ADF Bytes | Scoped ADF Bytes | Context Reduction | Scope Resolution |
