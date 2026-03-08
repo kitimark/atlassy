@@ -11,23 +11,23 @@ The program targets source structure and test architecture, not feature expansio
 
 ## Current State (2026-03-09)
 
-Phases 1-2 complete (leaf crate modularization, ErrorCode enum, pipeline modularization). Phases 3-4 remain.
+Phases 1-3 complete (leaf crate modularization, ErrorCode enum, pipeline modularization, CLI modularization). Phase 4 remains.
 
-- Remaining monolithic hotspot:
-  - `crates/atlassy-cli/src/main.rs` (2,780 lines) — all CLI logic in one file
-- Modularized crates (Phases 1-2):
+- No remaining monolithic hotspots.
+- Modularized crates (Phases 1-3):
   - `crates/atlassy-adf` — 6 modules (scope, path, index, patch, table_guard, bootstrap); `lib.rs` is 94-line facade; inline tests in scope/path/index
   - `crates/atlassy-contracts` — 3 modules (constants, types, validation); `lib.rs` is 10-line barrel; inline tests in constants/validation; `ErrorCode` is a 12-variant enum with `as_str()`/`Display`/`Serialize` impls
   - `crates/atlassy-confluence` — 3 modules (live, stub, types); `lib.rs` is 7-line barrel; inline tests in live; `src/tests.rs` removed
   - `crates/atlassy-pipeline` — 14 modules (6 infrastructure + 9 states via `states/`); `lib.rs` is 58-line facade with `RunMode`/`RunRequest` defined inline; inline tests in `state_tracker.rs`, `util.rs`
+  - `crates/atlassy-cli` — 22 source files across 4 module groups (commands/4, batch/3, readiness/4, top-level/5 + 3 `mod.rs` + `cli_args.rs`); `main.rs` is 110-line entrypoint (Clap dispatch only); `lib.rs` is 19-line facade with selective re-exports; inline tests in `commands/run.rs`
 - Test placement:
-  - Inline `#[cfg(test)] mod tests` in 8 files: `adf/scope.rs`, `adf/path.rs`, `adf/index.rs`, `contracts/constants.rs`, `contracts/validation.rs`, `confluence/live.rs`, `pipeline/state_tracker.rs`, `pipeline/util.rs`
-  - External `src/tests.rs` files remain in: `atlassy-cli` (573 lines, 13 tests) + `src/test_helpers.rs` (19 lines)
-  - Integration tests in `tests/` across 4 crates (unchanged)
+  - Inline `#[cfg(test)] mod tests` in 9 files: `adf/scope.rs`, `adf/path.rs`, `adf/index.rs`, `contracts/constants.rs`, `contracts/validation.rs`, `confluence/live.rs`, `pipeline/state_tracker.rs`, `pipeline/util.rs`, `cli/commands/run.rs`
+  - No external `src/tests.rs` files remain in any crate
+  - Integration tests in `tests/` across 4 crates; CLI integration tests (`batch_report.rs`, `readiness.rs`) import via `use atlassy_cli::*` (enabled by `lib.rs` extraction)
 - Error classification — remaining string-based points (15 in CLI, 0 in pipeline):
   - Pipeline layer (TYPED): `to_hard_error()` pattern-matches on `AdfError` variants → `ErrorCode` enum; `PipelineError::Hard.code` is `ErrorCode`, not `String`
-  - CLI layer (UNTYPED): `classify_run_from_summary()` in `main.rs:1913-2028` — 7 string-literal `error_class` assignments (`"io"`, `"pipeline_hard"`, `"telemetry_incomplete"`, etc.) + 3 CLI-only `error_code` strings (`ERR_SUMMARY_MISSING`, `ERR_TELEMETRY_INCOMPLETE`, `ERR_PROVENANCE_MISMATCH`) with no `ErrorCode` enum variant
-  - CLI downstream: 5 `.as_deref() == Some("...")` comparisons (runbooks, risk deltas) + 1 `matches!()` known-class guard
+  - CLI layer (UNTYPED): `classify_run_from_summary()` in `batch/report.rs` — 7 string-literal `error_class` assignments (`"io"`, `"pipeline_hard"`, `"telemetry_incomplete"`, etc.) + 3 CLI-only `error_code` strings (`ERR_SUMMARY_MISSING`, `ERR_TELEMETRY_INCOMPLETE`, `ERR_PROVENANCE_MISMATCH`) with no `ErrorCode` enum variant
+  - CLI downstream: 4 `.as_deref() == Some("...")` comparisons (runbooks, decision_packet) + 6 in tests
   - Wire format: `RunSummary.error_codes: Vec<String>` — pipeline writes `ErrorCode` variants via `.to_string()`, CLI reads via `.as_str()` comparisons
 
 ## Scope
@@ -220,7 +220,7 @@ Current `src/tests.rs` (3 tests) distributes into new modules:
 - Integration parity held: `tests/pipeline_integration.rs` unchanged and green
 - Open item: 4 state modules (`classify`, `md_assist_edit`, `adf_table_edit`, `merge_candidates`) have private helpers without inline `#[cfg(test)]` blocks; does not block Phase 3
 
-### Phase 3: CLI Modularization — size L
+### Phase 3: CLI Modularization — COMPLETE
 
 Refactor `atlassy-cli` so `main.rs` is thin dispatch only. No shared mutable state exists — all functions are pure or perform I/O through parameters.
 
@@ -276,6 +276,15 @@ Current `src/tests.rs` (13 tests) and `src/test_helpers.rs` distribute into new 
 - `src/tests.rs` and `src/test_helpers.rs` no longer exist; tests are inline in their modules.
 - Batch/readiness outputs remain schema-compatible.
 - Existing CLI integration tests remain green.
+
+#### Completion summary
+
+- `main.rs` reduced from 2,780 to 110 lines; entrypoint + Clap dispatch only; `cli_args.rs` (63 lines) holds subcommand arg structs
+- `lib.rs` created (19 lines); declares 8 modules (`commands`, `batch`, `readiness`, `provenance`, `fixtures`, `types`, `manifest`, `io`) with selective re-exports
+- 22 source files across 4 module groups: `commands/` (4: `run`, `run_batch`, `run_readiness`, `create_subpage`), `batch/` (3: `report`, `kpi`, `safety`), `readiness/` (4: `evidence`, `gates`, `runbooks`, `decision_packet`), top-level (5: `types`, `fixtures`, `provenance`, `manifest`, `io`) + 3 `mod.rs` files + `cli_args.rs`
+- `src/tests.rs` (573 lines, 13 tests) and `src/test_helpers.rs` (19 lines) removed; tests distributed to inline blocks and integration tests
+- Integration tests (`batch_report.rs`, `readiness.rs`) import via `use atlassy_cli::*` (binary crate constraint resolved by `lib.rs` extraction); `live_runtime_startup.rs` unchanged (binary-level test)
+- Open item: only `commands/run.rs` has inline `#[cfg(test)]` block; remaining modules with private logic lack inline unit tests; does not block Phase 4
 
 ### Phase 4: Error Taxonomy — size S-M
 
@@ -350,14 +359,12 @@ Optional future cleanup after Phase 4 core: add `Deserialize` impl with unknown-
 | Phase 1 (leaf crates) | **COMPLETE** | — |
 | Phase 2 prereq (ErrorCode enum) | **COMPLETE** | Phase 1 |
 | Phase 2 (pipeline) | **COMPLETE** | Phase 1, Phase 2 prereq |
-| Phase 3 (CLI) | Pending | Can overlap with Phase 2 |
+| Phase 3 (CLI) | **COMPLETE** | Can overlap with Phase 2 |
 | Phase 4 (error taxonomy) | Pending | Phase 3 (ErrorClass/DiagnosticCode live in CLI `types` module) |
 
-Remaining execution order: **3 → 4**.
+Remaining execution order: **4**.
 
-Phase 2 (pipeline) and Phase 3 (CLI) can overlap if the pipeline's 4-symbol public API (`Orchestrator`, `PipelineError`, `RunMode`, `RunRequest`) is frozen before CLI work begins. The CLI uses exactly these 4 symbols (verified: `main.rs` line 15), does not reach into pipeline internals, and reconstructs batch diagnostics from persisted `RunSummary` artifacts rather than the pipeline return value.
-
-Phase 4 depends on Phase 3 because the `ErrorClass` and `DiagnosticCode` enums belong in the CLI `types` module created during Phase 3. Phase 4 also depends on the typed `BatchRunDiagnostic` struct being in a proper module (not buried in a 2,780-line `main.rs`).
+Phase 4 depends on Phase 3 because the `ErrorClass` and `DiagnosticCode` enums belong in the CLI `types` module created during Phase 3. Phase 3 is now complete; `BatchRunDiagnostic` lives in `types.rs` and is ready for typed field migration.
 
 ## Quality Gates
 
