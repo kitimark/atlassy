@@ -45,9 +45,9 @@ Tests that call private (non-`pub`) functions, methods, or types SHALL be placed
 - **WHEN** `atlassy-confluence` tests call private `LiveConfluenceClient::build_publish_payload` or `build_create_payload`
 - **THEN** those tests reside in a `#[cfg(test)] mod tests` block within `crates/atlassy-confluence/src/live.rs`
 
-#### Scenario: CLI tests access binary crate internals
-- **WHEN** `atlassy-cli` tests use private types (`BatchReport`, `RunManifest`, `DecisionPacket`) or private functions (`map_live_startup_error`, `rebuild_batch_report_from_artifacts`, etc.)
-- **THEN** those tests reside in `crates/atlassy-cli/src/tests.rs`
+#### Scenario: CLI test accessing private map_live_startup_error
+- **WHEN** `atlassy-cli` tests call the private `map_live_startup_error` function
+- **THEN** that test resides in a `#[cfg(test)] mod tests` block within `crates/atlassy-cli/src/commands/run.rs`
 
 ### Requirement: Domain modules with private logic SHALL include inline unit tests
 
@@ -77,6 +77,11 @@ Domain module files containing private (`fn`) or `pub(crate)` functions SHALL in
 - **WHEN** `crates/atlassy-adf/src/bootstrap.rs`, `patch.rs`, or `table_guard.rs` is inspected
 - **THEN** they MAY omit `#[cfg(test)] mod tests` blocks (all functions are `pub`, tested via `tests/`)
 
+#### Scenario: CLI commands/run module has inline test for private helper
+- **WHEN** `crates/atlassy-cli/src/commands/run.rs` is inspected
+- **THEN** it contains a `#[cfg(test)] mod tests` block
+- **THEN** that block contains a test exercising the private `map_live_startup_error` function
+
 ### Requirement: Tests using only public API SHALL reside under tests/
 
 Tests that use only `pub` items from a library crate SHALL be placed under the crate's `tests/` directory as integration-style tests. These files use `use <crate_name>::*;` imports.
@@ -88,6 +93,11 @@ Tests that use only `pub` items from a library crate SHALL be placed under the c
 #### Scenario: Contracts tests use only public API
 - **WHEN** all 10 `atlassy-contracts` tests call only `pub` functions and reference only `pub` types
 - **THEN** those tests reside in `crates/atlassy-contracts/tests/contract_validation.rs`
+
+#### Scenario: CLI batch and readiness tests use public API
+- **WHEN** `atlassy-cli` tests exercise `execute_batch_from_manifest_file`, `rebuild_batch_report_from_artifacts`, `generate_readiness_outputs_from_artifacts`, `verify_decision_packet_replay`, or `ensure_readiness_unblocked`
+- **THEN** those tests reside in files under `crates/atlassy-cli/tests/`
+- **THEN** those tests import via `use atlassy_cli::*` (not `use super::*`)
 
 ### Requirement: Confluence public-API tests SHALL reside in tests/ directory
 
@@ -130,18 +140,26 @@ The 42 `atlassy-adf` tests SHALL be split across 5 files organized by functional
 - **WHEN** a test exercises `is_page_effectively_empty` or `bootstrap_scaffold`
 - **THEN** it resides in `crates/atlassy-adf/tests/emptiness_bootstrap.rs`
 
-### Requirement: CLI test helpers SHALL be in a separate module
+### Requirement: CLI test helpers SHALL use tests/common/mod.rs
 
-The `#[cfg(test)]` helper functions (`fixture_path`, `execute_batch_from_manifest_file`) SHALL reside in `crates/atlassy-cli/src/test_helpers.rs`, not inline in `main.rs` or in the test file.
+The `fixture_path` helper function SHALL reside in `crates/atlassy-cli/tests/common/mod.rs` following the Rust Book Ch. 11-3 convention for shared test helpers. The `execute_batch_from_manifest_file` wrapper SHALL NOT be a test helper - the function it wraps is now part of the public API and callable directly.
 
-#### Scenario: main.rs references test_helpers module
-- **WHEN** `main.rs` is inspected
-- **THEN** it contains `#[cfg(test)] mod test_helpers;` and `#[cfg(test)] mod tests;`
-- **THEN** it does NOT contain the body of `execute_batch_from_manifest_file`
+#### Scenario: fixture_path is in tests/common/mod.rs
+- **WHEN** `crates/atlassy-cli/tests/common/mod.rs` is inspected
+- **THEN** it contains the `fixture_path` helper function
+- **THEN** integration test files include `mod common;` and call `common::fixture_path`
 
-#### Scenario: Tests import helpers from test_helpers module
-- **WHEN** `src/tests.rs` calls `fixture_path` or `execute_batch_from_manifest_file`
-- **THEN** those functions are imported from `super::test_helpers`
+#### Scenario: No src/test_helpers.rs exists
+- **WHEN** `crates/atlassy-cli/src/` is listed
+- **THEN** no `test_helpers.rs` file exists
+
+#### Scenario: No src/tests.rs exists
+- **WHEN** `crates/atlassy-cli/src/` is listed
+- **THEN** no `tests.rs` file exists
+
+#### Scenario: main.rs has no test module declarations
+- **WHEN** `crates/atlassy-cli/src/main.rs` is inspected
+- **THEN** it does NOT contain `#[cfg(test)] mod tests;` or `#[cfg(test)] mod test_helpers;`
 
 ### Requirement: Public API visibility SHALL NOT be widened for test access
 
@@ -151,9 +169,14 @@ No item's visibility SHALL be changed from private to `pub` or `pub(crate)` sole
 - **WHEN** `compute_section_bytes` in `atlassy-pipeline` is private before extraction
 - **THEN** it remains private after extraction (tests access it via inline `#[cfg(test)] mod tests` in `util.rs` using `use super::*`)
 
-#### Scenario: Binary crate items stay private after extraction
-- **WHEN** `BatchReport`, `map_live_startup_error`, and other CLI internals are private before extraction
-- **THEN** they remain private after extraction
+#### Scenario: CLI entry-point functions become pub because they are the API
+- **WHEN** `execute_batch_from_manifest_file`, `generate_readiness_outputs_from_artifacts`, and `rebuild_batch_report_from_artifacts` are extracted to library modules
+- **THEN** they become `pub fn` because `main()` dispatches to them and they form the crate's public interface
+- **THEN** this is NOT visibility widening for test access - these are the same functions `main()` calls
+
+#### Scenario: CLI internal helpers stay private after extraction
+- **WHEN** `map_live_startup_error` in `commands/run.rs` is private before extraction
+- **THEN** it remains private after extraction (tested via inline `#[cfg(test)] mod tests` using `use super::*`)
 
 ### Requirement: Test count SHALL be preserved exactly
 
@@ -185,4 +208,4 @@ The total number of `#[test]` functions across the workspace SHALL remain identi
 
 #### Scenario: Full test suite passes
 - **WHEN** `cargo test --workspace` is run after extraction
-- **THEN** all 107 tests pass
+- **THEN** all tests pass
