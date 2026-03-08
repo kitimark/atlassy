@@ -1,0 +1,1180 @@
+{
+  "batch": {
+    "manifest_path": "artifacts/batch/manifest.input.json",
+    "normalized_manifest_path": "artifacts/batch/manifest.normalized.json",
+    "report_path": "artifacts/batch/report.json",
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    },
+    "provenance": {
+      "git_commit_sha": "959755ca323504d5cba8820cc990dc9753b7fceb",
+      "git_dirty": true,
+      "pipeline_version": "v1",
+      "runtime_mode": "live"
+    }
+  },
+  "runs": [
+    {
+      "run_id": "kpi-v3-c-base-01",
+      "page_id": "131294",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-c-pair-1",
+      "summary_path": "artifacts/kpi-v3-c-base-01/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-c-base-01/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-c-base-01/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-c-base-01/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-c-base-01/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-c-base-01/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-c-base-01/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-c-base-01/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-c-base-01/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-c-base-01/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-01/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-01/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-c-opt-01",
+      "page_id": "131294",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-c-pair-1",
+      "summary_path": "artifacts/kpi-v3-c-opt-01/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-c-opt-01/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-c-opt-01/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-c-opt-01/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-c-opt-01/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-c-opt-01/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-c-opt-01/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-c-opt-01/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-c-opt-01/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-c-opt-01/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-01/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-01/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-c-base-02",
+      "page_id": "131294",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-c-pair-2",
+      "summary_path": "artifacts/kpi-v3-c-base-02/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-c-base-02/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-c-base-02/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-c-base-02/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-c-base-02/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-c-base-02/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-c-base-02/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-c-base-02/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-c-base-02/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-c-base-02/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-02/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-02/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-c-opt-02",
+      "page_id": "131294",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-c-pair-2",
+      "summary_path": "artifacts/kpi-v3-c-opt-02/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-c-opt-02/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-c-opt-02/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-c-opt-02/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-c-opt-02/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-c-opt-02/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-c-opt-02/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-c-opt-02/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-c-opt-02/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-c-opt-02/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-02/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-02/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-c-base-03",
+      "page_id": "131294",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-c-pair-3",
+      "summary_path": "artifacts/kpi-v3-c-base-03/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-c-base-03/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-c-base-03/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-c-base-03/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-c-base-03/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-c-base-03/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-c-base-03/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-c-base-03/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-c-base-03/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-c-base-03/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-base-03/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-base-03/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-c-opt-03",
+      "page_id": "131294",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-c-pair-3",
+      "summary_path": "artifacts/kpi-v3-c-opt-03/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-c-opt-03/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-c-opt-03/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-c-opt-03/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-c-opt-03/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-c-opt-03/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-c-opt-03/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-c-opt-03/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-c-opt-03/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-c-opt-03/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-c-opt-03/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-c-opt-03/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-b-base-01",
+      "page_id": "327805",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-b-pair-1",
+      "summary_path": "artifacts/kpi-v3-b-base-01/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-b-base-01/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-b-base-01/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-b-base-01/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-b-base-01/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-b-base-01/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-b-base-01/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-b-base-01/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-b-base-01/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-b-base-01/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-01/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-01/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-b-opt-01",
+      "page_id": "327805",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-b-pair-1",
+      "summary_path": "artifacts/kpi-v3-b-opt-01/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-b-opt-01/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-b-opt-01/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-b-opt-01/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-b-opt-01/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-b-opt-01/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-b-opt-01/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-b-opt-01/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-b-opt-01/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-b-opt-01/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-01/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-01/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-b-base-02",
+      "page_id": "327805",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-b-pair-2",
+      "summary_path": "artifacts/kpi-v3-b-base-02/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-b-base-02/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-b-base-02/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-b-base-02/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-b-base-02/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-b-base-02/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-b-base-02/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-b-base-02/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-b-base-02/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-b-base-02/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-02/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-02/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-b-opt-02",
+      "page_id": "327805",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-b-pair-2",
+      "summary_path": "artifacts/kpi-v3-b-opt-02/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-b-opt-02/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-b-opt-02/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-b-opt-02/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-b-opt-02/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-b-opt-02/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-b-opt-02/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-b-opt-02/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-b-opt-02/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-b-opt-02/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-02/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-02/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-b-base-03",
+      "page_id": "327805",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-b-pair-3",
+      "summary_path": "artifacts/kpi-v3-b-base-03/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-b-base-03/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-b-base-03/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-b-base-03/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-b-base-03/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-b-base-03/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-b-base-03/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-b-base-03/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-b-base-03/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-b-base-03/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-base-03/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-base-03/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-b-opt-03",
+      "page_id": "327805",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-b-pair-3",
+      "summary_path": "artifacts/kpi-v3-b-opt-03/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-b-opt-03/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-b-opt-03/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-b-opt-03/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-b-opt-03/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-b-opt-03/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-b-opt-03/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-b-opt-03/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-b-opt-03/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-b-opt-03/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-b-opt-03/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-b-opt-03/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-a-base-01",
+      "page_id": "98465",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-a-pair-1",
+      "summary_path": "artifacts/kpi-v3-a-base-01/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-a-base-01/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-a-base-01/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-a-base-01/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-a-base-01/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-a-base-01/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-a-base-01/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-a-base-01/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-a-base-01/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-a-base-01/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-01/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-01/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-a-opt-01",
+      "page_id": "98465",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-a-pair-1",
+      "summary_path": "artifacts/kpi-v3-a-opt-01/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-a-opt-01/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-a-opt-01/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-a-opt-01/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-a-opt-01/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-a-opt-01/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-a-opt-01/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-a-opt-01/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-a-opt-01/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-a-opt-01/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-01/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-01/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-a-base-02",
+      "page_id": "98465",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-a-pair-2",
+      "summary_path": "artifacts/kpi-v3-a-base-02/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-a-base-02/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-a-base-02/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-a-base-02/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-a-base-02/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-a-base-02/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-a-base-02/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-a-base-02/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-a-base-02/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-a-base-02/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-02/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-02/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-a-opt-02",
+      "page_id": "98465",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-a-pair-2",
+      "summary_path": "artifacts/kpi-v3-a-opt-02/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-a-opt-02/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-a-opt-02/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-a-opt-02/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-a-opt-02/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-a-opt-02/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-a-opt-02/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-a-opt-02/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-a-opt-02/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-a-opt-02/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-02/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-02/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-a-base-03",
+      "page_id": "98465",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent_hash": "kpi-a-pair-3",
+      "summary_path": "artifacts/kpi-v3-a-base-03/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-a-base-03/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-a-base-03/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-a-base-03/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-a-base-03/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-a-base-03/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-a-base-03/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-a-base-03/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-a-base-03/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-a-base-03/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-base-03/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-base-03/publish/diagnostics.json"
+        }
+      ]
+    },
+    {
+      "run_id": "kpi-v3-a-opt-03",
+      "page_id": "98465",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent_hash": "kpi-a-pair-3",
+      "summary_path": "artifacts/kpi-v3-a-opt-03/summary.json",
+      "state_artifacts": [
+        {
+          "state": "fetch",
+          "input_path": "artifacts/kpi-v3-a-opt-03/fetch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/fetch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/fetch/diagnostics.json"
+        },
+        {
+          "state": "classify",
+          "input_path": "artifacts/kpi-v3-a-opt-03/classify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/classify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/classify/diagnostics.json"
+        },
+        {
+          "state": "extract_prose",
+          "input_path": "artifacts/kpi-v3-a-opt-03/extract_prose/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/extract_prose/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/extract_prose/diagnostics.json"
+        },
+        {
+          "state": "md_assist_edit",
+          "input_path": "artifacts/kpi-v3-a-opt-03/md_assist_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/md_assist_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/md_assist_edit/diagnostics.json"
+        },
+        {
+          "state": "adf_table_edit",
+          "input_path": "artifacts/kpi-v3-a-opt-03/adf_table_edit/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/adf_table_edit/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/adf_table_edit/diagnostics.json"
+        },
+        {
+          "state": "merge_candidates",
+          "input_path": "artifacts/kpi-v3-a-opt-03/merge_candidates/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/merge_candidates/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/merge_candidates/diagnostics.json"
+        },
+        {
+          "state": "patch",
+          "input_path": "artifacts/kpi-v3-a-opt-03/patch/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/patch/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/patch/diagnostics.json"
+        },
+        {
+          "state": "verify",
+          "input_path": "artifacts/kpi-v3-a-opt-03/verify/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/verify/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/verify/diagnostics.json"
+        },
+        {
+          "state": "publish",
+          "input_path": "artifacts/kpi-v3-a-opt-03/publish/state_input.json",
+          "output_path": "artifacts/kpi-v3-a-opt-03/publish/state_output.json",
+          "diagnostics_path": "artifacts/kpi-v3-a-opt-03/publish/diagnostics.json"
+        }
+      ]
+    }
+  ]
+}

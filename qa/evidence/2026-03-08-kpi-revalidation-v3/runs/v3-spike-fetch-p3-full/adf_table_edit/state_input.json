@@ -1,0 +1,13 @@
+{
+  "request_id": "v3-spike-fetch-p3-full",
+  "page_id": "131294",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "scoped fetch spike"
+  }
+}

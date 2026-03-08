@@ -1,0 +1,13 @@
+{
+  "request_id": "v3-scopecheck-p2-data",
+  "page_id": "327805",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "327805",
+    "edit_intent": "scope selector gate check",
+    "scope_selectors": [
+      "heading:Data"
+    ]
+  }
+}

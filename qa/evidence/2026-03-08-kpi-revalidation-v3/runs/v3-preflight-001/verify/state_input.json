@@ -1,0 +1,78 @@
+{
+  "request_id": "v3-preflight-001",
+  "page_id": "131207",
+  "state": "verify",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "original_scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "localId": "64448220f4ee",
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "attrs": {
+                "localId": "138985edbd1a"
+              },
+              "content": [
+                {
+                  "text": "QA v2 prose update 2026-03-08T11:48:38Z",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "localId": "ec49fcd30569"
+          },
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "localId": "64448220f4ee",
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "attrs": {
+                "localId": "138985edbd1a"
+              },
+              "content": [
+                {
+                  "text": "QA v2 prose update 2026-03-08T11:48:38Z",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "localId": "ec49fcd30569"
+          },
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "changed_paths": []
+  }
+}

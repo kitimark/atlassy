@@ -1,0 +1,15 @@
+{
+  "request_id": "v3-autodiscover-p3",
+  "page_id": "131294",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "auto-discovery validation"
+  }
+}

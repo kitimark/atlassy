@@ -1,0 +1,47 @@
+{
+  "request_id": "v3-autodiscover-p3",
+  "page_id": "131294",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Pattern C notes paragraph adjacent to locked blocks."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel content simulates locked-adjacent structure."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "adf_path": "/content/5/content/0"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5/content/0"
+    ],
+    "allowed_scope_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "auto-discovery validation"
+  }
+}

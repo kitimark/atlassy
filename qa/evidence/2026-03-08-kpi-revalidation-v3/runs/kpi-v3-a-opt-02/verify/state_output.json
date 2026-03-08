@@ -1,0 +1,14 @@
+{
+  "request_id": "kpi-v3-a-opt-02",
+  "page_id": "98465",
+  "state": "verify",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "verify_result": "pass",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

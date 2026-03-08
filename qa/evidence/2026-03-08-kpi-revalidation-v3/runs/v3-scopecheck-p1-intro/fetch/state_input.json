@@ -1,0 +1,13 @@
+{
+  "request_id": "v3-scopecheck-p1-intro",
+  "page_id": "98465",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "98465",
+    "edit_intent": "scope selector gate check",
+    "scope_selectors": [
+      "heading:Introduction"
+    ]
+  }
+}

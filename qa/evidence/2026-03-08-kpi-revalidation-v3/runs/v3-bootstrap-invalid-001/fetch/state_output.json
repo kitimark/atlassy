@@ -1,0 +1,56 @@
+{
+  "request_id": "v3-bootstrap-invalid-001",
+  "page_id": "131207",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "localId": "64448220f4ee",
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "attrs": {
+                "localId": "138985edbd1a"
+              },
+              "content": [
+                {
+                  "text": "Sandbox prose update 2026-03-08T13:33:52Z",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "localId": "ec49fcd30569"
+          },
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 9,
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "node_path_index": {
+      "/": "doc",
+      "/content/0": "panel",
+      "/content/0/content/0": "paragraph",
+      "/content/0/content/0/content/0": "text",
+      "/content/1": "paragraph"
+    },
+    "scope_resolution_failed": true,
+    "full_page_fetch": true,
+    "fallback_reason": "no_scope_selectors",
+    "full_page_adf_bytes": 312
+  }
+}

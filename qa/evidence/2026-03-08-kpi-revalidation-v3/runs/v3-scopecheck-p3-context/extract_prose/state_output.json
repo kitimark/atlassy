@@ -1,0 +1,41 @@
+{
+  "request_id": "v3-scopecheck-p3-context",
+  "page_id": "131294",
+  "state": "extract_prose",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "Pattern C context paragraph before locked blocks."
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Expandable details remain structurally locked."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "adf_path": "/content/2/content/0"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2/content/0"
+    ]
+  }
+}

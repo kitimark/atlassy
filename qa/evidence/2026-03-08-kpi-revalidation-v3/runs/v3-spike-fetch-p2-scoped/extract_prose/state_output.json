@@ -1,0 +1,41 @@
+{
+  "request_id": "v3-spike-fetch-p2-scoped",
+  "page_id": "327805",
+  "state": "extract_prose",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Pattern B data intro paragraph before the table."
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "Pattern B paragraph after table for scoped prose pairing."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/5",
+        "adf_path": "/content/5"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/2",
+      "/content/3",
+      "/content/5"
+    ]
+  }
+}

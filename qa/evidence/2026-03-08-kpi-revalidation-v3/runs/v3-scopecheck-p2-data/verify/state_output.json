@@ -1,0 +1,20 @@
+{
+  "request_id": "v3-scopecheck-p2-data",
+  "page_id": "327805",
+  "state": "verify",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "verify_result": "fail",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [
+        {
+          "code": "ERR_SCHEMA_INVALID",
+          "message": "forced verify failure",
+          "recovery": "fix candidate payload"
+        }
+      ],
+      "metrics": {}
+    }
+  }
+}

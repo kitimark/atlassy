@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-v3-a-base-01",
+  "page_id": "98465",
+  "state": "adf_table_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "Pattern A prose update pair 1"
+  }
+}

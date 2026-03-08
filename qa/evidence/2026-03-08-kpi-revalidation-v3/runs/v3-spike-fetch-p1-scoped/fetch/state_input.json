@@ -1,0 +1,13 @@
+{
+  "request_id": "v3-spike-fetch-p1-scoped",
+  "page_id": "98465",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "98465",
+    "edit_intent": "scoped fetch spike",
+    "scope_selectors": [
+      "heading:Introduction"
+    ]
+  }
+}

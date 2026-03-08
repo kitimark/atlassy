@@ -6,9 +6,9 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 
 | Page | ID | Parent | Title | Headings | Table | Locked Blocks | Size Estimate |
 |------|----|--------|-------|----------|-------|---------------|---------------|
-| P1 | 65934 | 131207 | KPI Experiment - Prose Rich | Introduction, Details, Summary | No | No | ~500-1000 ADF bytes |
-| P2 | 98323 | 131207 | KPI Experiment - Mixed Prose Table | Overview, Data | Yes (3x3 text cells) | No | ~1000-2000 ADF bytes |
-| P3 | 131227 | 131207 | KPI Experiment - Locked Adjacent | Context, Notes, References | No | Yes (expand macro, media or extension) | ~800-1500 ADF bytes |
+| P1 | 98465 | 131207 | KPI Experiment - Prose Rich v3 | Introduction, Details, Summary | No | No | ~500-1000 ADF bytes |
+| P2 | 327805 | 131207 | KPI Experiment - Mixed Prose Table v3 | Overview, Data | Yes (3x3 text cells) | No | ~1000-2000 ADF bytes |
+| P3 | 131294 | 131207 | KPI Experiment - Locked Adjacent v3 | Context, Notes, References | No | Yes (expand, panel, rule) | ~800-1500 ADF bytes |
 
 ## Route Classification Expected
 
@@ -16,7 +16,7 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 |------|-------------------|-------------|---------------------|
 | P1 | heading, paragraph, bulletList, orderedList, blockquote | None | None |
 | P2 | heading, paragraph | table, tableRow, tableCell | None |
-| P3 | heading, paragraph | None | expand, mediaSingle/media or extension |
+| P3 | heading, paragraph | None | expand, panel, rule |
 
 ## Content Design
 
@@ -43,39 +43,35 @@ Page inventory for KPI experiment sandbox pages. All pages are children of the p
 
 ## Heading Naming Rules
 
-- All headings on a given page must be distinct (no substring overlaps).
-- Avoid heading names that are substrings of other headings on the same page (the scope resolver uses `text.contains()` matching).
-- Good: "Introduction", "Details", "Summary" (no substring overlaps).
-- Bad: "Overview", "Project Overview" (one is a substring of the other).
+- Heading selectors are exact-match (`heading:<text>` must equal the heading text exactly).
+- Keep headings on a page distinct to avoid ambiguous intent in operator workflows.
+- Good: "Introduction", "Details", "Summary".
+- Avoid accidental drift: if a heading changes, update manifests using that selector.
 
 ## Target Paths
 
-> **Note**: Once `roadmap/14-target-path-auto-discovery.md` is implemented, `target_path` values are auto-discovered at runtime by the pipeline. The paths below become a reference baseline for validating auto-discovery output, not a required input to manifests. See `qa/manifests/kpi-revalidation-auto-discovery.example.json` for the auto-discovery manifest format.
+> **Note**: Auto-discovery is implemented. Explicit `target_path` is optional for route-specific modes; paths below are reference baselines for validating discovery output.
 
-Discovered during Phase 2 scoped fetch spike at commit `0e69067`.
+Discovered during Phase 2 scoped fetch spike on 2026-03-08 at commit `959755ca323504d5cba8820cc990dc9753b7fceb`.
 
 | Page | Prose Target Path | Table Cell Target Path | Notes |
 |------|-------------------|----------------------|-------|
-| P1 | `/content/1/content/0/text` (Introduction), `/content/5/content/0/text` (Details), `/content/9/content/0/text` (Summary) | N/A | All nodes editable_prose |
-| P2 | `/content/1/content/0/text` (Overview), `/content/4/content/0/text` (Data) | `/content/5/content/1/content/1/content/0/content/0/text` ("0 percent" cell) | Table at `/content/5` |
-| P3 | `/content/1/content/0/text` (Context), `/content/5/content/0/text` (Notes), `/content/9/content/0/text` (References) | N/A | Expand at `/content/3`, panel at `/content/7`, rule at `/content/10` |
+| P1 | `/content/1/content/0/text` (Introduction), `/content/5/content/0/text` (Details), `/content/9/content/0/text` (Summary) | N/A | All target prose nodes under editable prose routes |
+| P2 | `/content/1/content/0/text` (Overview), `/content/3/content/0/text` (Data prose) | `/content/4/content/0/content/0/content/0/content/0/text` (R1C1) | Table root at `/content/4`, post-table prose at `/content/5/content/0/text` |
+| P3 | `/content/1/content/0/text` (Context), `/content/4/content/0/text` (Notes), `/content/7/content/0/text` (References) | N/A | Expand at `/content/2`, panel at `/content/5`, rule at `/content/8` |
 
-## Scoped Fetch Spike Results (pre-section-extraction fix)
-
-> **Staleness**: Pages P1/P2/P3 advanced to version 6 during the 2026-03-08 KPI revalidation (baseline runs modified content). Target paths and scoped fetch metrics below were captured at commit `0e69067` before the section extraction fix (`expand_heading_to_section`) and before baseline publishes modified page content. Re-run the scoped fetch spike to refresh these values. Once `roadmap/14-target-path-auto-discovery.md` is implemented, auto-discovery eliminates this re-discovery step entirely.
-
-> **Note**: These results are from the pre-fix scope resolver (commit `0e69067`) which returned only the heading node, not the full section. Post-fix results (commit `86cf652`+) will show larger `scoped_adf_bytes` and lower `context_reduction_ratio` because the scoped ADF now includes the full heading section. Re-run the scoped fetch spike to update these values.
+## Scoped Fetch Spike Results (current v3 pages)
 
 | Page | Full ADF Bytes | Scoped ADF Bytes | Context Reduction | Scope Resolution |
 |------|---------------|-----------------|-------------------|------------------|
-| P1 | 2406 | 88 (heading:Introduction) | 96.3% | OK |
-| P2 | 2416 | 80 (heading:Data) | 96.7% | OK |
-| P3 | 2272 | 81 (heading:Notes) | 96.4% | OK |
+| P1 | 1270 | 467 (`heading:Introduction`) | 63.2% | OK |
+| P2 | 1858 | 1624 (`heading:Data`) | 12.6% | OK |
+| P3 | 961 | 357 (`heading:Notes`) | 62.9% | OK |
 
 ## Notes
 
-- Page IDs are filled after `create-subpage` execution.
+- Current page IDs correspond to v3 revalidation created on 2026-03-08.
 - Target paths are discovered during Phase 2 spike via `jq` inspection of fetch state output.
-- Bootstrap injects a heading + paragraph scaffold; user replaces/extends content via Confluence UI.
+- Bootstrap injects a heading + paragraph scaffold; pages are then seeded with pattern-specific ADF content.
 - `panel` wrappers are `locked_structural` but inner paragraphs are `editable_prose`.
 - The route classifier uses a catch-all: anything not in the 7-type prose whitelist or table family is `locked_structural`.

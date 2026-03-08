@@ -1,0 +1,686 @@
+{
+  "schema_version": "v1",
+  "generated_ts": "1970-01-01T00:00:00Z",
+  "recommendation": "iterate",
+  "provenance": {
+    "git_commit_sha": "959755ca323504d5cba8820cc990dc9753b7fceb",
+    "git_dirty": true,
+    "pipeline_version": "v1",
+    "runtime_mode": "live"
+  },
+  "blocking_condition": "gate_7_lifecycle_enablement_validation",
+  "rationale": [
+    "Lifecycle Enablement Validation failed: lifecycle evidence is incomplete: requires bootstrap-required failure, bootstrap success, bootstrap-on-non-empty failure, and create-subpage validation",
+    "kpi target miss: context_reduction_ratio (optimized median >= 70%)",
+    "kpi target miss: publish_latency (optimized median < 3000 ms and p90 <= baseline)"
+  ],
+  "gate_outcomes": [
+    {
+      "gate_id": "gate_1_design_and_contract_freeze",
+      "gate_name": "Design and Contract Freeze",
+      "target": "v1 route matrix and contract evidence are present",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "engineering_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/manifest.normalized.json",
+        "artifacts/batch/artifact-index.json"
+      ]
+    },
+    {
+      "gate_id": "gate_2_environment_and_access",
+      "gate_name": "Environment and Access",
+      "target": "batch evidence exists and run set is non-empty",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "engineering_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/manifest.normalized.json"
+      ]
+    },
+    {
+      "gate_id": "gate_3_pipeline_integrity",
+      "gate_name": "Pipeline Integrity",
+      "target": "safety gates hold and retry policy remains bounded",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "qa_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_4_test_and_fixture_coverage",
+      "gate_name": "Test and Fixture Coverage",
+      "target": "required scenario IDs are covered by batch evidence",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "qa_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_5_metrics_and_reporting",
+      "gate_name": "Metrics and Reporting",
+      "target": "telemetry is complete and aggregate KPI report is present",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "data_metrics_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_6_risk_control_activation",
+      "gate_name": "Risk Control Activation",
+      "target": "no unresolved material drift remains",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "release_reviewer",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_7_lifecycle_enablement_validation",
+      "gate_name": "Lifecycle Enablement Validation",
+      "target": "lifecycle matrix evidence covers bootstrap and create-subpage paths",
+      "pass": false,
+      "mandatory": true,
+      "owner_role": "qa_owner",
+      "blocking_reason": "lifecycle evidence is incomplete: requires bootstrap-required failure, bootstrap success, bootstrap-on-non-empty failure, and create-subpage validation",
+      "evidence_refs": [
+        "artifacts/batch/manifest.normalized.json",
+        "artifacts/batch/report.json"
+      ]
+    }
+  ],
+  "kpi_summary": {
+    "global_rollup": {
+      "scope": "global",
+      "pair_count": 9,
+      "metrics": [
+        {
+          "kpi": "context_reduction_ratio",
+          "baseline": {
+            "count": 9,
+            "median": 0.0,
+            "p90": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "optimized": {
+            "count": 9,
+            "median": 63.83881230116649,
+            "p90": 90.60293318848451,
+            "min": 11.536416799574688,
+            "max": 90.60293318848451
+          },
+          "delta_absolute": 63.838812301166,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "scoped_section_tokens",
+          "baseline": {
+            "count": 9,
+            "median": 311.0,
+            "p90": 472.25,
+            "min": 232.5,
+            "max": 472.25
+          },
+          "optimized": {
+            "count": 9,
+            "median": 89.25,
+            "p90": 416.0,
+            "min": 43.25,
+            "max": 416.0
+          },
+          "delta_absolute": -221.75,
+          "delta_relative": -0.713022508039
+        },
+        {
+          "kpi": "edit_success_rate",
+          "baseline": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "optimized": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "delta_absolute": 0.0,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "structural_preservation",
+          "baseline": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "optimized": {
+            "count": 1,
+            "median": 100.0,
+            "p90": 100.0,
+            "min": 100.0,
+            "max": 100.0
+          },
+          "delta_absolute": 0.0,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "conflict_rate",
+          "baseline": {
+            "count": 1,
+            "median": 0.0,
+            "p90": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "optimized": {
+            "count": 1,
+            "median": 0.0,
+            "p90": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "delta_absolute": 0.0,
+          "delta_relative": 0.0
+        },
+        {
+          "kpi": "publish_latency",
+          "baseline": {
+            "count": 9,
+            "median": 1797.0,
+            "p90": 1897.0,
+            "min": 1589.0,
+            "max": 1897.0
+          },
+          "optimized": {
+            "count": 9,
+            "median": 1745.0,
+            "p90": 1902.0,
+            "min": 1620.0,
+            "max": 1902.0
+          },
+          "delta_absolute": -52.0,
+          "delta_relative": -0.028937117418
+        }
+      ]
+    },
+    "pattern_rollups": [
+      {
+        "scope": "A",
+        "pair_count": 3,
+        "metrics": [
+          {
+            "kpi": "context_reduction_ratio",
+            "baseline": {
+              "count": 3,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 64.96763754045307,
+              "p90": 85.55102040816327,
+              "min": 53.23624595469256,
+              "max": 85.55102040816327
+            },
+            "delta_absolute": 64.967637540453,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "scoped_section_tokens",
+            "baseline": {
+              "count": 3,
+              "median": 311.0,
+              "p90": 317.5,
+              "min": 306.25,
+              "max": 317.5
+            },
+            "optimized": {
+              "count": 3,
+              "median": 108.25,
+              "p90": 144.5,
+              "min": 44.25,
+              "max": 144.5
+            },
+            "delta_absolute": -202.75,
+            "delta_relative": -0.65192926045
+          },
+          {
+            "kpi": "edit_success_rate",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "structural_preservation",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "conflict_rate",
+            "baseline": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "publish_latency",
+            "baseline": {
+              "count": 3,
+              "median": 1769.0,
+              "p90": 1897.0,
+              "min": 1693.0,
+              "max": 1897.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 1682.0,
+              "p90": 1745.0,
+              "min": 1664.0,
+              "max": 1745.0
+            },
+            "delta_absolute": -87.0,
+            "delta_relative": -0.049180327869
+          }
+        ]
+      },
+      {
+        "scope": "B",
+        "pair_count": 3,
+        "metrics": [
+          {
+            "kpi": "context_reduction_ratio",
+            "baseline": {
+              "count": 3,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 11.961722488038273,
+              "p90": 90.60293318848451,
+              "min": 11.536416799574688,
+              "max": 90.60293318848451
+            },
+            "delta_absolute": 11.961722488038,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "scoped_section_tokens",
+            "baseline": {
+              "count": 3,
+              "median": 464.5,
+              "p90": 472.25,
+              "min": 462.25,
+              "max": 472.25
+            },
+            "optimized": {
+              "count": 3,
+              "median": 414.0,
+              "p90": 416.0,
+              "min": 43.25,
+              "max": 416.0
+            },
+            "delta_absolute": -50.5,
+            "delta_relative": -0.108719052745
+          },
+          {
+            "kpi": "edit_success_rate",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "structural_preservation",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "conflict_rate",
+            "baseline": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "publish_latency",
+            "baseline": {
+              "count": 3,
+              "median": 1810.0,
+              "p90": 1839.0,
+              "min": 1797.0,
+              "max": 1839.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 1802.0,
+              "p90": 1902.0,
+              "min": 1801.0,
+              "max": 1902.0
+            },
+            "delta_absolute": -8.0,
+            "delta_relative": -0.004419889503
+          }
+        ]
+      },
+      {
+        "scope": "C",
+        "pair_count": 3,
+        "metrics": [
+          {
+            "kpi": "context_reduction_ratio",
+            "baseline": {
+              "count": 3,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 63.83881230116649,
+              "p90": 78.70967741935485,
+              "min": 62.14209968186639,
+              "max": 78.70967741935485
+            },
+            "delta_absolute": 63.838812301166,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "scoped_section_tokens",
+            "baseline": {
+              "count": 3,
+              "median": 237.75,
+              "p90": 240.25,
+              "min": 232.5,
+              "max": 240.25
+            },
+            "optimized": {
+              "count": 3,
+              "median": 85.25,
+              "p90": 89.25,
+              "min": 49.5,
+              "max": 89.25
+            },
+            "delta_absolute": -152.5,
+            "delta_relative": -0.641430073607
+          },
+          {
+            "kpi": "edit_success_rate",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "structural_preservation",
+            "baseline": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 100.0,
+              "p90": 100.0,
+              "min": 100.0,
+              "max": 100.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "conflict_rate",
+            "baseline": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "optimized": {
+              "count": 1,
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0,
+              "max": 0.0
+            },
+            "delta_absolute": 0.0,
+            "delta_relative": 0.0
+          },
+          {
+            "kpi": "publish_latency",
+            "baseline": {
+              "count": 3,
+              "median": 1729.0,
+              "p90": 1845.0,
+              "min": 1589.0,
+              "max": 1845.0
+            },
+            "optimized": {
+              "count": 3,
+              "median": 1724.0,
+              "p90": 1781.0,
+              "min": 1620.0,
+              "max": 1781.0
+            },
+            "delta_absolute": -5.0,
+            "delta_relative": -0.002891844997
+          }
+        ]
+      }
+    ],
+    "checks": [
+      {
+        "name": "context_reduction_ratio",
+        "target": "optimized median >= 70%",
+        "pass": false
+      },
+      {
+        "name": "edit_success_rate",
+        "target": "optimized median > 95%",
+        "pass": true
+      },
+      {
+        "name": "structural_preservation",
+        "target": "optimized median = 100%",
+        "pass": true
+      },
+      {
+        "name": "conflict_rate",
+        "target": "optimized median < 10%",
+        "pass": true
+      },
+      {
+        "name": "publish_latency",
+        "target": "optimized median < 3000 ms and p90 <= baseline",
+        "pass": false
+      }
+    ]
+  },
+  "risk_status_deltas": [
+    {
+      "risk_id": "R-001",
+      "title": "Out-of-scope mutation",
+      "priority": "high",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "out-of-scope mutation diagnostics"
+    },
+    {
+      "risk_id": "R-002",
+      "title": "Locked structural node mutation",
+      "priority": "high",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "locked-node mutation diagnostics"
+    },
+    {
+      "risk_id": "R-003",
+      "title": "Table shape drift",
+      "priority": "high",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "table-shape violation diagnostics"
+    },
+    {
+      "risk_id": "R-004",
+      "title": "Insufficient context reduction",
+      "priority": "medium",
+      "previous_status": "watch",
+      "current_status": "open",
+      "reason": "context reduction KPI result"
+    },
+    {
+      "risk_id": "R-005",
+      "title": "Conflict retry token waste",
+      "priority": "medium",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "retry policy gate outcome"
+    },
+    {
+      "risk_id": "R-006",
+      "title": "Schema-invalid candidate payloads",
+      "priority": "high",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "verify diagnostics error codes"
+    },
+    {
+      "risk_id": "R-007",
+      "title": "Metrics instrumentation gaps",
+      "priority": "medium",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "telemetry completeness gate"
+    },
+    {
+      "risk_id": "R-008",
+      "title": "External service variance masking regressions",
+      "priority": "medium",
+      "previous_status": "watch",
+      "current_status": "mitigated",
+      "reason": "live-vs-stub drift status"
+    }
+  ],
+  "top_failure_classes": [],
+  "checklist_path": "artifacts/batch/readiness.checklist.json",
+  "runbook_path": "artifacts/batch/runbook.bundle.json",
+  "report_path": "artifacts/batch/report.json"
+}

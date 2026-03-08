@@ -1,0 +1,42 @@
+{
+  "request_id": "v3-prose-001",
+  "page_id": "131207",
+  "state": "publish",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "localId": "64448220f4ee",
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "attrs": {
+                "localId": "138985edbd1a"
+              },
+              "content": [
+                {
+                  "text": "Sandbox prose update 2026-03-08T13:33:52Z",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "localId": "ec49fcd30569"
+          },
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 8
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "request_id": "v3-spike-fetch-p2-scoped",
+  "page_id": "327805",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_candidates": [],
+    "table_changed_paths": [],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

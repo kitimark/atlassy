@@ -1,0 +1,50 @@
+{
+  "request_id": "v3-spike-fetch-p1-scoped",
+  "page_id": "98465",
+  "state": "extract_prose",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "Pattern A introduction paragraph one for scoped prose validation."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Pattern A introduction paragraph two keeps body text available for discovery."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Pattern A introduction paragraph three increases section depth."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3"
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "request_id": "v3-scopecheck-p1-summary",
+  "page_id": "98465",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/8",
+        "markdown": "Summary"
+      },
+      {
+        "md_block_id": "/content/9",
+        "markdown": "Pattern A summary closing paragraph."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/8",
+        "adf_path": "/content/8"
+      },
+      {
+        "md_block_id": "/content/9",
+        "adf_path": "/content/9"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/8",
+      "/content/9"
+    ],
+    "allowed_scope_paths": [
+      "/content/8",
+      "/content/9"
+    ],
+    "edit_intent": "scope selector gate check"
+  }
+}

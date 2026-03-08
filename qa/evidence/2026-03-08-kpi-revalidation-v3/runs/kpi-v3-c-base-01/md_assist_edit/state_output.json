@@ -1,0 +1,51 @@
+{
+  "request_id": "kpi-v3-c-base-01",
+  "page_id": "131294",
+  "state": "md_assist_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v3 baseline C1 prose update"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Expandable details remain structurally locked."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Pattern C notes paragraph adjacent to locked blocks."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel content simulates locked-adjacent structure."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "Pattern C references closing paragraph."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/1/content/0/text",
+        "markdown": "KPI-v3 baseline C1 prose update"
+      }
+    ]
+  }
+}

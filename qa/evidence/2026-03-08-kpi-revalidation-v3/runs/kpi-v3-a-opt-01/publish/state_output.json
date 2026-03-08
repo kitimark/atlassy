@@ -1,0 +1,16 @@
+{
+  "request_id": "kpi-v3-a-opt-01",
+  "page_id": "98465",
+  "state": "publish",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 5,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

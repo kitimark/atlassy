@@ -1,0 +1,86 @@
+{
+  "request_id": "v3-spike-fetch-p3-full",
+  "page_id": "131294",
+  "state": "extract_prose",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "Pattern C context paragraph before locked blocks."
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Expandable details remain structurally locked."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Pattern C notes paragraph adjacent to locked blocks."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel content simulates locked-adjacent structure."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "Pattern C references closing paragraph."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "adf_path": "/content/2/content/0"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "adf_path": "/content/5/content/0"
+      },
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      },
+      {
+        "md_block_id": "/content/7",
+        "adf_path": "/content/7"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2/content/0",
+      "/content/3",
+      "/content/4",
+      "/content/5/content/0",
+      "/content/6",
+      "/content/7"
+    ]
+  }
+}

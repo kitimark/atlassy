@@ -1,0 +1,32 @@
+{
+  "request_id": "v3-prose-001",
+  "page_id": "131207",
+  "state": "extract_prose",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "markdown": "QA v2 prose update 2026-03-08T11:48:38Z"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": ""
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "adf_path": "/content/0/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0/content/0",
+      "/content/1"
+    ]
+  }
+}

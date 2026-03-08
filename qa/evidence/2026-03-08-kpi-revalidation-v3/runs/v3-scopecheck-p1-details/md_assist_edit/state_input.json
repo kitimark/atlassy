@@ -1,0 +1,102 @@
+{
+  "request_id": "v3-scopecheck-p1-details",
+  "page_id": "98465",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/4",
+        "markdown": "Details"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "Pattern A details paragraph before list and quote."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Detail bullet one.Detail bullet two."
+      },
+      {
+        "md_block_id": "/content/6/content/0",
+        "markdown": "Detail bullet one."
+      },
+      {
+        "md_block_id": "/content/6/content/0/content/0",
+        "markdown": "Detail bullet one."
+      },
+      {
+        "md_block_id": "/content/6/content/1",
+        "markdown": "Detail bullet two."
+      },
+      {
+        "md_block_id": "/content/6/content/1/content/0",
+        "markdown": "Detail bullet two."
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "Details blockquote for prose route coverage."
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "markdown": "Details blockquote for prose route coverage."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/5",
+        "adf_path": "/content/5"
+      },
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      },
+      {
+        "md_block_id": "/content/6/content/0",
+        "adf_path": "/content/6/content/0"
+      },
+      {
+        "md_block_id": "/content/6/content/0/content/0",
+        "adf_path": "/content/6/content/0/content/0"
+      },
+      {
+        "md_block_id": "/content/6/content/1",
+        "adf_path": "/content/6/content/1"
+      },
+      {
+        "md_block_id": "/content/6/content/1/content/0",
+        "adf_path": "/content/6/content/1/content/0"
+      },
+      {
+        "md_block_id": "/content/7",
+        "adf_path": "/content/7"
+      },
+      {
+        "md_block_id": "/content/7/content/0",
+        "adf_path": "/content/7/content/0"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/4",
+      "/content/5",
+      "/content/6",
+      "/content/6/content/0",
+      "/content/6/content/0/content/0",
+      "/content/6/content/1",
+      "/content/6/content/1/content/0",
+      "/content/7",
+      "/content/7/content/0"
+    ],
+    "allowed_scope_paths": [
+      "/content/4",
+      "/content/5",
+      "/content/6",
+      "/content/7"
+    ],
+    "edit_intent": "scope selector gate check"
+  }
+}

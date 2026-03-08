@@ -1,0 +1,13 @@
+{
+  "request_id": "v3-autodiscover-p2-table",
+  "page_id": "327805",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "327805",
+    "edit_intent": "auto-discovery table validation",
+    "scope_selectors": [
+      "heading:Data"
+    ]
+  }
+}

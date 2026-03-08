@@ -1,0 +1,22 @@
+{
+  "request_id": "kpi-v3-b-opt-02",
+  "page_id": "327805",
+  "state": "adf_table_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "table_candidates": [
+      {
+        "op": "cell_text_update",
+        "path": "/content/4/content/0/content/0/content/0/content/0/text",
+        "value": "KPI-v3 optimized B2 scoped table cell update",
+        "source_route": "table_adf"
+      }
+    ],
+    "table_changed_paths": [
+      "/content/4/content/0/content/0/content/0/content/0/text"
+    ],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}
