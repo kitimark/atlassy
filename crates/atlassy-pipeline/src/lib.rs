@@ -7,7 +7,8 @@ use atlassy_adf::{
     bootstrap_scaffold, build_node_path_index, build_patch_ops, canonicalize_mapped_path,
     discover_target_path, ensure_paths_in_scope, is_page_effectively_empty,
     is_path_within_or_descendant, is_table_cell_text_path, is_table_shape_or_attr_path,
-    markdown_for_path, normalize_changed_paths, path_has_ancestor_type, resolve_scope,
+    is_within_allowed_scope, markdown_for_path, normalize_changed_paths, path_has_ancestor_type,
+    resolve_scope,
 };
 use atlassy_confluence::{ConfluenceClient, ConfluenceError};
 use atlassy_contracts::{
@@ -610,6 +611,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             .node_manifest
             .iter()
             .filter(|node| node.route == "editable_prose")
+            .filter(|node| is_within_allowed_scope(&node.path, &fetch.payload.allowed_scope_paths))
         {
             let canonical_path =
                 canonicalize_mapped_path(&node.path, &fetch.payload.allowed_scope_paths)

@@ -479,7 +479,7 @@ fn find_heading_paths(value: &Value, heading_text: &str, path: String) -> Vec<St
     if let Value::Object(map) = value {
         if map.get("type") == Some(&Value::String("heading".to_string())) {
             let text = collect_text(value);
-            if text.contains(heading_text) {
+            if text == heading_text {
                 matches.push(if path.is_empty() {
                     "/".to_string()
                 } else {
@@ -552,7 +552,7 @@ fn collect_text(value: &Value) -> String {
     text
 }
 
-fn is_within_allowed_scope(path: &str, allowed_scope_paths: &[String]) -> bool {
+pub fn is_within_allowed_scope(path: &str, allowed_scope_paths: &[String]) -> bool {
     allowed_scope_paths.iter().any(|allowed| {
         if allowed == "/" {
             return true;
@@ -604,6 +604,133 @@ mod tests {
             vec!["/content/0", "/content/1"]
         );
         assert_eq!(resolution.scoped_adf, adf);
+    }
+
+    #[test]
+    fn heading_selector_requires_exact_match() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "content": [{"type":"text", "text":"Overview"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:View".to_string()]).unwrap();
+        assert!(resolution.scope_resolution_failed);
+        assert!(resolution.full_page_fetch);
+        assert_eq!(resolution.allowed_scope_paths, vec!["/"]);
+        assert!(
+            resolution
+                .fallback_reason
+                .as_deref()
+                .is_some_and(|reason| reason.contains("scope_selector_not_found"))
+        );
+    }
+
+    #[test]
+    fn heading_selector_exact_match_still_works() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "content": [{"type":"text", "text":"Overview"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Overview".to_string()]).unwrap();
+        assert!(!resolution.scope_resolution_failed);
+        assert!(!resolution.full_page_fetch);
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1"]
+        );
+    }
+
+    #[test]
+    fn duplicate_heading_text_matches_all_sections() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Notes"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"First section"}]},
+                {"type": "heading", "attrs": {"level": 2}, "content": [{"type":"text", "text":"Notes"}]},
+                {"type": "paragraph", "content": [{"type":"text", "text":"Second section"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["heading:Notes".to_string()]).unwrap();
+        assert_eq!(
+            resolution.allowed_scope_paths,
+            vec!["/content/0", "/content/1", "/content/2", "/content/3"]
+        );
+    }
+
+    #[test]
+    fn resolves_block_scope_by_attrs_id() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "panel",
+                    "attrs": {"id": "panel-1"},
+                    "content": [
+                        {"type": "paragraph", "content": [{"type":"text", "text":"Panel body"}]}
+                    ]
+                }
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["block:panel-1".to_string()]).unwrap();
+        assert!(!resolution.scope_resolution_failed);
+        assert!(
+            resolution
+                .allowed_scope_paths
+                .contains(&"/content/0".to_string())
+        );
+    }
+
+    #[test]
+    fn resolves_block_scope_by_attrs_local_id() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"localId": "local-abc"},
+                    "content": [{"type":"text", "text":"Body"}]
+                }
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["block:local-abc".to_string()]).unwrap();
+        assert!(!resolution.scope_resolution_failed);
+        assert!(
+            resolution
+                .allowed_scope_paths
+                .contains(&"/content/0".to_string())
+        );
+    }
+
+    #[test]
+    fn block_selector_falls_back_when_no_match() {
+        let adf = serde_json::json!({
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type":"text", "text":"Body"}]}
+            ]
+        });
+
+        let resolution = resolve_scope(&adf, &["block:nonexistent".to_string()]).unwrap();
+        assert!(resolution.scope_resolution_failed);
+        assert!(resolution.full_page_fetch);
+        assert_eq!(resolution.allowed_scope_paths, vec!["/"]);
+        assert!(
+            resolution
+                .fallback_reason
+                .as_deref()
+                .is_some_and(|reason| reason.contains("scope_selector_not_found"))
+        );
     }
 
     #[test]

@@ -214,6 +214,60 @@ fn pipeline_auto_discovers_and_patches() {
 }
 
 #[test]
+fn scoped_prose_update_only_touches_in_scope_paths() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "multi_section_adf.json");
+
+    let mut request = sample_request("run-scoped-prose-update");
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: Some("/content/1/content/0/text".to_string()),
+        markdown: "Scoped update".to_string(),
+    };
+
+    let summary = orchestrator
+        .run(request)
+        .expect("scoped prose update should succeed");
+    assert!(summary.success);
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/1/content/0/text".to_string()]
+    );
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+}
+
+#[test]
+fn scoped_auto_discovery_finds_target_within_section() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "multi_section_adf.json");
+
+    let mut request = sample_request("run-scoped-auto-discovery");
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: None,
+        markdown: "Scoped auto discovered update".to_string(),
+    };
+
+    let summary = orchestrator
+        .run(request)
+        .expect("scoped auto discovery should succeed");
+    let discovered = summary
+        .discovered_target_path
+        .clone()
+        .expect("discovered target path should be populated");
+    assert!(
+        discovered.starts_with("/content/0/") || discovered.starts_with("/content/1/"),
+        "expected discovered path in Overview section, got {discovered}"
+    );
+    assert!(
+        !discovered.starts_with("/content/2/")
+            && !discovered.starts_with("/content/3/")
+            && !discovered.starts_with("/content/4/"),
+        "expected discovered path to exclude Details section, got {discovered}"
+    );
+    assert_eq!(summary.applied_paths, vec![discovered]);
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+}
+
+#[test]
 fn table_cell_update_run_succeeds() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
     let mut orchestrator =

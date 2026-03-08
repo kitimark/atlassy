@@ -1,0 +1,68 @@
+{
+  "type": "doc",
+  "version": 1,
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "id": "overview-heading"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Overview"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "overview-body"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Overview body"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "id": "details-heading"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Details"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "details-body"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Details body"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "id": "more-details"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "More details"
+        }
+      ]
+    }
+  ]
+}
