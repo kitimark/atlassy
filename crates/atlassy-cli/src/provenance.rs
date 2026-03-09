@@ -1,9 +1,12 @@
 use atlassy_contracts::{
-    PIPELINE_VERSION, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
-    validate_provenance_stamp, validate_run_summary_telemetry,
+    validate_provenance_stamp, validate_run_summary_telemetry, ProvenanceStamp, RunSummary,
+    PIPELINE_VERSION, RUNTIME_LIVE, RUNTIME_STUB,
 };
 
 use crate::DynError;
+
+const GIT_COMMIT_SHA: &str = env!("GIT_COMMIT_SHA");
+const GIT_DIRTY: &str = env!("GIT_DIRTY");
 
 pub fn collect_provenance(runtime_mode: &str) -> Result<ProvenanceStamp, DynError> {
     if !matches!(runtime_mode, RUNTIME_STUB | RUNTIME_LIVE) {
@@ -14,43 +17,25 @@ pub fn collect_provenance(runtime_mode: &str) -> Result<ProvenanceStamp, DynErro
         .into());
     }
 
-    let git_commit_sha = resolve_git_commit_sha()?;
-    let git_dirty = resolve_git_dirty()?;
+    let git_dirty = match GIT_DIRTY {
+        "true" => true,
+        "false" => false,
+        value => {
+            return Err(format!(
+                "embedded git dirty flag `{value}` is invalid: expected `true` or `false`"
+            )
+            .into());
+        }
+    };
+
     let provenance = ProvenanceStamp {
-        git_commit_sha,
+        git_commit_sha: GIT_COMMIT_SHA.to_string(),
         git_dirty,
         pipeline_version: PIPELINE_VERSION.to_string(),
         runtime_mode: runtime_mode.to_string(),
     };
     validate_provenance_stamp(&provenance)?;
     Ok(provenance)
-}
-
-fn resolve_git_commit_sha() -> Result<String, DynError> {
-    let output = std::process::Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()?;
-    if !output.status.success() {
-        return Err("failed to collect git commit SHA via `git rev-parse HEAD`".into());
-    }
-
-    let value = String::from_utf8(output.stdout)?.trim().to_string();
-    if value.len() != 40 || !value.chars().all(|ch| ch.is_ascii_hexdigit()) {
-        return Err(
-            "git commit SHA is malformed; expected 40 lowercase/uppercase hex chars".into(),
-        );
-    }
-    Ok(value)
-}
-
-fn resolve_git_dirty() -> Result<bool, DynError> {
-    let output = std::process::Command::new("git")
-        .args(["status", "--porcelain"])
-        .output()?;
-    if !output.status.success() {
-        return Err("failed to inspect git dirty state via `git status --porcelain`".into());
-    }
-    Ok(!String::from_utf8(output.stdout)?.trim().is_empty())
 }
 
 pub(crate) fn provenance_matches(summary: &RunSummary, provenance: &ProvenanceStamp) -> bool {
@@ -62,4 +47,21 @@ pub(crate) fn provenance_matches(summary: &RunSummary, provenance: &ProvenanceSt
 
 pub(crate) fn summary_telemetry_complete(summary: &RunSummary) -> bool {
     summary.telemetry_complete && validate_run_summary_telemetry(summary).is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn embedded_git_commit_sha_passes_validation() {
+        let provenance = ProvenanceStamp {
+            git_commit_sha: env!("GIT_COMMIT_SHA").to_string(),
+            git_dirty: false,
+            pipeline_version: PIPELINE_VERSION.to_string(),
+            runtime_mode: RUNTIME_STUB.to_string(),
+        };
+
+        assert!(validate_provenance_stamp(&provenance).is_ok());
+    }
 }
