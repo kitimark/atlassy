@@ -90,8 +90,8 @@ Define a reproducible measurement protocol for the CLI-first PoC that captures r
 Each run must emit one record with at least:
 
 - `request_id`, `run_id`, `flow` (`baseline|optimized`), `pipeline_version`.
-- `git_commit_sha` (full 40-character SHA for the build under test).
-- `git_dirty` (boolean working-tree cleanliness marker at run start).
+- `git_commit_sha` (full 40-character SHA embedded at compile time).
+- `git_dirty` (boolean working-tree cleanliness marker embedded at build time).
 - `page_id`, `pattern` (`A|B|C`), `edit_intent_hash`.
 - `scope_selectors`, `scope_resolution_failed`, `full_page_fetch`.
 - `full_page_adf_bytes`, `scoped_adf_bytes`, `context_reduction_ratio`.
