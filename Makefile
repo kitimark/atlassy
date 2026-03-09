@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt check qa-setup qa-check
+.PHONY: build test lint fmt check qa-setup qa-check setup
 
 build:
 	cargo build --workspace
@@ -20,3 +20,6 @@ qa-setup:
 
 qa-check:
 	bash qa/scripts/check-env.sh
+
+setup:
+	git config core.hooksPath .githooks

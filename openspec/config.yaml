@@ -3,11 +3,14 @@ schema: spec-driven
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack: Rust (stable), Cargo workspace
+  Crates: atlassy-cli, atlassy-pipeline, atlassy-adf, atlassy-confluence, atlassy-contracts
+  Domain: token-efficient Confluence editing toolkit for AI/MCP
+  We use conventional commits: <type>(<scope>): <description>
+  Valid types: feat, fix, docs, refactor, test, chore, build, ci, perf, style
+  Valid scopes: cli, pipeline, adf, confluence, contracts, roadmap, openspec, qa, ideas
+  Omit scope when a change spans multiple crates or areas
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

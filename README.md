@@ -128,8 +128,4 @@ cargo run -p atlassy-cli -- run-readiness --verify-replay ...
 
 ## Contributing
 
-Use a design-first flow.
-
-- Add or update roadmap docs before implementation changes.
-- Record major tradeoffs and defaults in decision notes.
-- Keep proposals testable with measurable success criteria.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
