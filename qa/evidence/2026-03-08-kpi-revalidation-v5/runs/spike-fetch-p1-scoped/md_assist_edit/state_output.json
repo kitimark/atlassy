@@ -1,0 +1,28 @@
+{
+  "request_id": "spike-fetch-p1-scoped",
+  "page_id": "131373",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v4 baseline A3 prose update"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Pattern A introduction paragraph two keeps body text available for discovery."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Pattern A introduction paragraph three increases section depth."
+      }
+    ],
+    "prose_changed_paths": [],
+    "prose_change_candidates": []
+  }
+}

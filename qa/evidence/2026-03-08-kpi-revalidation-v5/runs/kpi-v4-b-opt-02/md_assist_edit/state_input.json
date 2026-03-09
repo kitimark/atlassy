@@ -1,0 +1,48 @@
+{
+  "request_id": "kpi-v4-b-opt-02",
+  "page_id": "131387",
+  "state": "md_assist_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "KPI-v4 optimized B3 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "Pattern B paragraph after table for scoped prose pairing."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/5",
+        "adf_path": "/content/5"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/2",
+      "/content/3",
+      "/content/5"
+    ],
+    "allowed_scope_paths": [
+      "/content/2",
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "Pattern B table cell update pair 2"
+  }
+}

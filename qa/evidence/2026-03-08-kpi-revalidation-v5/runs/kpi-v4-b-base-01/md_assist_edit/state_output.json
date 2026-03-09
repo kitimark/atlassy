@@ -1,0 +1,39 @@
+{
+  "request_id": "kpi-v4-b-base-01",
+  "page_id": "131387",
+  "state": "md_assist_edit",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Overview"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v4 baseline B1 prose update"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "KPI-v4 optimized B3 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "Pattern B paragraph after table for scoped prose pairing."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/1/content/0/text",
+        "markdown": "KPI-v4 baseline B1 prose update"
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "request_id": "spike-autodiscover-p2-table",
+  "page_id": "131387",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "table_candidates": [
+      {
+        "op": "cell_text_update",
+        "path": "/content/4/content/0/content/0/content/0/content/0/text",
+        "value": "auto-discovery table validation text",
+        "source_route": "table_adf"
+      }
+    ],
+    "table_changed_paths": [
+      "/content/4/content/0/content/0/content/0/content/0/text"
+    ],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

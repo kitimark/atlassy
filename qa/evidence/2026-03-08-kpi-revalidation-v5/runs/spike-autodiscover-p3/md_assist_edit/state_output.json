@@ -1,0 +1,31 @@
+{
+  "request_id": "spike-autodiscover-p3",
+  "page_id": "327877",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "auto-discovery validation text"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel content simulates locked-adjacent structure."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/4/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/4/content/0/text",
+        "markdown": "auto-discovery validation text"
+      }
+    ]
+  }
+}

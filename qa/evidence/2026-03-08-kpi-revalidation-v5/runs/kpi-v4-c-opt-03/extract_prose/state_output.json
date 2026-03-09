@@ -1,0 +1,32 @@
+{
+  "request_id": "kpi-v4-c-opt-03",
+  "page_id": "327877",
+  "state": "extract_prose",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "KPI-v4 optimized C3 scoped prose update"
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      },
+      {
+        "md_block_id": "/content/7",
+        "adf_path": "/content/7"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/6",
+      "/content/7"
+    ]
+  }
+}

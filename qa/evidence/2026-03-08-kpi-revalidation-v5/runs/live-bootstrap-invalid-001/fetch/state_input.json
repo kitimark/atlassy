@@ -1,0 +1,11 @@
+{
+  "request_id": "live-bootstrap-invalid-001",
+  "page_id": "131207",
+  "state": "fetch",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "page_id": "131207",
+    "edit_intent": "bootstrap invalid state detection",
+    "scope_selectors": []
+  }
+}

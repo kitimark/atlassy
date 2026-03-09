@@ -1,0 +1,44 @@
+{
+  "request_id": "spike-fetch-p3-full",
+  "page_id": "327877",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v4 baseline C3 prose update"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Expandable details remain structurally locked."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "KPI-v4 optimized C2 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel content simulates locked-adjacent structure."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "KPI-v4 optimized C3 scoped prose update"
+      }
+    ],
+    "prose_changed_paths": [],
+    "prose_change_candidates": []
+  }
+}

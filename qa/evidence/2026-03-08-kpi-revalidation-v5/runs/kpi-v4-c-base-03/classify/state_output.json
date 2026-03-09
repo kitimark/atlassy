@@ -1,0 +1,110 @@
+{
+  "request_id": "kpi-v4-c-base-03",
+  "page_id": "327877",
+  "state": "classify",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "node_manifest": [
+      {
+        "path": "/",
+        "node_type": "doc",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/0",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/1",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/1/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/2",
+        "node_type": "expand",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/3",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/3/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/4",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/4/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/5",
+        "node_type": "panel",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/5/content/0",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/5/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/6",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/6/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/7",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/7/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/8",
+        "node_type": "rule",
+        "route": "locked_structural"
+      }
+    ]
+  }
+}

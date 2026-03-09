@@ -1,0 +1,143 @@
+{
+  "request_id": "kpi-v4-a-base-02",
+  "page_id": "131373",
+  "state": "publish",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "payload": {
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Introduction",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v4 baseline A2 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Pattern A introduction paragraph two keeps body text available for discovery.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "Pattern A introduction paragraph three increases section depth.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Details",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v4 optimized A2 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet one.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet two.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            }
+          ],
+          "type": "bulletList"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Details blockquote for prose route coverage.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "blockquote"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Summary",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v4 optimized A3 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 11
+  }
+}
