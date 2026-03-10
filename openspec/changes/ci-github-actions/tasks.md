@@ -20,9 +20,9 @@
 ## 4. Push and Verify
 
 - [x] 4.1 Commit all new and modified files and push to `main`
-- [ ] 4.2 Verify CI workflow runs and passes on GitHub Actions
+- [x] 4.2 Verify CI workflow runs and passes on GitHub Actions
 
 ## 5. Repository Configuration
 
-- [ ] 5.1 Configure squash-only merging via `gh api` (`allow_squash_merge=true`, `allow_merge_commit=false`, `allow_rebase_merge=false`, `squash_merge_commit_title=PR_TITLE`)
-- [ ] 5.2 Enable branch protection via `gh api` (require `test` check, `strict: true`, `enforce_admins: false`)
+- [x] 5.1 Configure squash-only merging via `gh api` (`allow_squash_merge=true`, `allow_merge_commit=false`, `allow_rebase_merge=false`, `squash_merge_commit_title=PR_TITLE`)
+- [x] 5.2 Enable branch protection via `gh api` (require `test` check, `strict: true`, `enforce_admins: false`)
