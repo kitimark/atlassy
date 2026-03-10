@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
 use std::path::Path;
 
 use atlassy_contracts::{
@@ -8,7 +9,9 @@ use atlassy_contracts::{
 use crate::io::{load_required_json, load_run_summary};
 use crate::manifest::normalize_manifest;
 use crate::provenance::provenance_matches;
-use crate::{BatchArtifactIndex, BatchReport, DynError, ReadinessEvidence, RunManifest};
+use crate::{
+    Attestations, BatchArtifactIndex, BatchReport, DynError, ReadinessEvidence, RunManifest,
+};
 
 pub(crate) fn load_readiness_evidence(artifacts_dir: &Path) -> Result<ReadinessEvidence, DynError> {
     let batch_dir = artifacts_dir.join("artifacts").join("batch");
@@ -38,6 +41,9 @@ pub(crate) fn load_readiness_evidence(artifacts_dir: &Path) -> Result<ReadinessE
             ))
     });
 
+    let attestation_path = batch_dir.join("attestations.json");
+    let (attestations, has_attestation_file) = load_attestations(&attestation_path)?;
+
     let mut summaries = BTreeMap::new();
     for run in &manifest.runs {
         let summary = load_run_summary(artifacts_dir, &run.run_id)?.ok_or_else(|| {
@@ -62,6 +68,9 @@ pub(crate) fn load_readiness_evidence(artifacts_dir: &Path) -> Result<ReadinessE
             .iter()
             .map(|run| format!("artifacts/{}/summary.json", run.run_id)),
     );
+    if has_attestation_file {
+        source_artifacts.push("artifacts/batch/attestations.json".to_string());
+    }
     source_artifacts.sort();
 
     Ok(ReadinessEvidence {
@@ -69,8 +78,40 @@ pub(crate) fn load_readiness_evidence(artifacts_dir: &Path) -> Result<ReadinessE
         provenance: report.provenance.clone(),
         report,
         summaries,
+        attestations,
         source_artifacts,
     })
+}
+
+fn load_attestations(path: &Path) -> Result<(Attestations, bool), DynError> {
+    if !path.exists() {
+        return Ok((Attestations::default(), false));
+    }
+
+    let text = fs::read_to_string(path).map_err(|err| {
+        format!(
+            "missing readiness evidence: failed reading {}: {err}",
+            path.display()
+        )
+    })?;
+    let attestations = serde_json::from_str::<Attestations>(&text).map_err(|err| {
+        format!(
+            "missing readiness evidence: malformed attestation file {}: {err}",
+            path.display()
+        )
+    })?;
+
+    for entry in &attestations.entries {
+        validate_provenance_stamp(&entry.provenance).map_err(|err| {
+            format!(
+                "missing readiness evidence: malformed attestation provenance in {} for attestation {}: {err}",
+                path.display(),
+                entry.attestation_id
+            )
+        })?;
+    }
+
+    Ok((attestations, true))
 }
 
 fn canonicalize_artifact_index(index: &mut BatchArtifactIndex) {

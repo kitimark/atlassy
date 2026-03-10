@@ -1,6 +1,9 @@
 use atlassy_contracts::ErrorCode;
 
-use crate::{ReadinessChecklist, ReadinessEvidence, ReadinessGateResult, ReadinessOwnerRoles};
+use crate::{
+    LifecycleClaims, ReadinessChecklist, ReadinessEvidence, ReadinessGateResult,
+    ReadinessOwnerRoles,
+};
 
 pub(crate) fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> ReadinessChecklist {
     let generated_ts = deterministic_generated_ts(evidence);
@@ -15,25 +18,59 @@ pub(crate) fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> Readines
     let gate_5_pass = evidence.report.telemetry_complete && evidence.report.kpi.is_some();
     let gate_6_pass = !evidence.report.drift.unresolved_material_drift;
 
-    let has_bootstrap_required_failure = evidence.summaries.values().any(|s| {
+    let lifecycle_claims = lifecycle_claims_from_attestations(evidence);
+    let summary_has_bootstrap_required_failure = evidence.summaries.values().any(|s| {
         s.empty_page_detected
             && !s.success
             && s.error_codes
                 .iter()
                 .any(|c| c == ErrorCode::BootstrapRequired.as_str())
     });
-    let has_bootstrap_success = evidence
+    let summary_has_bootstrap_success = evidence
         .summaries
         .values()
         .any(|s| s.bootstrap_applied && s.success);
-    let has_bootstrap_invalid_state = evidence.summaries.values().any(|s| {
+    let summary_has_bootstrap_invalid_state = evidence.summaries.values().any(|s| {
         !s.empty_page_detected
             && !s.success
             && s.error_codes
                 .iter()
                 .any(|c| c == ErrorCode::BootstrapInvalidState.as_str())
     });
-    let has_create_subpage_evidence = evidence.manifest.batch.lifecycle_create_subpage_validated;
+    let summary_has_create_subpage_evidence =
+        evidence.manifest.batch.lifecycle_create_subpage_validated;
+
+    let has_bootstrap_required_failure = lifecycle_claims
+        .as_ref()
+        .is_some_and(|claims| claims.bootstrap_required_failure)
+        || summary_has_bootstrap_required_failure;
+    let has_bootstrap_success = lifecycle_claims
+        .as_ref()
+        .is_some_and(|claims| claims.bootstrap_success)
+        || summary_has_bootstrap_success;
+    let has_bootstrap_invalid_state = lifecycle_claims
+        .as_ref()
+        .is_some_and(|claims| claims.bootstrap_on_non_empty_failure)
+        || summary_has_bootstrap_invalid_state;
+    let has_create_subpage_evidence = lifecycle_claims
+        .as_ref()
+        .is_some_and(|claims| claims.create_subpage_validated)
+        || summary_has_create_subpage_evidence;
+
+    let attestation_contributes = lifecycle_claims.as_ref().is_some_and(|claims| {
+        (claims.bootstrap_required_failure && !summary_has_bootstrap_required_failure)
+            || (claims.bootstrap_success && !summary_has_bootstrap_success)
+            || (claims.bootstrap_on_non_empty_failure && !summary_has_bootstrap_invalid_state)
+            || (claims.create_subpage_validated && !summary_has_create_subpage_evidence)
+    });
+
+    let mut gate_7_evidence_refs = vec![
+        "artifacts/batch/manifest.normalized.json".to_string(),
+        "artifacts/batch/report.json".to_string(),
+    ];
+    if attestation_contributes {
+        gate_7_evidence_refs.push("artifacts/batch/attestations.json".to_string());
+    }
     let gate_7_pass = has_bootstrap_required_failure
         && has_bootstrap_success
         && has_bootstrap_invalid_state
@@ -127,10 +164,7 @@ pub(crate) fn evaluate_readiness_gates(evidence: &ReadinessEvidence) -> Readines
             "lifecycle matrix evidence covers bootstrap and create-subpage paths",
             gate_7_pass,
             "qa_owner",
-            vec![
-                "artifacts/batch/manifest.normalized.json".to_string(),
-                "artifacts/batch/report.json".to_string(),
-            ],
+            gate_7_evidence_refs,
             if gate_7_pass {
                 None
             } else {
@@ -192,4 +226,13 @@ fn deterministic_generated_ts(evidence: &ReadinessEvidence) -> String {
         .max()
         .unwrap_or("1970-01-01T00:00:00Z")
         .to_string()
+}
+
+fn lifecycle_claims_from_attestations(evidence: &ReadinessEvidence) -> Option<LifecycleClaims> {
+    let entry = evidence
+        .attestations
+        .entries
+        .iter()
+        .find(|entry| entry.attestation_id == "lifecycle_validation")?;
+    serde_json::from_value::<LifecycleClaims>(entry.claims.clone()).ok()
 }

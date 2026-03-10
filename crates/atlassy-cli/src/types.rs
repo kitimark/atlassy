@@ -494,12 +494,45 @@ pub struct ReadinessOutputs {
     pub decision_packet: DecisionPacket,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct Attestations {
+    pub schema_version: String,
+    pub entries: Vec<Attestation>,
+}
+
+impl Default for Attestations {
+    fn default() -> Self {
+        Self {
+            schema_version: "v1".to_string(),
+            entries: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct Attestation {
+    pub attestation_id: String,
+    pub attested_by: String,
+    pub provenance: ProvenanceStamp,
+    pub evidence_refs: Vec<String>,
+    pub claims: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct LifecycleClaims {
+    pub bootstrap_required_failure: bool,
+    pub bootstrap_success: bool,
+    pub bootstrap_on_non_empty_failure: bool,
+    pub create_subpage_validated: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct ReadinessEvidence {
     pub manifest: RunManifest,
     pub provenance: ProvenanceStamp,
     pub report: BatchReport,
     pub summaries: BTreeMap<String, RunSummary>,
+    pub attestations: Attestations,
     pub source_artifacts: Vec<String>,
 }
 

@@ -1,0 +1,25 @@
+{
+  "schema_version": "v1",
+  "entries": [
+    {
+      "attestation_id": "lifecycle_validation",
+      "attested_by": "qa_owner",
+      "provenance": {
+        "git_commit_sha": "0123456789abcdef0123456789abcdef01234567",
+        "git_dirty": false,
+        "pipeline_version": "0.1.0",
+        "runtime_mode": "stub"
+      },
+      "evidence_refs": [
+        "qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/README.md",
+        "qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/run-log.txt"
+      ],
+      "claims": {
+        "bootstrap_required_failure": true,
+        "bootstrap_success": true,
+        "bootstrap_on_non_empty_failure": true,
+        "create_subpage_validated": true
+      }
+    }
+  ]
+}

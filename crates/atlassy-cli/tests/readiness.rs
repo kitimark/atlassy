@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 
 use atlassy_cli::*;
 
@@ -260,6 +261,141 @@ fn gate_7_lifecycle_evidence_controls_pass_and_iterate_recommendation() {
 }
 
 #[test]
+fn gate_7_passes_via_attestation_without_lifecycle_runs() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    execute_batch_from_manifest_file(
+        &fixture_path("batch_coverage_failure_manifest.json"),
+        temp.path(),
+    )
+    .expect("batch run should complete");
+
+    copy_attestations_fixture(temp.path());
+
+    let readiness = generate_readiness_outputs_from_artifacts(temp.path())
+        .expect("readiness should be generated");
+    let gate_7 = readiness
+        .checklist
+        .gates
+        .iter()
+        .find(|gate| gate.gate_id == "gate_7_lifecycle_enablement_validation")
+        .expect("gate 7 should be present");
+
+    assert!(
+        gate_7.pass,
+        "gate 7 should pass when attestation supplies lifecycle evidence"
+    );
+    assert!(
+        gate_7
+            .evidence_refs
+            .iter()
+            .any(|path| path == "artifacts/batch/attestations.json"),
+        "attestation path should be listed when attestation evidence contributes"
+    );
+}
+
+#[test]
+fn gate_7_fails_when_attestation_claims_are_malformed() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    execute_batch_from_manifest_file(
+        &fixture_path("batch_coverage_failure_manifest.json"),
+        temp.path(),
+    )
+    .expect("batch run should complete");
+
+    write_attestations_json(
+        temp.path(),
+        serde_json::json!({
+            "schema_version": "v1",
+            "entries": [
+                {
+                    "attestation_id": "lifecycle_validation",
+                    "attested_by": "qa_owner",
+                    "provenance": {
+                        "git_commit_sha": "0123456789abcdef0123456789abcdef01234567",
+                        "git_dirty": false,
+                        "pipeline_version": "0.1.0",
+                        "runtime_mode": "stub"
+                    },
+                    "evidence_refs": [
+                        "qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/README.md"
+                    ],
+                    "claims": {
+                        "bootstrap_success": true
+                    }
+                }
+            ]
+        }),
+    );
+
+    let readiness = generate_readiness_outputs_from_artifacts(temp.path())
+        .expect("readiness should be generated");
+    let gate_7 = readiness
+        .checklist
+        .gates
+        .iter()
+        .find(|gate| gate.gate_id == "gate_7_lifecycle_enablement_validation")
+        .expect("gate 7 should be present");
+
+    assert!(
+        !gate_7.pass,
+        "malformed claims should be treated as absent and keep gate 7 failing"
+    );
+    assert!(
+        gate_7
+            .evidence_refs
+            .iter()
+            .all(|path| path != "artifacts/batch/attestations.json"),
+        "attestation path should not be listed when claims cannot deserialize"
+    );
+}
+
+#[test]
+fn gate_7_remains_backward_compatible_without_attestation_file() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    execute_batch_from_manifest_file(&fixture_path("batch_complete_manifest.json"), temp.path())
+        .expect("batch run should complete");
+
+    let readiness = generate_readiness_outputs_from_artifacts(temp.path())
+        .expect("readiness should be generated");
+    let gate_7 = readiness
+        .checklist
+        .gates
+        .iter()
+        .find(|gate| gate.gate_id == "gate_7_lifecycle_enablement_validation")
+        .expect("gate 7 should be present");
+
+    assert!(
+        gate_7.pass,
+        "batch lifecycle evidence should still pass gate 7 without attestation"
+    );
+    assert!(
+        readiness
+            .checklist
+            .source_artifacts
+            .iter()
+            .all(|path| path != "artifacts/batch/attestations.json"),
+        "source artifacts should omit attestation path when file is absent"
+    );
+}
+
+#[test]
+fn readiness_replay_verification_succeeds_with_attestation_file_present() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    execute_batch_from_manifest_file(
+        &fixture_path("batch_coverage_failure_manifest.json"),
+        temp.path(),
+    )
+    .expect("batch run should complete");
+
+    copy_attestations_fixture(temp.path());
+    let _ = generate_readiness_outputs_from_artifacts(temp.path())
+        .expect("readiness outputs should be generated");
+
+    verify_decision_packet_replay(temp.path())
+        .expect("replay should match when attestation file is unchanged");
+}
+
+#[test]
 fn readiness_errors_are_operator_facing() {
     let empty = tempfile::tempdir().expect("tempdir should be created");
     let missing_err = generate_readiness_outputs_from_artifacts(empty.path())
@@ -285,4 +421,25 @@ fn readiness_errors_are_operator_facing() {
         blocked_err.to_string().contains("readiness blocked"),
         "unexpected error: {blocked_err}"
     );
+}
+
+fn copy_attestations_fixture(artifacts_dir: &Path) {
+    let source = fixture_path("attestations_lifecycle_complete.json");
+    let destination = artifacts_dir
+        .join("artifacts")
+        .join("batch")
+        .join("attestations.json");
+    fs::copy(source, destination).expect("attestations fixture should be copied");
+}
+
+fn write_attestations_json(artifacts_dir: &Path, value: serde_json::Value) {
+    let path = artifacts_dir
+        .join("artifacts")
+        .join("batch")
+        .join("attestations.json");
+    fs::write(
+        path,
+        serde_json::to_string_pretty(&value).expect("attestation json should serialize"),
+    )
+    .expect("attestation json should be written");
 }
