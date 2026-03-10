@@ -1,0 +1,11 @@
+{
+  "request_id": "v6-table-001",
+  "page_id": "1245185",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:11:25.551222+00:00",
+  "payload": {
+    "page_id": "1245185",
+    "edit_intent": "sandbox scoped table cell update",
+    "scope_selectors": []
+  }
+}

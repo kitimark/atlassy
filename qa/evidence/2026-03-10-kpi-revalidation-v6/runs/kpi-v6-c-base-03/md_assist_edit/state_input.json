@@ -1,0 +1,90 @@
+{
+  "request_id": "kpi-v6-c-base-03",
+  "page_id": "1245199",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682225+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 baseline C2 prose update"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Hidden expand content for locked-structural routing."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "KPI-v6 optimized C2 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel body text to represent locked-adjacent structure."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "P3 references paragraph used by heading:References selector."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "adf_path": "/content/2/content/0"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "adf_path": "/content/5/content/0"
+      },
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      },
+      {
+        "md_block_id": "/content/7",
+        "adf_path": "/content/7"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2/content/0",
+      "/content/3",
+      "/content/4",
+      "/content/5/content/0",
+      "/content/6",
+      "/content/7"
+    ],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "Pattern C prose update pair 3"
+  }
+}

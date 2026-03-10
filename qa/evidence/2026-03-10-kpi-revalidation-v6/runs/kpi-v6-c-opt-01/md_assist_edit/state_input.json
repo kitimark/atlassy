@@ -1,0 +1,47 @@
+{
+  "request_id": "kpi-v6-c-opt-01",
+  "page_id": "1245199",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682204+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 baseline C1 prose update"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Hidden expand content for locked-structural routing."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "adf_path": "/content/2/content/0"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2/content/0"
+    ],
+    "allowed_scope_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2"
+    ],
+    "edit_intent": "Pattern C prose update pair 1"
+  }
+}

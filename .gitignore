@@ -1,3 +1,4 @@
 /target/
 /artifacts/
 /qa/.env.local
+/qa/runs/

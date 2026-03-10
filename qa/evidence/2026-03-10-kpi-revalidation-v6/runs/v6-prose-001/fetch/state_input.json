@@ -1,0 +1,11 @@
+{
+  "request_id": "v6-prose-001",
+  "page_id": "131207",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:07:42.059312+00:00",
+  "payload": {
+    "page_id": "131207",
+    "edit_intent": "sandbox scoped prose update",
+    "scope_selectors": []
+  }
+}

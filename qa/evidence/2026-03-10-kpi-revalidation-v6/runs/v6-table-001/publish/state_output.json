@@ -1,0 +1,16 @@
+{
+  "request_id": "v6-table-001",
+  "page_id": "1245185",
+  "state": "publish",
+  "timestamp": "2026-03-10T21:11:25.551222+00:00",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 4,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

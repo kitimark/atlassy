@@ -1,0 +1,11 @@
+{
+  "request_id": "v6-preflight-001",
+  "page_id": "131207",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:06:37.495078+00:00",
+  "payload": {
+    "page_id": "131207",
+    "edit_intent": "sandbox live preflight",
+    "scope_selectors": []
+  }
+}

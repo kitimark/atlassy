@@ -1,0 +1,12 @@
+{
+  "request_id": "kpi-v6-a-base-03",
+  "page_id": "1212417",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-10T21:13:48.682122+00:00",
+  "payload": {
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "table_changed_paths": []
+  }
+}

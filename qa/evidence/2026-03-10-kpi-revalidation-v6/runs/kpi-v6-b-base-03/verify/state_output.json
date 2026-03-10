@@ -1,0 +1,14 @@
+{
+  "request_id": "kpi-v6-b-base-03",
+  "page_id": "1245185",
+  "state": "verify",
+  "timestamp": "2026-03-10T21:13:48.682181+00:00",
+  "payload": {
+    "verify_result": "pass",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

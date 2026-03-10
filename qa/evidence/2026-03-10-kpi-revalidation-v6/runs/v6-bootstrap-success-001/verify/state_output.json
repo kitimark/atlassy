@@ -1,0 +1,14 @@
+{
+  "request_id": "v6-bootstrap-success-001",
+  "page_id": "1245213",
+  "state": "verify",
+  "timestamp": "2026-03-10T21:08:39.385872+00:00",
+  "payload": {
+    "verify_result": "pass",
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

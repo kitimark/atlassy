@@ -20,7 +20,8 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Investigations
 
 - Naming convention: `YYYY-MM-DD-<topic>.md`.
-- Latest: `qa/investigations/2026-03-08-kpi-revalidation-v5.md`.
+- Latest: `qa/investigations/2026-03-10-kpi-revalidation-v6.md`.
+- Prior: `qa/investigations/2026-03-08-kpi-revalidation-v5.md`.
 - Prior: `qa/investigations/2026-03-08-kpi-revalidation-v4.md`.
 - Prior: `qa/investigations/2026-03-08-kpi-revalidation-v3.md`.
 - Prior: `qa/investigations/2026-03-08-kpi-revalidation-v2.md`.
@@ -36,7 +37,8 @@ This folder contains repeatable QA playbooks for live sandbox validation.
 ## Evidence
 
 - Commit handoff-ready evidence bundles under `qa/evidence/YYYY-MM-DD-<topic>/`.
-- Latest bundle: `qa/evidence/2026-03-08-kpi-revalidation-v5/`.
+- Latest bundle: `qa/evidence/2026-03-10-kpi-revalidation-v6/`.
+- Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation-v5/`.
 - Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation-v4/`.
 - Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation-v3/`.
 - Prior bundle: `qa/evidence/2026-03-08-kpi-revalidation-v2/`.

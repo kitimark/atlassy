@@ -1,0 +1,24 @@
+{
+  "request_id": "v6-spike-fetch-p1-scoped",
+  "page_id": "1212417",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:12:16.182641+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "P1 intro paragraph one for scoped selector validation."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "P1 intro paragraph two for baseline and optimized delta checks."
+      }
+    ],
+    "prose_changed_paths": [],
+    "prose_change_candidates": []
+  }
+}

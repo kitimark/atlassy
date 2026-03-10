@@ -1,0 +1,226 @@
+{
+  "request_id": "kpi-v6-c-base-02",
+  "page_id": "1245199",
+  "state": "verify",
+  "timestamp": "2026-03-10T21:13:48.682211+00:00",
+  "payload": {
+    "original_scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Context",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v6 optimized C1 scoped prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "title": "Expandable context"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Hidden expand content for locked-structural routing.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "expand"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Notes",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P3 notes paragraph for scoped selector heading:Notes.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Panel body text to represent locked-adjacent structure.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "References",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P3 references paragraph used by heading:References selector.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "type": "rule"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Context",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v6 baseline C2 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "title": "Expandable context"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Hidden expand content for locked-structural routing.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "expand"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Notes",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P3 notes paragraph for scoped selector heading:Notes.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Panel body text to represent locked-adjacent structure.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "References",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P3 references paragraph used by heading:References selector.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "type": "rule"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "changed_paths": [
+      "/content/1/content/0/text"
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "request_id": "kpi-v6-a-base-03",
+  "page_id": "1212417",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682122+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 baseline A3 prose update"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "P1 intro paragraph two for baseline and optimized delta checks."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Details"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "KPI-v6 optimized A2 scoped prose updateDetail bullet two for P1 pattern A coverage.Detail bullet three for P1 pattern A coverage."
+      },
+      {
+        "md_block_id": "/content/4/content/0",
+        "markdown": "KPI-v6 optimized A2 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/4/content/0/content/0",
+        "markdown": "KPI-v6 optimized A2 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/4/content/1",
+        "markdown": "Detail bullet two for P1 pattern A coverage."
+      },
+      {
+        "md_block_id": "/content/4/content/1/content/0",
+        "markdown": "Detail bullet two for P1 pattern A coverage."
+      },
+      {
+        "md_block_id": "/content/4/content/2",
+        "markdown": "Detail bullet three for P1 pattern A coverage."
+      },
+      {
+        "md_block_id": "/content/4/content/2/content/0",
+        "markdown": "Detail bullet three for P1 pattern A coverage."
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "P1 blockquote to ensure prose-route diversity."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "P1 blockquote to ensure prose-route diversity."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Summary"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "P1 summary paragraph used by optimized selector heading:Summary."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/1/content/0/text",
+        "markdown": "KPI-v6 baseline A3 prose update"
+      }
+    ]
+  }
+}

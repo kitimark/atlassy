@@ -1,0 +1,24 @@
+{
+  "request_id": "v6-spike-fetch-p3-scoped",
+  "page_id": "1245199",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:12:18.062058+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "P3 notes paragraph for scoped selector heading:Notes."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel body text to represent locked-adjacent structure."
+      }
+    ],
+    "prose_changed_paths": [],
+    "prose_change_candidates": []
+  }
+}

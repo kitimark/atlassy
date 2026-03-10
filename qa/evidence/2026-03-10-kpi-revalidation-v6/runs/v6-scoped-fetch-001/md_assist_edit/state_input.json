@@ -1,0 +1,47 @@
+{
+  "request_id": "v6-scoped-fetch-001",
+  "page_id": "1212417",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:11:01.206821+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "P1 intro paragraph one for scoped selector validation."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "P1 intro paragraph two for baseline and optimized delta checks."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2"
+    ],
+    "allowed_scope_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2"
+    ],
+    "edit_intent": "sandbox scoped fetch validation"
+  }
+}

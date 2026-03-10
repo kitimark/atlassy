@@ -1,0 +1,216 @@
+{
+  "request_id": "kpi-v6-c-opt-01",
+  "page_id": "1245199",
+  "state": "extract_prose",
+  "timestamp": "2026-03-10T21:13:48.682204+00:00",
+  "payload": {
+    "node_manifest": [
+      {
+        "path": "/",
+        "node_type": "doc",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/0",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/1",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/1/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/2",
+        "node_type": "expand",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/2/content/0",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/2/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/3",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/3/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/4",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/4/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/5",
+        "node_type": "panel",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/5/content/0",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/5/content/0/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/6",
+        "node_type": "heading",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/6/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/7",
+        "node_type": "paragraph",
+        "route": "editable_prose"
+      },
+      {
+        "path": "/content/7/content/0",
+        "node_type": "text",
+        "route": "locked_structural"
+      },
+      {
+        "path": "/content/8",
+        "node_type": "rule",
+        "route": "locked_structural"
+      }
+    ],
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Context",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "KPI-v6 baseline C1 prose update",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "title": "Expandable context"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Hidden expand content for locked-structural routing.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "expand"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Notes",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P3 notes paragraph for scoped selector heading:Notes.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "Panel body text to represent locked-adjacent structure.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "References",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P3 references paragraph used by heading:References selector.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "type": "rule"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "request_id": "v6-autodiscover-p1",
+  "page_id": "1212417",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:12:53.074995+00:00",
+  "payload": {
+    "page_id": "1212417",
+    "edit_intent": "auto-discovery validation",
+    "scope_selectors": [
+      "heading:Introduction"
+    ]
+  }
+}

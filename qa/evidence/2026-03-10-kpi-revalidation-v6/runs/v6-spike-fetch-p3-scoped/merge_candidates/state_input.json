@@ -1,0 +1,10 @@
+{
+  "request_id": "v6-spike-fetch-p3-scoped",
+  "page_id": "1245199",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-10T21:12:18.062058+00:00",
+  "payload": {
+    "prose_changed_paths": [],
+    "table_changed_paths": []
+  }
+}

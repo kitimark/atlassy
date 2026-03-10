@@ -1,0 +1,59 @@
+{
+  "success": false,
+  "run_id": "v6-autodiscover-p3",
+  "request_id": "v6-autodiscover-p3",
+  "page_id": "1245199",
+  "flow": "optimized",
+  "pattern": "A",
+  "edit_intent_hash": "hda19f7a47dff3ba3",
+  "scope_selectors": [
+    "heading:Notes"
+  ],
+  "scope_resolution_failed": false,
+  "full_page_fetch": false,
+  "full_page_adf_bytes": 1007,
+  "scoped_adf_bytes": 363,
+  "context_reduction_ratio": 0.6395233366434956,
+  "pipeline_version": "v1",
+  "git_commit_sha": "217a942383a6c8784d4c20b65377e990a1db0422",
+  "git_dirty": true,
+  "runtime_mode": "live",
+  "state_token_usage": {
+    "adf_table_edit": 56,
+    "classify": 414,
+    "extract_prose": 171,
+    "fetch": 476,
+    "md_assist_edit": 139,
+    "merge_candidates": 47,
+    "patch": 316,
+    "verify": 77
+  },
+  "total_tokens": 1696,
+  "retry_count": 0,
+  "retry_tokens": 0,
+  "patch_ops_bytes": 94,
+  "verify_result": "fail",
+  "verify_error_codes": [
+    "ERR_SCHEMA_INVALID"
+  ],
+  "publish_result": "",
+  "publish_error_code": null,
+  "new_version": null,
+  "start_ts": "2026-03-10T21:12:57.077180+00:00",
+  "verify_end_ts": "2026-03-10T21:12:57.077180+00:00+462ms",
+  "publish_end_ts": "2026-03-10T21:12:57.077180+00:00+462ms",
+  "latency_ms": 462,
+  "locked_node_mutation": false,
+  "out_of_scope_mutation": false,
+  "telemetry_complete": false,
+  "discovered_target_path": "/content/4/content/0/text",
+  "applied_paths": [],
+  "blocked_paths": [],
+  "error_codes": [
+    "ERR_SCHEMA_INVALID"
+  ],
+  "token_metrics": {},
+  "failure_state": "verify",
+  "empty_page_detected": false,
+  "bootstrap_applied": false
+}

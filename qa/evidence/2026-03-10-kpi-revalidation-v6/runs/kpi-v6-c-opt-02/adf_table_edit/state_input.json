@@ -1,0 +1,15 @@
+{
+  "request_id": "kpi-v6-c-opt-02",
+  "page_id": "1245199",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-10T21:13:48.682218+00:00",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "Pattern C prose update pair 2"
+  }
+}

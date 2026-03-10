@@ -1,0 +1,31 @@
+{
+  "request_id": "kpi-v6-a-opt-01",
+  "page_id": "1212417",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682100+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Introduction"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 optimized A1 scoped prose update"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "P1 intro paragraph two for baseline and optimized delta checks."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/1/content/0/text",
+        "markdown": "KPI-v6 optimized A1 scoped prose update"
+      }
+    ]
+  }
+}

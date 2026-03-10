@@ -86,7 +86,7 @@ Start here: `openspec/README.md`.
 
 - Implementation checkpoint: phases 1-5 are implemented. Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox.
 - Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented and validated with committed live evidence.
-- Current readiness decision: `iterate` (legacy KPI framing from stub-backed evaluation is superseded; revised KPI revalidation with scoped-selector manifests is pending).
+- Current readiness decision: `iterate` (live KPI revalidation v6 completed with fresh pages; Gate 7 lifecycle evidence is now satisfied, but KPI targets for context reduction and publish latency remain below threshold).
 
 ## Project Structure
 

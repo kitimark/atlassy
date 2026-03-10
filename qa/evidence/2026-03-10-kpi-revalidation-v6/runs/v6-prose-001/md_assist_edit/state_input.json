@@ -1,0 +1,36 @@
+{
+  "request_id": "v6-prose-001",
+  "page_id": "131207",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:07:42.059312+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "markdown": "Sandbox prose update 2026-03-08T23:48:56Z"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": ""
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0/content/0",
+        "adf_path": "/content/0/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0/content/0",
+      "/content/1"
+    ],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "sandbox scoped prose update"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "request_id": "v6-autodiscover-p2-prose",
+  "page_id": "1245185",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-10T21:12:54.973219+00:00",
+  "payload": {
+    "table_candidates": [],
+    "table_changed_paths": [],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

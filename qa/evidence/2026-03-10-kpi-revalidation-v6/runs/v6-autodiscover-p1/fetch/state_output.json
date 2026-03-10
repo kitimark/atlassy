@@ -1,0 +1,176 @@
+{
+  "request_id": "v6-autodiscover-p1",
+  "page_id": "1212417",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:12:53.074995+00:00",
+  "payload": {
+    "scoped_adf": {
+      "content": [
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Introduction",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P1 intro paragraph one for scoped selector validation.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "content": [
+            {
+              "text": "P1 intro paragraph two for baseline and optimized delta checks.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Details",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet one for P1 pattern A coverage.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet two for P1 pattern A coverage.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            },
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "text": "Detail bullet three for P1 pattern A coverage.",
+                      "type": "text"
+                    }
+                  ],
+                  "type": "paragraph"
+                }
+              ],
+              "type": "listItem"
+            }
+          ],
+          "type": "bulletList"
+        },
+        {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": "P1 blockquote to ensure prose-route diversity.",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "blockquote"
+        },
+        {
+          "attrs": {
+            "level": 2
+          },
+          "content": [
+            {
+              "text": "Summary",
+              "type": "text"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "content": [
+            {
+              "text": "P1 summary paragraph used by optimized selector heading:Summary.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "page_version": 3,
+    "allowed_scope_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2"
+    ],
+    "node_path_index": {
+      "/": "doc",
+      "/content/0": "heading",
+      "/content/0/content/0": "text",
+      "/content/1": "paragraph",
+      "/content/1/content/0": "text",
+      "/content/2": "paragraph",
+      "/content/2/content/0": "text",
+      "/content/3": "heading",
+      "/content/3/content/0": "text",
+      "/content/4": "bulletList",
+      "/content/4/content/0": "listItem",
+      "/content/4/content/0/content/0": "paragraph",
+      "/content/4/content/0/content/0/content/0": "text",
+      "/content/4/content/1": "listItem",
+      "/content/4/content/1/content/0": "paragraph",
+      "/content/4/content/1/content/0/content/0": "text",
+      "/content/4/content/2": "listItem",
+      "/content/4/content/2/content/0": "paragraph",
+      "/content/4/content/2/content/0/content/0": "text",
+      "/content/5": "blockquote",
+      "/content/5/content/0": "paragraph",
+      "/content/5/content/0/content/0": "text",
+      "/content/6": "heading",
+      "/content/6/content/0": "text",
+      "/content/7": "paragraph",
+      "/content/7/content/0": "text"
+    },
+    "scope_resolution_failed": false,
+    "full_page_fetch": false,
+    "fallback_reason": null,
+    "full_page_adf_bytes": 1233
+  }
+}

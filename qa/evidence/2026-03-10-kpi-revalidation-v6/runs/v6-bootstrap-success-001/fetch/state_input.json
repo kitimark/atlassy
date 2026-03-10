@@ -1,0 +1,11 @@
+{
+  "request_id": "v6-bootstrap-success-001",
+  "page_id": "1245213",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:08:39.385872+00:00",
+  "payload": {
+    "page_id": "1245213",
+    "edit_intent": "bootstrap scaffold injection",
+    "scope_selectors": []
+  }
+}

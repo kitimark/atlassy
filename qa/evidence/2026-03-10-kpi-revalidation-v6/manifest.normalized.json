@@ -1,0 +1,435 @@
+{
+  "batch": {
+    "required_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "observed_scenario_ids": [
+      "S-001",
+      "S-010"
+    ],
+    "live_smoke": {
+      "scoped_fetch_parity": true,
+      "publish_conflict_parity": true,
+      "error_payload_parity": true
+    },
+    "runtime_mode": "live",
+    "lifecycle_create_subpage_validated": false
+  },
+  "runs": [
+    {
+      "run_id": "kpi-v6-a-base-01",
+      "page_id": "1212417",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A prose update pair 1",
+      "edit_intent_hash": "kpi-a-pair-1",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682022+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline A1 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-a-opt-01",
+      "page_id": "1212417",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A prose update pair 1",
+      "edit_intent_hash": "kpi-a-pair-1",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Introduction"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682100+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized A1 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-a-base-02",
+      "page_id": "1212417",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A prose update pair 2",
+      "edit_intent_hash": "kpi-a-pair-2",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682107+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline A2 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-a-opt-02",
+      "page_id": "1212417",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A prose update pair 2",
+      "edit_intent_hash": "kpi-a-pair-2",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Details"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682115+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized A2 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-a-base-03",
+      "page_id": "1212417",
+      "pattern": "A",
+      "flow": "baseline",
+      "edit_intent": "Pattern A prose update pair 3",
+      "edit_intent_hash": "kpi-a-pair-3",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682122+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline A3 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-a-opt-03",
+      "page_id": "1212417",
+      "pattern": "A",
+      "flow": "optimized",
+      "edit_intent": "Pattern A prose update pair 3",
+      "edit_intent_hash": "kpi-a-pair-3",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Summary"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682130+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized A3 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-b-base-01",
+      "page_id": "1245185",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B prose update pair 1",
+      "edit_intent_hash": "kpi-b-pair-1",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682137+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline B1 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-b-opt-01",
+      "page_id": "1245185",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B prose update pair 1",
+      "edit_intent_hash": "kpi-b-pair-1",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Overview"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682145+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized B1 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-b-base-02",
+      "page_id": "1245185",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B table cell update pair 2",
+      "edit_intent_hash": "kpi-b-pair-2",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682154+00:00",
+      "mode": "simple_scoped_table_cell_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline B2 table cell update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-b-opt-02",
+      "page_id": "1245185",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B table cell update pair 2",
+      "edit_intent_hash": "kpi-b-pair-2",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Data"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682174+00:00",
+      "mode": "simple_scoped_table_cell_update",
+      "target_path": null,
+      "target_index": 0,
+      "new_value": "KPI-v6 optimized B2 scoped table cell update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-b-base-03",
+      "page_id": "1245185",
+      "pattern": "B",
+      "flow": "baseline",
+      "edit_intent": "Pattern B prose update pair 3",
+      "edit_intent_hash": "kpi-b-pair-3",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682181+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline B3 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-b-opt-03",
+      "page_id": "1245185",
+      "pattern": "B",
+      "flow": "optimized",
+      "edit_intent": "Pattern B prose update pair 3",
+      "edit_intent_hash": "kpi-b-pair-3",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Data"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682189+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized B3 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-c-base-01",
+      "page_id": "1245199",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C prose update pair 1",
+      "edit_intent_hash": "kpi-c-pair-1",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682195+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline C1 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-c-opt-01",
+      "page_id": "1245199",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C prose update pair 1",
+      "edit_intent_hash": "kpi-c-pair-1",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Context"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682204+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized C1 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-c-base-02",
+      "page_id": "1245199",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C prose update pair 2",
+      "edit_intent_hash": "kpi-c-pair-2",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682211+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline C2 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-c-opt-02",
+      "page_id": "1245199",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C prose update pair 2",
+      "edit_intent_hash": "kpi-c-pair-2",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:Notes"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682218+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized C2 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-c-base-03",
+      "page_id": "1245199",
+      "pattern": "C",
+      "flow": "baseline",
+      "edit_intent": "Pattern C prose update pair 3",
+      "edit_intent_hash": "kpi-c-pair-3",
+      "scenario_ids": [
+        "S-001"
+      ],
+      "scope_selectors": [],
+      "timestamp": "2026-03-10T21:13:48.682225+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 baseline C3 prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    },
+    {
+      "run_id": "kpi-v6-c-opt-03",
+      "page_id": "1245199",
+      "pattern": "C",
+      "flow": "optimized",
+      "edit_intent": "Pattern C prose update pair 3",
+      "edit_intent_hash": "kpi-c-pair-3",
+      "scenario_ids": [
+        "S-010"
+      ],
+      "scope_selectors": [
+        "heading:References"
+      ],
+      "timestamp": "2026-03-10T21:13:48.682234+00:00",
+      "mode": "simple_scoped_prose_update",
+      "target_path": null,
+      "target_index": null,
+      "new_value": "KPI-v6 optimized C3 scoped prose update",
+      "force_verify_fail": false,
+      "simulate_conflict_once": false,
+      "simulate_conflict_exhausted": false,
+      "bootstrap_empty_page": null,
+      "simulate_empty_page": false
+    }
+  ]
+}

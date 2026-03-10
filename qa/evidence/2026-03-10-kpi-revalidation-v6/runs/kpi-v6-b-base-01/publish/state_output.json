@@ -1,0 +1,16 @@
+{
+  "request_id": "kpi-v6-b-base-01",
+  "page_id": "1245185",
+  "state": "publish",
+  "timestamp": "2026-03-10T21:13:48.682137+00:00",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 5,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": "v1",
+  "generated_ts": "2026-03-10T21:13:48.682234+00:00",
+  "provenance": {
+    "git_commit_sha": "217a942383a6c8784d4c20b65377e990a1db0422",
+    "git_dirty": true,
+    "pipeline_version": "v1",
+    "runtime_mode": "live"
+  },
+  "sections": [
+    {
+      "failure_class": "no_active_failures",
+      "severity": "low",
+      "primary_owner_role": "release_reviewer",
+      "escalation_owner_role": "release_reviewer",
+      "escalation_trigger": "no failure-class triage required",
+      "triage_steps": [
+        "confirm checklist and KPI gates remain passing"
+      ],
+      "evidence_checks": [
+        "artifacts/batch/report.json"
+      ],
+      "fallback": false,
+      "blocks_signoff": false
+    }
+  ],
+  "blocked": false
+}

@@ -1,0 +1,11 @@
+{
+  "request_id": "v6-autodiscover-p2-table",
+  "page_id": "1245185",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-10T21:12:59.336109+00:00",
+  "payload": {
+    "changed_paths": [
+      "/content/4/content/0/content/0/content/0/content/0/text"
+    ]
+  }
+}

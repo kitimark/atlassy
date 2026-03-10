@@ -1,0 +1,32 @@
+{
+  "request_id": "kpi-v6-c-opt-03",
+  "page_id": "1245199",
+  "state": "extract_prose",
+  "timestamp": "2026-03-10T21:13:48.682234+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "P3 references paragraph used by heading:References selector."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/6",
+        "adf_path": "/content/6"
+      },
+      {
+        "md_block_id": "/content/7",
+        "adf_path": "/content/7"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/6",
+      "/content/7"
+    ]
+  }
+}

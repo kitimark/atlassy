@@ -1,0 +1,13 @@
+{
+  "request_id": "kpi-v6-c-opt-03",
+  "page_id": "1245199",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:13:48.682234+00:00",
+  "payload": {
+    "page_id": "1245199",
+    "edit_intent": "Pattern C prose update pair 3",
+    "scope_selectors": [
+      "heading:References"
+    ]
+  }
+}

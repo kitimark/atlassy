@@ -1,0 +1,13 @@
+{
+  "request_id": "v6-preflight-001",
+  "page_id": "131207",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-10T21:06:37.495078+00:00",
+  "payload": {
+    "table_candidates": [],
+    "table_changed_paths": [],
+    "allowed_ops": [
+      "cell_text_update"
+    ]
+  }
+}

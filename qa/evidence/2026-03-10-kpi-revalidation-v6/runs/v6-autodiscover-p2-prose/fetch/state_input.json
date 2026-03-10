@@ -1,0 +1,13 @@
+{
+  "request_id": "v6-autodiscover-p2-prose",
+  "page_id": "1245185",
+  "state": "fetch",
+  "timestamp": "2026-03-10T21:12:54.973219+00:00",
+  "payload": {
+    "page_id": "1245185",
+    "edit_intent": "auto-discovery prose validation",
+    "scope_selectors": [
+      "heading:Data"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "request_id": "kpi-v6-c-base-01",
+  "page_id": "1245199",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682195+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Context"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 baseline C1 prose update"
+      },
+      {
+        "md_block_id": "/content/2/content/0",
+        "markdown": "Hidden expand content for locked-structural routing."
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "P3 notes paragraph for scoped selector heading:Notes."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel body text to represent locked-adjacent structure."
+      },
+      {
+        "md_block_id": "/content/6",
+        "markdown": "References"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "P3 references paragraph used by heading:References selector."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/1/content/0/text",
+        "markdown": "KPI-v6 baseline C1 prose update"
+      }
+    ]
+  }
+}

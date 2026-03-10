@@ -1,0 +1,11 @@
+{
+  "request_id": "v6-table-001",
+  "page_id": "1245185",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-10T21:11:25.551222+00:00",
+  "payload": {
+    "changed_paths": [
+      "/content/4/content/0/content/0/content/0/content/0/text"
+    ]
+  }
+}

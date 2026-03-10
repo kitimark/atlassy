@@ -1,0 +1,27 @@
+{
+  "schema_version": "v1",
+  "entries": [
+    {
+      "attestation_id": "lifecycle_validation",
+      "attested_by": "qa_owner",
+      "provenance": {
+        "git_commit_sha": "217a942383a6c8784d4c20b65377e990a1db0422",
+        "git_dirty": true,
+        "pipeline_version": "v1",
+        "runtime_mode": "live"
+      },
+      "evidence_refs": [
+        "qa/runs/full-steps-1-8-20260310T210423Z/create-subpage-bootstrap.json",
+        "qa/runs/full-steps-1-8-20260310T210423Z/artifacts/v6-bootstrap-required-001/summary.json",
+        "qa/runs/full-steps-1-8-20260310T210423Z/artifacts/v6-bootstrap-success-001/summary.json",
+        "qa/runs/full-steps-1-8-20260310T210423Z/artifacts/v6-bootstrap-invalid-001/summary.json"
+      ],
+      "claims": {
+        "bootstrap_required_failure": true,
+        "bootstrap_success": true,
+        "bootstrap_on_non_empty_failure": true,
+        "create_subpage_validated": true
+      }
+    }
+  ]
+}

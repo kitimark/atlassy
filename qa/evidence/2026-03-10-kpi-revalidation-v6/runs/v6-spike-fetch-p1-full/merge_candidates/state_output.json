@@ -1,0 +1,9 @@
+{
+  "request_id": "v6-spike-fetch-p1-full",
+  "page_id": "1212417",
+  "state": "merge_candidates",
+  "timestamp": "2026-03-10T21:11:54.787027+00:00",
+  "payload": {
+    "changed_paths": []
+  }
+}

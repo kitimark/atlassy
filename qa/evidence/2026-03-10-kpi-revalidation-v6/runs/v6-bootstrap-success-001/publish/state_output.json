@@ -1,0 +1,16 @@
+{
+  "request_id": "v6-bootstrap-success-001",
+  "page_id": "1245213",
+  "state": "publish",
+  "timestamp": "2026-03-10T21:08:39.385872+00:00",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 2,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "request_id": "v6-scoped-fetch-001",
+  "page_id": "1212417",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-10T21:11:01.206821+00:00",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2"
+    ],
+    "edit_intent": "sandbox scoped fetch validation"
+  }
+}

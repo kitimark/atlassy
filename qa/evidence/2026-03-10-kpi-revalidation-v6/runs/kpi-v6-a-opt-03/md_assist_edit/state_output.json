@@ -1,0 +1,27 @@
+{
+  "request_id": "kpi-v6-a-opt-03",
+  "page_id": "1212417",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682130+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/6",
+        "markdown": "Summary"
+      },
+      {
+        "md_block_id": "/content/7",
+        "markdown": "KPI-v6 optimized A3 scoped prose update"
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/7/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/7/content/0/text",
+        "markdown": "KPI-v6 optimized A3 scoped prose update"
+      }
+    ]
+  }
+}

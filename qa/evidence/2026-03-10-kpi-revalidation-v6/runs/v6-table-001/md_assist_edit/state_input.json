@@ -1,0 +1,63 @@
+{
+  "request_id": "v6-table-001",
+  "page_id": "1245185",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:11:25.551222+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Overview"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "P2 overview paragraph for mixed prose/table scenario."
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "P2 data intro paragraph before table content."
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "P2 post-table paragraph for additional prose target coverage."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      },
+      {
+        "md_block_id": "/content/2",
+        "adf_path": "/content/2"
+      },
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/5",
+        "adf_path": "/content/5"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2",
+      "/content/3",
+      "/content/5"
+    ],
+    "allowed_scope_paths": [
+      "/"
+    ],
+    "edit_intent": "sandbox scoped table cell update"
+  }
+}

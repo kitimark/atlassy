@@ -1,0 +1,47 @@
+{
+  "request_id": "v6-autodiscover-p3",
+  "page_id": "1245199",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:12:57.077180+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/3",
+        "markdown": "Notes"
+      },
+      {
+        "md_block_id": "/content/4",
+        "markdown": "P3 notes paragraph for scoped selector heading:Notes."
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "markdown": "Panel body text to represent locked-adjacent structure."
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/3",
+        "adf_path": "/content/3"
+      },
+      {
+        "md_block_id": "/content/4",
+        "adf_path": "/content/4"
+      },
+      {
+        "md_block_id": "/content/5/content/0",
+        "adf_path": "/content/5/content/0"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5/content/0"
+    ],
+    "allowed_scope_paths": [
+      "/content/3",
+      "/content/4",
+      "/content/5"
+    ],
+    "edit_intent": "auto-discovery validation"
+  }
+}

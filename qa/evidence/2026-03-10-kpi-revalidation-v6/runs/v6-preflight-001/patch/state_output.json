@@ -1,0 +1,43 @@
+{
+  "request_id": "v6-preflight-001",
+  "page_id": "131207",
+  "state": "patch",
+  "timestamp": "2026-03-10T21:06:37.495078+00:00",
+  "payload": {
+    "patch_ops": [],
+    "candidate_page_adf": {
+      "content": [
+        {
+          "attrs": {
+            "localId": "64448220f4ee",
+            "panelType": "info"
+          },
+          "content": [
+            {
+              "attrs": {
+                "localId": "138985edbd1a"
+              },
+              "content": [
+                {
+                  "text": "Sandbox prose update 2026-03-08T23:48:56Z",
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "panel"
+        },
+        {
+          "attrs": {
+            "localId": "ec49fcd30569"
+          },
+          "type": "paragraph"
+        }
+      ],
+      "type": "doc",
+      "version": 1
+    },
+    "patch_ops_bytes": 2
+  }
+}

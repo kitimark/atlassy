@@ -1,0 +1,16 @@
+{
+  "request_id": "v6-prose-001",
+  "page_id": "131207",
+  "state": "publish",
+  "timestamp": "2026-03-10T21:07:42.059312+00:00",
+  "payload": {
+    "publish_result": "published",
+    "new_version": 11,
+    "retry_count": 0,
+    "diagnostics": {
+      "warnings": [],
+      "errors": [],
+      "metrics": {}
+    }
+  }
+}

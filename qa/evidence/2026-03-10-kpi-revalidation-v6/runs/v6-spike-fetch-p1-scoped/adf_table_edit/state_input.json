@@ -1,0 +1,15 @@
+{
+  "request_id": "v6-spike-fetch-p1-scoped",
+  "page_id": "1212417",
+  "state": "adf_table_edit",
+  "timestamp": "2026-03-10T21:12:16.182641+00:00",
+  "payload": {
+    "table_nodes": [],
+    "allowed_scope_paths": [
+      "/content/0",
+      "/content/1",
+      "/content/2"
+    ],
+    "edit_intent": "scoped fetch spike"
+  }
+}

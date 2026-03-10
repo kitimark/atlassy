@@ -1,0 +1,39 @@
+{
+  "request_id": "kpi-v6-b-base-03",
+  "page_id": "1245185",
+  "state": "md_assist_edit",
+  "timestamp": "2026-03-10T21:13:48.682181+00:00",
+  "payload": {
+    "edited_markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Overview"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 baseline B3 prose update"
+      },
+      {
+        "md_block_id": "/content/2",
+        "markdown": "Data"
+      },
+      {
+        "md_block_id": "/content/3",
+        "markdown": "P2 data intro paragraph before table content."
+      },
+      {
+        "md_block_id": "/content/5",
+        "markdown": "P2 post-table paragraph for additional prose target coverage."
+      }
+    ],
+    "prose_changed_paths": [
+      "/content/1/content/0/text"
+    ],
+    "prose_change_candidates": [
+      {
+        "path": "/content/1/content/0/text",
+        "markdown": "KPI-v6 baseline B3 prose update"
+      }
+    ]
+  }
+}

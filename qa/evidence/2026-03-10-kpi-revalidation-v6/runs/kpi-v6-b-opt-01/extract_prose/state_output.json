@@ -1,0 +1,32 @@
+{
+  "request_id": "kpi-v6-b-opt-01",
+  "page_id": "1245185",
+  "state": "extract_prose",
+  "timestamp": "2026-03-10T21:13:48.682145+00:00",
+  "payload": {
+    "markdown_blocks": [
+      {
+        "md_block_id": "/content/0",
+        "markdown": "Overview"
+      },
+      {
+        "md_block_id": "/content/1",
+        "markdown": "KPI-v6 baseline B1 prose update"
+      }
+    ],
+    "md_to_adf_map": [
+      {
+        "md_block_id": "/content/0",
+        "adf_path": "/content/0"
+      },
+      {
+        "md_block_id": "/content/1",
+        "adf_path": "/content/1"
+      }
+    ],
+    "editable_prose_paths": [
+      "/content/0",
+      "/content/1"
+    ]
+  }
+}

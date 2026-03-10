@@ -1,0 +1,131 @@
+{
+  "schema_version": "v1",
+  "generated_ts": "2026-03-10T21:13:48.682234+00:00",
+  "owner_roles": {
+    "product_owner": "product_owner",
+    "engineering_owner": "engineering_owner",
+    "qa_owner": "qa_owner",
+    "data_metrics_owner": "data_metrics_owner",
+    "release_reviewer": "release_reviewer"
+  },
+  "source_artifacts": [
+    "artifacts/batch/artifact-index.json",
+    "artifacts/batch/attestations.json",
+    "artifacts/batch/manifest.normalized.json",
+    "artifacts/batch/report.json",
+    "artifacts/kpi-v6-a-base-01/summary.json",
+    "artifacts/kpi-v6-a-base-02/summary.json",
+    "artifacts/kpi-v6-a-base-03/summary.json",
+    "artifacts/kpi-v6-a-opt-01/summary.json",
+    "artifacts/kpi-v6-a-opt-02/summary.json",
+    "artifacts/kpi-v6-a-opt-03/summary.json",
+    "artifacts/kpi-v6-b-base-01/summary.json",
+    "artifacts/kpi-v6-b-base-02/summary.json",
+    "artifacts/kpi-v6-b-base-03/summary.json",
+    "artifacts/kpi-v6-b-opt-01/summary.json",
+    "artifacts/kpi-v6-b-opt-02/summary.json",
+    "artifacts/kpi-v6-b-opt-03/summary.json",
+    "artifacts/kpi-v6-c-base-01/summary.json",
+    "artifacts/kpi-v6-c-base-02/summary.json",
+    "artifacts/kpi-v6-c-base-03/summary.json",
+    "artifacts/kpi-v6-c-opt-01/summary.json",
+    "artifacts/kpi-v6-c-opt-02/summary.json",
+    "artifacts/kpi-v6-c-opt-03/summary.json"
+  ],
+  "provenance": {
+    "git_commit_sha": "217a942383a6c8784d4c20b65377e990a1db0422",
+    "git_dirty": true,
+    "pipeline_version": "v1",
+    "runtime_mode": "live"
+  },
+  "gates": [
+    {
+      "gate_id": "gate_1_design_and_contract_freeze",
+      "gate_name": "Design and Contract Freeze",
+      "target": "v1 route matrix and contract evidence are present",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "engineering_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/manifest.normalized.json",
+        "artifacts/batch/artifact-index.json"
+      ]
+    },
+    {
+      "gate_id": "gate_2_environment_and_access",
+      "gate_name": "Environment and Access",
+      "target": "batch evidence exists and run set is non-empty",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "engineering_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/manifest.normalized.json"
+      ]
+    },
+    {
+      "gate_id": "gate_3_pipeline_integrity",
+      "gate_name": "Pipeline Integrity",
+      "target": "safety gates hold and retry policy remains bounded",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "qa_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_4_test_and_fixture_coverage",
+      "gate_name": "Test and Fixture Coverage",
+      "target": "required scenario IDs are covered by batch evidence",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "qa_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_5_metrics_and_reporting",
+      "gate_name": "Metrics and Reporting",
+      "target": "telemetry is complete and aggregate KPI report is present",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "data_metrics_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_6_risk_control_activation",
+      "gate_name": "Risk Control Activation",
+      "target": "no unresolved material drift remains",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "release_reviewer",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/report.json"
+      ]
+    },
+    {
+      "gate_id": "gate_7_lifecycle_enablement_validation",
+      "gate_name": "Lifecycle Enablement Validation",
+      "target": "lifecycle matrix evidence covers bootstrap and create-subpage paths",
+      "pass": true,
+      "mandatory": true,
+      "owner_role": "qa_owner",
+      "blocking_reason": null,
+      "evidence_refs": [
+        "artifacts/batch/manifest.normalized.json",
+        "artifacts/batch/report.json",
+        "artifacts/batch/attestations.json"
+      ]
+    }
+  ],
+  "blocked": false
+}

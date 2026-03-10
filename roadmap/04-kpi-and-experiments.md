@@ -164,21 +164,21 @@ If any condition fails:
 ## Current Checkpoint Snapshot
 
 - Latest readiness recommendation: `iterate`.
-- **2026-03-08 KPI revalidation batch executed** (18 runs, 3 patterns, live runtime). Result: 9/9 baseline succeeded, 0/9 optimized succeeded.
-- Blocking defect: scope resolver returns heading node only, not heading section. All optimized runs fail at `patch` with `ERR_SCHEMA_INVALID` because `target_path` references nodes outside the scoped ADF. See `qa/investigations/2026-03-08-kpi-revalidation.md`.
-- Positive signals from batch: baseline pipeline fully validated (100% publish success, zero retries, median latency ~1716ms), scope resolution finds headings correctly (96% context reduction), safety gates held on all 18 runs.
-- Next step: fix section extraction in `resolve_scope()` (`crates/atlassy-adf/src/lib.rs`), re-seed pages, re-run batch. See `ideas/2026-03-scope-resolution-quality.md`.
-- Live evidence: `qa/evidence/2026-03-08-kpi-revalidation/` (KPI revalidation batch, blocking defect documented).
-- Prior evidence: `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/` (runtime and lifecycle validation).
+- **2026-03-10 KPI revalidation v6 executed** (18 runs, 3 patterns, live runtime). Result: 18/18 runs succeeded, 9/9 pairs complete.
+- Lifecycle readiness packaging gap is closed for Gate 7 via attestation evidence (`artifacts/batch/attestations.json`); readiness now blocks on KPI targets rather than lifecycle evidence coverage.
+- Current KPI blockers: `context_reduction_ratio` optimized median `64.18%` (<70% threshold) and `publish_latency` p90 regression (`2604ms` optimized vs `2351ms` baseline).
+- Pattern-level signal: A passes context target (`75.37%`), B remains primary reduction bottleneck (`11.96%`), C remains below global threshold (`64.18%`).
+- Live evidence: `qa/evidence/2026-03-10-kpi-revalidation-v6/` (fresh-page run, Gate 7 pass, KPI-target miss).
+- Prior evidence: `qa/evidence/2026-03-08-kpi-revalidation-v5/` and `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.
 
 ## Blocking Prerequisites for Re-Run
 
 The following must be resolved before the KPI batch can be re-run with valid paired results:
 
-- **Section extraction fix** (P0): `resolve_scope()` must return the heading section, not just the heading node. All 9 optimized runs in the 2026-03-08 batch failed because the scoped ADF contained only the heading (~88 bytes), making `target_path` references to subsequent paragraphs invalid. See `ideas/2026-03-scope-resolution-quality.md` (promoted).
-- **Section extraction unit tests** (P0): regression safety net for the fix. Required cases: heading with trailing content, heading at end of array, adjacent headings (empty section), nested content, multi-selector merge.
-- **`seed-page` CLI command** (P1): pages are at version 6 after baseline publishes. Re-seeding requires either manual Confluence UI editing or `curl` — both non-reproducible. The `seed-page` command enables automated, reproducible page setup. See `ideas/2026-03-raw-adf-page-seeding.md` (promoted).
-- **Scoped pipeline integration test** (P1): at least one integration test with non-empty `scope_selectors` to prevent regression of the scoped pipeline path.
+- **Pattern B selector strategy** (P0): narrow scoped selection for mixed prose/table pages so optimized context reduction exceeds threshold while preserving publish reliability.
+- **Publish latency regression analysis** (P0): identify and mitigate causes of optimized p90 latency regression versus baseline (2604ms vs 2351ms in v6).
+- **Reproducible page seeding flow** (P1): standardize scripted seeding for fresh KPI pages so reruns remain deterministic and auditable.
+- **Scoped KPI guardrails** (P1): add or extend integration coverage around scoped selector quality for mixed-content pages to prevent broad-scope regressions.
 
 ## Exit and Decision Update Workflow
 
