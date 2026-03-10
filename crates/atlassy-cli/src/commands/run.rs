@@ -7,6 +7,7 @@ use atlassy_contracts::{
     ErrorCode, FLOW_OPTIMIZED, PATTERN_A, PipelineState, RUNTIME_LIVE, RUNTIME_STUB,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest};
+use chrono::Utc;
 
 use crate::{DynError, collect_provenance, demo_page};
 
@@ -110,7 +111,7 @@ pub fn execute_run_command(
         pattern: PATTERN_A.to_string(),
         edit_intent,
         scope_selectors,
-        timestamp: "2026-03-06T10:00:00Z".to_string(),
+        timestamp: Utc::now().to_rfc3339(),
         provenance,
         run_mode,
         target_index: target_index.unwrap_or_default(),

@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::error::Error;
 
 use atlassy_contracts::{ErrorCode, ProvenanceStamp, RUNTIME_STUB, RunSummary};
+use chrono::Utc;
 use serde::de::Error as DeError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -561,7 +562,7 @@ fn default_runtime_mode() -> String {
 }
 
 fn default_manifest_timestamp() -> String {
-    "1970-01-01T00:00:00Z".to_string()
+    Utc::now().to_rfc3339()
 }
 
 #[cfg(test)]

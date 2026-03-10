@@ -7,6 +7,7 @@ edition.workspace = true
 atlassy-confluence = { path = "../atlassy-confluence" }
 atlassy-contracts = { path = "../atlassy-contracts" }
 atlassy-pipeline = { path = "../atlassy-pipeline" }
+chrono.workspace = true
 clap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
