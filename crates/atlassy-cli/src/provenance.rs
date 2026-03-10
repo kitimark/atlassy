@@ -1,6 +1,6 @@
 use atlassy_contracts::{
-    validate_provenance_stamp, validate_run_summary_telemetry, ProvenanceStamp, RunSummary,
-    PIPELINE_VERSION, RUNTIME_LIVE, RUNTIME_STUB,
+    PIPELINE_VERSION, ProvenanceStamp, RUNTIME_LIVE, RUNTIME_STUB, RunSummary,
+    validate_provenance_stamp, validate_run_summary_telemetry,
 };
 
 use crate::DynError;

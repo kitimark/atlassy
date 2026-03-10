@@ -19,7 +19,7 @@
 
 ## 4. Push and Verify
 
-- [ ] 4.1 Commit all new and modified files and push to `main`
+- [x] 4.1 Commit all new and modified files and push to `main`
 - [ ] 4.2 Verify CI workflow runs and passes on GitHub Actions
 
 ## 5. Repository Configuration
