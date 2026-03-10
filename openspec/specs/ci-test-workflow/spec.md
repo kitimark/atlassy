@@ -16,7 +16,7 @@ The CI workflow SHALL run on every push to the `main` branch and on every pull r
 - **THEN** the CI workflow runs the full test job
 
 ### Requirement: CI checks formatting
-The CI workflow SHALL reject code that does not pass `cargo fmt --all -- --check`.
+The CI workflow SHALL reject code that does not pass the format check by calling `make fmt-check`.
 
 #### Scenario: Unformatted code fails CI
 - **WHEN** the workspace contains unformatted Rust code
@@ -27,7 +27,7 @@ The CI workflow SHALL reject code that does not pass `cargo fmt --all -- --check
 - **THEN** the format check step succeeds
 
 ### Requirement: CI checks lint warnings
-The CI workflow SHALL reject code that produces clippy warnings, using `cargo clippy --workspace --all-targets -- -D warnings`.
+The CI workflow SHALL reject code that produces clippy warnings by calling `make lint`.
 
 #### Scenario: Clippy warning fails CI
 - **WHEN** the workspace contains code producing clippy warnings
@@ -38,7 +38,7 @@ The CI workflow SHALL reject code that produces clippy warnings, using `cargo cl
 - **THEN** the lint step succeeds
 
 ### Requirement: CI runs full test suite
-The CI workflow SHALL run `cargo test --workspace` and reject code with any test failure.
+The CI workflow SHALL run the full workspace test suite by calling `make test` and reject code with any test failure.
 
 #### Scenario: Test failure fails CI
 - **WHEN** any test in the workspace fails
