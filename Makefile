@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt check qa-setup qa-check setup
+.PHONY: build test lint fmt fmt-check check qa-setup qa-check setup
 
 build:
 	cargo build --workspace
@@ -11,6 +11,9 @@ lint:
 
 fmt:
 	cargo fmt --all
+
+fmt-check:
+	cargo fmt --all -- --check
 
 check:
 	cargo check --workspace
