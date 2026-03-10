@@ -1,50 +1,9 @@
 #!/bin/sh
-#
-# Conventional commit message validation hook.
-# Rejects commits that do not match: <type>(<scope>): <description>
-# Scope is optional. Merge commits are allowed through.
 
 commit_msg_file="$1"
-commit_msg=$(head -1 "$commit_msg_file")
+commit_msg=$(sed -n '1p' "$commit_msg_file")
 
-# Allow merge commits
-if echo "$commit_msg" | grep -qE '^Merge '; then
-  exit 0
-fi
+hook_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+validator_script="$hook_dir/../scripts/validate-commit-msg.sh"
 
-# Allowed types
-types="feat|fix|docs|refactor|test|chore|build|ci|perf|style"
-
-# Validate format: type(scope): description  or  type: description
-if ! echo "$commit_msg" | grep -qE "^($types)(\([a-z]+\))?: .+"; then
-  echo ""
-  echo "ERROR: commit message does not follow conventional commits."
-  echo ""
-  echo "  Expected: <type>(<scope>): <description>"
-  echo ""
-  echo "  Types:  feat, fix, docs, refactor, test, chore, build, ci, perf, style"
-  echo "  Scopes: cli, pipeline, adf, confluence, contracts, roadmap, openspec, qa, ideas"
-  echo "  Scope is optional."
-  echo ""
-  echo "  Examples:"
-  echo "    feat(cli): embed git provenance at build time"
-  echo "    docs(roadmap): clarify build-time values"
-  echo "    test: extract inline test modules"
-  echo ""
-  echo "  Your message:"
-  echo "    $commit_msg"
-  echo ""
-  exit 1
-fi
-
-# Check subject line length (72 chars max)
-length=$(echo -n "$commit_msg" | wc -c | tr -d ' ')
-if [ "$length" -gt 72 ]; then
-  echo ""
-  echo "ERROR: commit subject line is $length characters (max 72)."
-  echo ""
-  echo "  Your message:"
-  echo "    $commit_msg"
-  echo ""
-  exit 1
-fi
+"$validator_script" "$commit_msg"
