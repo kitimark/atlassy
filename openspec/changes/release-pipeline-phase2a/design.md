@@ -123,7 +123,7 @@ The repo is hosted at `github.com/kitimark/atlassy`. The Makefile has targets fo
 
 - [ARM64 Linux runner (`ubuntu-24.04-arm`) is a partner image] → Preinstalled software may differ from `ubuntu-latest`. Mitigated by installing Rust toolchain explicitly via `dtolnay/rust-toolchain@stable`.
 - [First release changelog includes full project history (133 commits)] → May be long but provides complete record. Subsequent releases will have focused changelogs.
-- [GitHub repo setting must be changed manually] → Document in prerequisites. If forgotten, release-plz-pr job will fail with a permissions error — visible and diagnosable.
+- [GitHub repo setting must be changed] → Current state: `default_workflow_permissions: "read"` (fine, per-workflow permissions override), `can_approve_pull_request_reviews: false` (must change to `true`). Enable via `gh api repos/kitimark/atlassy/actions/permissions/workflow -X PUT -f default_workflow_permissions="read" -F can_approve_pull_request_reviews=true`. If not enabled, release-plz-pr job will fail with a permissions error — visible and diagnosable.
 - [`release_always = false` adds one extra merge step per release] → Acceptable trade-off for controlled release timing. The release PR also serves as a review checkpoint.
 - [No crates.io publishing] → `cargo install atlassy-cli` won't work until Phase 2b. Mitigated by documenting `curl | tar` install in README.
 

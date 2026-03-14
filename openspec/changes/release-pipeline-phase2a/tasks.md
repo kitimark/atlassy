@@ -32,5 +32,5 @@
 ## 6. Commit and Verify
 
 - [ ] 6.1 Commit all new and modified files with message `ci: add release pipeline with release-plz and cross-platform builds`
-- [ ] 6.2 Document manual prerequisite: enable "Allow GitHub Actions to create and approve pull requests" in GitHub repo settings
+- [ ] 6.2 Enable GitHub Actions PR creation permission: `gh api repos/kitimark/atlassy/actions/permissions/workflow -X PUT -f default_workflow_permissions="read" -F can_approve_pull_request_reviews=true`
 - [ ] 6.3 Run post-merge verification via `gh` CLI (see design.md Post-Merge Verification section)

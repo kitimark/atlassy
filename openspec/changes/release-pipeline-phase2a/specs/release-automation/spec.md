@@ -73,6 +73,17 @@ The repository SHALL contain a `LICENSE` file with the Apache-2.0 license text.
 - **WHEN** a user or automated tool checks the repository for license information
 - **THEN** a `LICENSE` file with Apache-2.0 text is present at the repository root
 
+### Requirement: GitHub Actions PR creation permission
+The repository SHALL have `can_approve_pull_request_reviews` set to `true` in GitHub Actions workflow permissions so that release-plz can create release PRs. This SHALL be enabled via the GitHub API: `gh api repos/kitimark/atlassy/actions/permissions/workflow -X PUT -f default_workflow_permissions="read" -F can_approve_pull_request_reviews=true`.
+
+#### Scenario: release-plz can create PRs
+- **WHEN** release-plz attempts to create a release PR
+- **THEN** it succeeds because GitHub Actions has permission to create pull requests
+
+#### Scenario: Permission not enabled
+- **WHEN** `can_approve_pull_request_reviews` is `false` and release-plz attempts to create a PR
+- **THEN** the `release-plz-pr` job fails with a permissions error
+
 ### Requirement: Local release build target
 The Makefile SHALL include a `build-release` target that runs `cargo build -p atlassy-cli --release` to produce a release-optimized binary.
 
