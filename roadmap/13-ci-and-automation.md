@@ -101,32 +101,121 @@ EOF
 - `"required_pull_request_reviews": null` does not require PR reviews (single-contributor project).
 - Requires `gh` authenticated with `repo` scope (verified available).
 
-## Phase 2: Build and Artifact Validation (Deferred)
+## Phase 2: Release Pipeline (Planned)
 
 ### Scope
 
-Add build artifact steps and optional artifact upload for release validation.
+Automated release pipeline: version bumping, changelog generation, git tagging, GitHub Release creation, and cross-platform binary distribution.
 
-### Candidate Work
+### Tool Selection
 
-- Add `cargo build --release --workspace` step.
-- Upload binary artifacts for tagged releases.
-- Add version tagging and changelog automation.
+**Selected: `release-plz`** — a Rust-native release automation tool that analyzes conventional commits, determines version bumps, generates changelogs, and creates GitHub Releases.
 
-### Signals to Start
+| Tool | Approach | Fit | Decision |
+|------|----------|-----|----------|
+| `release-plz` | Fully automated: release PR with version bump + changelog, tag + release on merge | Leverages existing conventional commits, no local tooling required | **Selected** |
+| `cargo-release` | Semi-automated: operator runs `cargo release` locally, CI picks up the tag | Ties releases to local machine, requires per-developer setup | Rejected |
+| Manual tag + CI | Operator bumps `Cargo.toml`, tags, pushes; CI builds on tag | Simplest but most manual steps per release, no automated changelog | Rejected |
+| `workflow_dispatch` | Push-button release from GitHub Actions UI | Custom workflow logic to maintain for version bump step | Rejected |
 
-- Project approaches v1 release readiness (`go` recommendation).
-- Need for distributable binaries beyond local development.
+`release-plz` was chosen because:
+
+- The project already uses conventional commits with validation in CI (`scripts/validate-commit-msg.sh`).
+- No local tooling setup required — runs entirely in GitHub Actions.
+- No vendor lock-in — the tags, releases, and changelog it creates are standard git/GitHub primitives.
+- No `CARGO_REGISTRY_TOKEN` needed since the project does not publish to crates.io.
+
+### Versioning Convention
+
+Atlassy is a CLI binary distributed via GitHub Releases, not a library consumed via `Cargo.toml` dependency. The Cargo semver convention (where the left-most non-zero component is the compatibility boundary) applies to library dependency resolution, not to CLI user-facing version semantics.
+
+For CLI users, version numbers should communicate the significance of changes:
+
+| Commit type | Version bump | Example |
+|-------------|-------------|---------|
+| `fix:` | Patch | 0.1.0 → 0.1.1 |
+| `feat:` | Minor | 0.1.0 → 0.2.0 |
+| `feat!:` / `BREAKING CHANGE:` | Minor (pre-1.0) | 0.2.0 → 0.3.0 |
+
+Post-1.0: `feat!:` bumps major instead.
+
+Configured via `features_always_increment_minor = true` in `release-plz.toml`. This deviates from Cargo's library convention (where `feat` bumps patch in 0.x) because for a CLI binary, each feature release should be a visible version increment.
+
+Reference: [Cargo SemVer Compatibility](https://doc.rust-lang.org/cargo/reference/semver.html), [Specifying Dependencies — Default Requirements](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#default-requirements).
+
+### Release Workflow
+
+Two GitHub Actions workflows coordinate the release process:
+
+**`release-plz.yml`** — triggered on push to `main`:
+
+1. `release-plz release-pr`: Analyzes commits since the last release tag. If releasable changes exist, creates or updates a PR that bumps `version` in workspace `Cargo.toml` and generates/updates `CHANGELOG.md`.
+2. `release-plz release`: After the release PR is merged, creates a git tag (e.g., `v0.2.0`) and a GitHub Release with the changelog as the body.
+
+The release PR goes through the existing CI pipeline (`test` job: fmt-check, clippy, tests) before merge.
+
+**`release-build.yml`** — triggered on tag push matching `v*`:
+
+Builds release binaries for 4 targets and uploads them to the existing GitHub Release.
+
+| Target | Runner | Build Method |
+|--------|--------|-------------|
+| `x86_64-unknown-linux-gnu` | `ubuntu-latest` | Native |
+| `aarch64-unknown-linux-gnu` | `ubuntu-latest` | `cross` (Docker-based cross-compilation) |
+| `x86_64-apple-darwin` | `macos-13` | Native |
+| `aarch64-apple-darwin` | `macos-latest` (M1) | Native |
+
+Each build produces a tarball: `atlassy-cli-{tag}-{target}.tar.gz`.
+
+### Configuration
+
+**`release-plz.toml`** key decisions:
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| `publish` | `false` | No crates.io publishing |
+| `git_only` | `true` | Version determined from git tags, not cargo registry |
+| `release` (workspace) | `false` | Skip all packages by default |
+| `release` (atlassy-cli) | `true` | Only the CLI binary produces releases |
+| `semver_check` | `false` | CLI binary, no library API surface |
+| `features_always_increment_minor` | `true` | `feat` bumps minor in 0.x |
+| `changelog_include` | all 4 internal crates | Commits to any crate appear in CLI changelog |
+
+**Files:**
+
+| File | Type | Purpose |
+|------|------|---------|
+| `release-plz.toml` | New | release-plz configuration |
+| `.github/workflows/release-plz.yml` | New | Release PR + tag/release automation |
+| `.github/workflows/release-build.yml` | New | Cross-platform binary builds on tag |
+| `Makefile` | Modified | Add `build-release` target (`cargo build -p atlassy-cli --release`) |
+
+### Prerequisites
+
+1. **GitHub repo setting**: Enable "Allow GitHub Actions to create and approve pull requests" in Settings → Actions → General.
+2. **Workflow permissions**: `release-plz.yml` requires `contents: write` and `pull-requests: write`.
+3. **Branch protection**: The existing `test` job remains required for merge. Release PRs created by release-plz pass through it like any other PR.
+
+### Done Criteria
+
+- `release-plz.toml` exists at repo root with configuration described above.
+- `.github/workflows/release-plz.yml` runs on push to `main` and creates release PRs.
+- `.github/workflows/release-build.yml` triggers on `v*` tags and produces 4-platform binaries.
+- `make build-release` produces a release binary at `target/release/atlassy-cli`.
+- First release PR is created automatically after merging the implementation.
+- Merging the release PR creates a git tag and GitHub Release with changelog body.
+- All 4 binary tarballs are attached to the GitHub Release.
+- Existing CI (`test` job) is unaffected and gates release PRs.
 
 ## Phase 3: Extended Automation (Deferred)
 
 ### Scope
 
-Additional CI capabilities beyond basic test/build.
+Additional CI capabilities beyond test/build/release.
 
 ### Candidate Work
 
-- Matrix builds (multiple Rust versions, multiple OS targets).
+- Matrix builds (multiple Rust versions).
 - Code coverage reporting (e.g., `cargo-llvm-cov` with Codecov or similar).
 - Live Confluence smoke tests in CI (requires GitHub Actions secrets for sandbox credentials).
 - Scheduled nightly runs for drift detection.
@@ -134,7 +223,7 @@ Additional CI capabilities beyond basic test/build.
 
 ### Signals to Start
 
-- Test job is stable and passing consistently.
+- Phase 2 release pipeline is stable and producing releases.
 - Project has multiple contributors or external CI consumers.
 - Live smoke tests are needed for regression detection beyond local QA.
 
