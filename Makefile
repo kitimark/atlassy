@@ -1,7 +1,10 @@
-.PHONY: build test lint fmt fmt-check check qa-setup qa-check setup
+.PHONY: build build-release test lint fmt fmt-check check qa-setup qa-check setup
 
 build:
 	cargo build --workspace
+
+build-release:
+	cargo build -p atlassy-cli --release
 
 test:
 	cargo test --workspace

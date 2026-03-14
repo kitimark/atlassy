@@ -2,6 +2,39 @@
 
 Atlassy is a token-efficient Confluence workflow toolkit for AI and MCP-driven editing.
 
+## Installation
+
+Resolve the latest release tag first:
+
+```bash
+VERSION="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/kitimark/atlassy/releases/latest)"
+VERSION="${VERSION##*/}"
+```
+
+macOS (Apple Silicon):
+
+```bash
+curl -fsSL "https://github.com/kitimark/atlassy/releases/download/${VERSION}/atlassy-cli-${VERSION}-aarch64-apple-darwin.tar.gz" | tar -xz
+```
+
+macOS (Intel):
+
+```bash
+curl -fsSL "https://github.com/kitimark/atlassy/releases/download/${VERSION}/atlassy-cli-${VERSION}-x86_64-apple-darwin.tar.gz" | tar -xz
+```
+
+Linux (x86_64):
+
+```bash
+curl -fsSL "https://github.com/kitimark/atlassy/releases/download/${VERSION}/atlassy-cli-${VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar -xz
+```
+
+Linux (ARM64):
+
+```bash
+curl -fsSL "https://github.com/kitimark/atlassy/releases/download/${VERSION}/atlassy-cli-${VERSION}-aarch64-unknown-linux-gnu.tar.gz" | tar -xz
+```
+
 ## Editing Model (v1 default)
 
 - ADF is canonical for fetch, diff, patch, verify, and publish.

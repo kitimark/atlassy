@@ -1,0 +1,17 @@
+[workspace]
+publish = false
+git_only = true
+release_always = false
+semver_check = false
+features_always_increment_minor = true
+release = false
+
+[[package]]
+name = "atlassy-cli"
+release = true
+changelog_include = [
+  "atlassy-pipeline",
+  "atlassy-adf",
+  "atlassy-confluence",
+  "atlassy-contracts",
+]
