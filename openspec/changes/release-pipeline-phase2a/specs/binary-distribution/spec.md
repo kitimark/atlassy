@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Cross-platform build workflow
-The repository SHALL contain `.github/workflows/release-build.yml` triggered on tag push matching `v*`. The workflow SHALL build release binaries for 4 targets using a matrix strategy with architecture-matched native runners.
+The repository SHALL contain `.github/workflows/release-build.yml` triggered on tag push matching `v*` and support `workflow_dispatch` with a required `tag` input for recovery/replay. The workflow SHALL build release binaries for 4 targets using a matrix strategy with architecture-matched native runners.
 
 #### Scenario: Tag push triggers build
 - **WHEN** a git tag matching `v*` (e.g., `v0.2.0`) is pushed
 - **THEN** the release-build workflow starts and runs 4 parallel matrix jobs
+
+#### Scenario: Manual dispatch triggers build
+- **WHEN** an operator runs `workflow_dispatch` with `tag = v0.2.0`
+- **THEN** the release-build workflow checks out that tag and runs the same 4 matrix jobs
 
 #### Scenario: Build matrix targets
 - **WHEN** the build matrix executes
@@ -47,6 +51,13 @@ Each build job SHALL upload its tarball to the existing GitHub Release (created 
 #### Scenario: Upload uses gh CLI
 - **WHEN** a build job uploads its tarball
 - **THEN** it uses `gh release upload` with `GITHUB_TOKEN` authentication, not a third-party action
+
+### Requirement: Checksums job uses explicit repository context
+The checksums job SHALL run `gh release download` with explicit repository context that does not depend on a local `.git` checkout (for example `gh release download ... -R kitimark/atlassy`), so checksum generation works in a standalone job.
+
+#### Scenario: Checksums job runs without checkout
+- **WHEN** the checksums job executes without `actions/checkout`
+- **THEN** tarball download succeeds because repository context is explicitly provided to `gh`
 
 ### Requirement: Rust toolchain setup in build jobs
 Each build job SHALL install the Rust stable toolchain using `dtolnay/rust-toolchain@stable`, consistent with the Phase 1 CI workflow.

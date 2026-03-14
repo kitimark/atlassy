@@ -21,9 +21,32 @@ jobs:
       - name: Install release-plz
         run: cargo install --locked release-plz
 
+      - name: Validate GitHub App secrets
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "${APP_ID}" ]; then
+            echo "Missing required Actions secret: APP_ID" >&2
+            exit 1
+          fi
+          if [ -z "${APP_PRIVATE_KEY}" ]; then
+            echo "Missing required Actions secret: APP_PRIVATE_KEY" >&2
+            exit 1
+          fi
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Create or update release PR
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: release-plz release-pr --git-token "${GITHUB_TOKEN}"
 
   release-plz-release:
@@ -39,7 +62,29 @@ jobs:
       - name: Install release-plz
         run: cargo install --locked release-plz
 
+      - name: Validate GitHub App secrets
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "${APP_ID}" ]; then
+            echo "Missing required Actions secret: APP_ID" >&2
+            exit 1
+          fi
+          if [ -z "${APP_PRIVATE_KEY}" ]; then
+            echo "Missing required Actions secret: APP_PRIVATE_KEY" >&2
+            exit 1
+          fi
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+
       - name: Create release and tag
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: release-plz release --git-token "${GITHUB_TOKEN}"

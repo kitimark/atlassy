@@ -119,17 +119,67 @@ The repo is hosted at `github.com/kitimark/atlassy`. The Makefile has targets fo
 
 **Rationale**: Internal crates are implementation details, not independently distributable. All 5 crates share the workspace version and move in lockstep. The `changelog_include` setting ensures commits to any crate appear in the CLI's changelog. release-plz modifies the workspace version in root `Cargo.toml`; all crates inherit via `version.workspace = true`.
 
+### D11: GitHub App token for release workflow chaining
+
+**Choice**: Generate a short-lived GitHub App token with `actions/create-github-app-token` and pass it to `release-plz release-pr` and `release-plz release` via `--git-token`.
+
+**Alternatives considered**:
+- Default `GITHUB_TOKEN`: Works for release-plz operations, but events created by it do not trigger downstream workflows.
+- Personal Access Token (PAT): Works for workflow chaining, but is long-lived and tied to a user identity.
+
+**Rationale**: App tokens are short-lived, least-privileged, and support workflow chaining from release-created tags while keeping bot ownership explicit.
+
+### D12: Explicit repository context for checksums download
+
+**Choice**: Use `gh release download ... -R kitimark/atlassy` in the checksums job.
+
+**Alternatives considered**:
+- Add checkout step to checksums job: Valid but unnecessary overhead.
+- Rely on implicit repository context: Fails in standalone jobs without a `.git` directory.
+
+**Rationale**: Explicit repository scoping makes checksums generation reliable regardless of checkout state.
+
+### D13: Explicit versions for internal path dependencies in releasable crates
+
+**Choice**: Keep explicit `version` requirements on internal path dependencies for crates involved in release-plz packaging checks.
+
+**Alternatives considered**:
+- Path-only dependencies: Simpler local manifests, but `cargo package` fails during release-plz next-version calculation.
+
+**Rationale**: release-plz validates packageability against historical baselines; explicit versions are required for those checks to pass.
+
 ## Risks / Trade-offs
 
 - [ARM64 Linux runner (`ubuntu-24.04-arm`) is a partner image] → Preinstalled software may differ from `ubuntu-latest`. Mitigated by installing Rust toolchain explicitly via `dtolnay/rust-toolchain@stable`.
 - [First release changelog includes full project history (133 commits)] → May be long but provides complete record. Subsequent releases will have focused changelogs.
-- [GitHub repo setting must be changed] → Current state: `default_workflow_permissions: "read"` (fine, per-workflow permissions override), `can_approve_pull_request_reviews: false` (must change to `true`). Enable via `gh api repos/kitimark/atlassy/actions/permissions/workflow -X PUT -f default_workflow_permissions="read" -F can_approve_pull_request_reviews=true`. If not enabled, release-plz-pr job will fail with a permissions error — visible and diagnosable.
+- [GitHub App bootstrap is partially manual] → Creating/installing the App and private key issuance cannot be fully automated from CLI. Mitigated by one-time admin bootstrap, then storing `APP_ID` and `APP_PRIVATE_KEY` in Actions secrets.
+- [App secrets missing or invalid] → release-plz workflow cannot create the app token. Mitigated by preflight checks and fail-fast messaging in workflow steps.
 - [`release_always = false` adds one extra merge step per release] → Acceptable trade-off for controlled release timing. The release PR also serves as a review checkpoint.
 - [No crates.io publishing] → `cargo install atlassy-cli` won't work until Phase 2b. Mitigated by documenting `curl | tar` install in README.
 
+## Migration Plan
+
+1. Configure GitHub App and store `APP_ID`/`APP_PRIVATE_KEY` in repo Actions secrets.
+2. Update `release-plz.yml` to generate an app token and use it for both release-plz jobs.
+3. Update `release-build.yml` checksums job to use explicit repo context for `gh release download`.
+4. Trigger a release cycle and verify release PR, tag/release creation, build workflow execution, and final asset set.
+5. If automatic build trigger does not occur, run `release-build` via `workflow_dispatch` for the release tag and investigate token/config drift.
+
+## Open Questions
+
+- Should we enforce app-secret presence via a dedicated setup check workflow in addition to fail-fast inside `release-plz.yml`?
+- Should we keep `workflow_dispatch` permanently for recovery, or remove it after app-token chaining is stable for several releases?
+
 ## Post-Merge Verification
 
-One-time manual verification after the first release using `gh` CLI. Not a committed script — run these commands once to confirm the pipeline works end-to-end.
+Manual verification after release pipeline updates using `gh` CLI. Not a committed script.
+
+### 0. Preflight: verify required secrets exist
+
+```bash
+gh secret list --app actions -R kitimark/atlassy
+# Confirm APP_ID and APP_PRIVATE_KEY are present
+```
 
 ### 1. Check release-plz workflow ran
 
@@ -140,7 +190,7 @@ gh run list --workflow=release-plz.yml --limit=3
 ### 2. Check release PR was created
 
 ```bash
-gh pr list --author "github-actions[bot]" --search "release-plz"
+gh pr list --search "release-plz" --state all
 gh pr view <PR_NUMBER>
 gh pr checks <PR_NUMBER>
 ```
@@ -159,6 +209,13 @@ gh run list --workflow=release-build.yml --limit=3
 gh run view <RUN_ID> --log-failed   # if any failures
 ```
 
+### 4b. If tag push did not trigger build, use manual fallback
+
+```bash
+gh workflow run release-build.yml --ref main -f tag=v0.2.0
+gh run list --workflow=release-build.yml --limit=3
+```
+
 ### 5. Verify all 5 assets on the release
 
 ```bash
@@ -170,8 +227,8 @@ gh release view v0.2.0 --json assets --jq '.assets | length'
 ### 6. Download and smoke test
 
 ```bash
-gh release download v0.2.0 --pattern "*aarch64-apple-darwin*"
-gh release download v0.2.0 --pattern "checksums.txt"
+gh release download v0.2.0 -R kitimark/atlassy --pattern "*aarch64-apple-darwin*"
+gh release download v0.2.0 -R kitimark/atlassy --pattern "checksums.txt"
 shasum -a 256 -c checksums.txt
 tar xzf atlassy-cli-v0.2.0-aarch64-apple-darwin.tar.gz
 ./atlassy-cli --help

@@ -31,6 +31,11 @@
 
 ## 6. Commit and Verify
 
-- [ ] 6.1 Commit all new and modified files with message `ci: add release pipeline with release-plz and cross-platform builds`
-- [ ] 6.2 Enable GitHub Actions PR creation permission: `gh api repos/kitimark/atlassy/actions/permissions/workflow -X PUT -f default_workflow_permissions="read" -F can_approve_pull_request_reviews=true`
-- [ ] 6.3 Run post-merge verification via `gh` CLI (see design.md Post-Merge Verification section)
+- [x] 6.1 Commit all new and modified files with message `ci: add release pipeline with release-plz and cross-platform builds`
+- [x] 6.2 Enable GitHub Actions PR creation permission: `gh api repos/kitimark/atlassy/actions/permissions/workflow -X PUT -f default_workflow_permissions="read" -F can_approve_pull_request_reviews=true`
+- [x] 6.3 Add explicit versions for internal path dependencies in releasable crates (`crates/atlassy-cli/Cargo.toml`, `crates/atlassy-pipeline/Cargo.toml`) so release-plz `cargo package` checks pass
+- [x] 6.4 Switch `.github/workflows/release-plz.yml` to GitHub App token flow (`actions/create-github-app-token`) using `APP_ID` and `APP_PRIVATE_KEY`
+- [x] 6.5 Add fail-fast preflight checks in `release-plz.yml` for missing `APP_ID` / `APP_PRIVATE_KEY` secrets before running release-plz
+- [x] 6.6 Fix `.github/workflows/release-build.yml` checksums job to use explicit repository context for `gh release download` (no `.git` dependency)
+- [ ] 6.7 Re-run release flow and verify release-plz creates/updates release PR and merged release triggers `release-build.yml`
+- [ ] 6.8 Verify release has 5 assets (4 tarballs + `checksums.txt`) and smoke-test checksum + extracted binary via `gh` CLI commands in `design.md`

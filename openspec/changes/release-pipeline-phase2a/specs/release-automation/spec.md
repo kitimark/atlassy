@@ -12,7 +12,7 @@ The repository SHALL contain a `release-plz.toml` at the workspace root that con
 - **THEN** `atlassy-pipeline`, `atlassy-adf`, `atlassy-confluence`, and `atlassy-contracts` are skipped for release processing because `release = false` at workspace level
 
 ### Requirement: Release PR workflow
-The repository SHALL contain `.github/workflows/release-plz.yml` triggered on push to `main`. The workflow SHALL run two jobs: `release-plz release-pr` to create or update a release PR, and `release-plz release` to create a git tag and GitHub Release when a release PR is merged.
+The repository SHALL contain `.github/workflows/release-plz.yml` triggered on push to `main`. The workflow SHALL run two jobs: `release-plz release-pr` to create or update a release PR, and `release-plz release` to create a git tag and GitHub Release when a release PR is merged. Both jobs SHALL pass `--git-token` to release-plz.
 
 #### Scenario: Feature commit pushed to main
 - **WHEN** a commit with type `feat:` is pushed to `main`
@@ -29,6 +29,17 @@ The repository SHALL contain `.github/workflows/release-plz.yml` triggered on pu
 #### Scenario: Non-release PR is merged
 - **WHEN** a regular (non-release) PR is merged to `main`
 - **THEN** the release job is a no-op because `release_always = false`
+
+### Requirement: Release workflow uses GitHub App token
+The release workflow SHALL generate a short-lived token using `actions/create-github-app-token` with `APP_ID` and `APP_PRIVATE_KEY` secrets and SHALL use that token for both release-plz jobs.
+
+#### Scenario: App token available
+- **WHEN** `APP_ID` and `APP_PRIVATE_KEY` secrets are configured
+- **THEN** release-plz uses the generated App token for `release-pr` and `release`, and release-created tags can trigger downstream workflows
+
+#### Scenario: App token secrets missing
+- **WHEN** either `APP_ID` or `APP_PRIVATE_KEY` is not configured
+- **THEN** the workflow fails before running release-plz with a clear error
 
 #### Scenario: Release PR goes through CI
 - **WHEN** release-plz creates a release PR
@@ -90,3 +101,10 @@ The Makefile SHALL include a `build-release` target that runs `cargo build -p at
 #### Scenario: make build-release
 - **WHEN** an operator runs `make build-release`
 - **THEN** a release binary is produced at `target/release/atlassy-cli`
+
+### Requirement: Path dependencies are packageable for release-plz
+Workspace path dependencies in releasable crates SHALL include explicit version requirements so `cargo package` checks performed by release-plz succeed against historical baselines.
+
+#### Scenario: release-plz validates package metadata
+- **WHEN** release-plz computes the next release and runs `cargo package`
+- **THEN** packaging succeeds because internal path dependencies used by releasable crates include explicit version requirements
