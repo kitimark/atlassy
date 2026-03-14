@@ -53,11 +53,11 @@ pub(crate) fn to_hard_error(source_state: PipelineState, error: AdfError) -> Pip
         AdfError::OutOfScope(_) => ErrorCode::OutOfScopeMutation,
         AdfError::WholeBodyRewriteDisallowed => ErrorCode::RouteViolation,
         AdfError::ScopeResolutionFailed => ErrorCode::ScopeMiss,
+        AdfError::TargetDiscoveryFailed { .. } => ErrorCode::TargetDiscoveryFailed,
         AdfError::InvalidSelector(_)
         | AdfError::InvalidPath(_)
         | AdfError::DuplicatePath(_)
-        | AdfError::MappingIntegrity(_)
-        | AdfError::TargetDiscoveryFailed { .. } => ErrorCode::SchemaInvalid,
+        | AdfError::MappingIntegrity(_) => ErrorCode::SchemaInvalid,
     };
 
     PipelineError::Hard {

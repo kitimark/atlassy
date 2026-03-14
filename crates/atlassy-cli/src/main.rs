@@ -25,7 +25,6 @@ enum Commands {
 #[derive(Debug, Clone, ValueEnum)]
 enum CliMode {
     NoOp,
-    SimpleScopedUpdate,
     SimpleScopedProseUpdate,
     SimpleScopedTableCellUpdate,
 }
@@ -34,7 +33,6 @@ impl CliMode {
     fn as_str(&self) -> &'static str {
         match self {
             CliMode::NoOp => "no-op",
-            CliMode::SimpleScopedUpdate => "simple-scoped-update",
             CliMode::SimpleScopedProseUpdate => "simple-scoped-prose-update",
             CliMode::SimpleScopedTableCellUpdate => "simple-scoped-table-cell-update",
         }

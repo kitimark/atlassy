@@ -15,10 +15,6 @@ pub use state_tracker::StateTracker;
 #[derive(Debug, Clone)]
 pub enum RunMode {
     NoOp,
-    SimpleScopedUpdate {
-        target_path: String,
-        new_value: serde_json::Value,
-    },
     SimpleScopedProseUpdate {
         target_path: Option<String>,
         markdown: String,

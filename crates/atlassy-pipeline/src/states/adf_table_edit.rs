@@ -45,21 +45,6 @@ pub(crate) fn run_adf_table_edit_state(
 
     match &request.run_mode {
         RunMode::NoOp | RunMode::SimpleScopedProseUpdate { .. } => {}
-        RunMode::SimpleScopedUpdate {
-            target_path,
-            new_value,
-        } => {
-            if let Some(text) = new_value.as_str() {
-                project_table_candidate(
-                    target_path,
-                    text,
-                    &fetch.payload.allowed_scope_paths,
-                    &fetch.payload.node_path_index,
-                    &allowed_ops,
-                    &mut table_candidates,
-                )?;
-            }
-        }
         RunMode::SimpleScopedTableCellUpdate { target_path, text } => {
             let resolved_target_path = if let Some(path) = target_path {
                 path.clone()

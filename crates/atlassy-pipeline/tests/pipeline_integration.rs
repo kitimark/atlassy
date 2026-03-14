@@ -213,6 +213,32 @@ fn pipeline_auto_discovers_and_patches() {
 }
 
 #[test]
+fn pipeline_auto_discovers_table_cell_and_patches() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_fixture(temp.path(), "table_allowed_cell_update_adf.json");
+
+    let mut request = sample_request("run-table-auto-discovery");
+    request.scope_selectors = vec![];
+    request.target_index = 0;
+    request.run_mode = RunMode::SimpleScopedTableCellUpdate {
+        target_path: None,
+        text: "Updated table cell".to_string(),
+    };
+
+    let summary = orchestrator.run(request).expect("run should succeed");
+    assert!(summary.success);
+    assert_eq!(
+        summary.discovered_target_path,
+        Some("/content/1/content/0/content/0/content/0/content/0/text".to_string())
+    );
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/1/content/0/content/0/content/0/content/0/text".to_string()]
+    );
+}
+
+#[test]
 fn scoped_prose_update_only_touches_in_scope_paths() {
     let temp = tempfile::tempdir().expect("tempdir should be created");
     let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "multi_section_adf.json");

@@ -101,7 +101,6 @@ pub struct ManifestRunEntry {
 pub enum ManifestMode {
     #[default]
     NoOp,
-    SimpleScopedUpdate,
     SimpleScopedProseUpdate,
     SimpleScopedTableCellUpdate,
 }

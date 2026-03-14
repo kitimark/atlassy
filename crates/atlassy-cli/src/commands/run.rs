@@ -88,10 +88,6 @@ pub fn execute_run_command(
     let provenance = collect_provenance(runtime_mode)?;
     let run_mode = match mode {
         "no-op" => RunMode::NoOp,
-        "simple-scoped-update" => RunMode::SimpleScopedUpdate {
-            target_path: target_path.unwrap_or_else(|| "/content/1/content/0/text".to_string()),
-            new_value: serde_json::json!(new_value.unwrap_or_else(|| "Updated text".to_string())),
-        },
         "simple-scoped-prose-update" => RunMode::SimpleScopedProseUpdate {
             target_path,
             markdown: new_value.unwrap_or_else(|| "Updated prose body".to_string()),

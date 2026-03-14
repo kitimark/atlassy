@@ -45,23 +45,6 @@ pub(crate) fn run_md_assist_edit_state(
 
     match &request.run_mode {
         RunMode::NoOp => {}
-        RunMode::SimpleScopedUpdate {
-            target_path,
-            new_value,
-        } => {
-            let markdown = new_value
-                .as_str()
-                .map(ToString::to_string)
-                .unwrap_or_else(|| new_value.to_string());
-            project_prose_candidate(
-                target_path,
-                &markdown,
-                &input.payload.editable_prose_paths,
-                &input.payload.allowed_scope_paths,
-                &mut prose_changed_paths,
-                &mut prose_change_candidates,
-            )?;
-        }
         RunMode::SimpleScopedProseUpdate {
             target_path,
             markdown,

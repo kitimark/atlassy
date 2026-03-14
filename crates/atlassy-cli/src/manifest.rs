@@ -37,18 +37,6 @@ pub(crate) fn normalize_manifest(manifest: &mut RunManifest) {
 pub(crate) fn run_mode_from_manifest(entry: &ManifestRunEntry) -> RunMode {
     match entry.mode {
         ManifestMode::NoOp => RunMode::NoOp,
-        ManifestMode::SimpleScopedUpdate => RunMode::SimpleScopedUpdate {
-            target_path: entry
-                .target_path
-                .clone()
-                .unwrap_or_else(|| "/content/1/content/0/text".to_string()),
-            new_value: serde_json::json!(
-                entry
-                    .new_value
-                    .clone()
-                    .unwrap_or_else(|| "Updated text".to_string())
-            ),
-        },
         ManifestMode::SimpleScopedProseUpdate => RunMode::SimpleScopedProseUpdate {
             target_path: entry.target_path.clone(),
             markdown: entry
