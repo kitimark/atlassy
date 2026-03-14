@@ -33,3 +33,4 @@
 
 - [ ] 6.1 Commit all new and modified files with message `ci: add release pipeline with release-plz and cross-platform builds`
 - [ ] 6.2 Document manual prerequisite: enable "Allow GitHub Actions to create and approve pull requests" in GitHub repo settings
+- [ ] 6.3 Run post-merge verification via `gh` CLI (see design.md Post-Merge Verification section)

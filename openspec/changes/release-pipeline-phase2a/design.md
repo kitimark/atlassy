@@ -126,3 +126,53 @@ The repo is hosted at `github.com/kitimark/atlassy`. The Makefile has targets fo
 - [GitHub repo setting must be changed manually] → Document in prerequisites. If forgotten, release-plz-pr job will fail with a permissions error — visible and diagnosable.
 - [`release_always = false` adds one extra merge step per release] → Acceptable trade-off for controlled release timing. The release PR also serves as a review checkpoint.
 - [No crates.io publishing] → `cargo install atlassy-cli` won't work until Phase 2b. Mitigated by documenting `curl | tar` install in README.
+
+## Post-Merge Verification
+
+One-time manual verification after the first release using `gh` CLI. Not a committed script — run these commands once to confirm the pipeline works end-to-end.
+
+### 1. Check release-plz workflow ran
+
+```bash
+gh run list --workflow=release-plz.yml --limit=3
+```
+
+### 2. Check release PR was created
+
+```bash
+gh pr list --author "github-actions[bot]" --search "release-plz"
+gh pr view <PR_NUMBER>
+gh pr checks <PR_NUMBER>
+```
+
+### 3. After merging release PR — check tag and release
+
+```bash
+gh release list --limit=3
+gh release view v0.2.0
+```
+
+### 4. Check build workflow ran
+
+```bash
+gh run list --workflow=release-build.yml --limit=3
+gh run view <RUN_ID> --log-failed   # if any failures
+```
+
+### 5. Verify all 5 assets on the release
+
+```bash
+gh release view v0.2.0 --json assets --jq '.assets[].name'
+gh release view v0.2.0 --json assets --jq '.assets | length'
+# Expected: 5 (4 tarballs + checksums.txt)
+```
+
+### 6. Download and smoke test
+
+```bash
+gh release download v0.2.0 --pattern "*aarch64-apple-darwin*"
+gh release download v0.2.0 --pattern "checksums.txt"
+shasum -a 256 -c checksums.txt
+tar xzf atlassy-cli-v0.2.0-aarch64-apple-darwin.tar.gz
+./atlassy-cli --help
+```
