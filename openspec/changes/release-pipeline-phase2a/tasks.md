@@ -38,4 +38,4 @@
 - [x] 6.5 Add fail-fast preflight checks in `release-plz.yml` for missing `APP_ID` / `APP_PRIVATE_KEY` secrets before running release-plz
 - [x] 6.6 Fix `.github/workflows/release-build.yml` checksums job to use explicit repository context for `gh release download` and `gh release upload` (no `.git` dependency)
 - [ ] 6.7 Re-run release flow and verify release-plz creates/updates release PR and merged release triggers `release-build.yml`
-- [ ] 6.8 Verify release has 5 assets (4 tarballs + `checksums.txt`) and smoke-test checksum + extracted binary via `gh` CLI commands in `design.md`
+- [x] 6.8 Verify release has 5 assets (4 tarballs + `checksums.txt`) and smoke-test checksum + extracted binary via `gh` CLI commands in `design.md`
