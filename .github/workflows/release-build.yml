@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (e.g. v0.1.1)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -28,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -38,7 +46,7 @@ jobs:
       - name: Package tarball
         id: package
         run: |
-          tag="${GITHUB_REF_NAME}"
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
           archive="atlassy-cli-${tag}-${{ matrix.target }}.tar.gz"
 
           mkdir -p dist
@@ -51,7 +59,7 @@ jobs:
       - name: Upload tarball to GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.ref_name }}" "${{ steps.package.outputs.archive }}" --clobber
+        run: gh release upload "${{ github.event.inputs.tag || github.ref_name }}" "${{ steps.package.outputs.archive }}" --clobber
 
   checksums:
     name: Checksums
@@ -61,14 +69,14 @@ jobs:
       - name: Download tarballs from release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release download "${{ github.ref_name }}" --pattern "atlassy-cli-${{ github.ref_name }}-*.tar.gz" --dir dist
+        run: gh release download "${{ github.event.inputs.tag || github.ref_name }}" --pattern "atlassy-cli-${{ github.event.inputs.tag || github.ref_name }}-*.tar.gz" --dir dist
 
       - name: Generate SHA256 checksums
         run: |
           cd dist
-          shasum -a 256 atlassy-cli-${{ github.ref_name }}-*.tar.gz > checksums.txt
+          shasum -a 256 atlassy-cli-${{ github.event.inputs.tag || github.ref_name }}-*.tar.gz > checksums.txt
 
       - name: Upload checksums to GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.ref_name }}" dist/checksums.txt --clobber
+        run: gh release upload "${{ github.event.inputs.tag || github.ref_name }}" dist/checksums.txt --clobber
