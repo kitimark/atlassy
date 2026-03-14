@@ -42,9 +42,9 @@
 
 ## 7. release-plz Action Migration (Version-Tag Pinned)
 
-- [ ] 7.1 Replace CLI install/run steps in `.github/workflows/release-plz.yml` with `release-plz/action@v0.5` (`command: release-pr` and `command: release`)
-- [ ] 7.2 Pin release workflow actions by version tag: `actions/checkout@v6` and `actions/create-github-app-token@v3`
-- [ ] 7.3 Add `concurrency` control to `release-plz-pr` job (`group: release-plz-${{ github.ref }}`, `cancel-in-progress: false`)
+- [x] 7.1 Replace CLI install/run steps in `.github/workflows/release-plz.yml` with `release-plz/action@v0.5` (`command: release-pr` and `command: release`)
+- [x] 7.2 Pin release workflow actions by version tag: `actions/checkout@v6` and `actions/create-github-app-token@v3`
+- [x] 7.3 Add `concurrency` control to `release-plz-pr` job (`group: release-plz-${{ github.ref }}`, `cancel-in-progress: false`)
 - [ ] 7.4 Push a conventional-commit change and verify action-based release-plz creates or updates a release PR
 - [ ] 7.5 Merge the generated release PR and verify a tag-triggered `release-build.yml` run starts automatically
 - [ ] 7.6 Verify the new release includes 5 assets (4 tarballs + `checksums.txt`) and checksum validation succeeds
