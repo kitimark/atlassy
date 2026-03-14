@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/kitimark/atlassy/compare/v0.1.1...v0.1.2) - 2026-03-14
+
+### Fixed
+
+- *(cli)* clarify release readiness help text
+- *(cli)* adjust readiness automation help text
+- *(cli)* refine readiness help wording
+
 ## [0.1.1](https://github.com/kitimark/atlassy/compare/v0.1.0...v0.1.1) - 2026-03-14
 
 ### Fixed
