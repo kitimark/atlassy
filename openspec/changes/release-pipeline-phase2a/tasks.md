@@ -1,0 +1,35 @@
+## 1. License and Makefile
+
+- [ ] 1.1 Create `LICENSE` file with Apache-2.0 text at repository root
+- [ ] 1.2 Add `build-release` target to `Makefile` (`cargo build -p atlassy-cli --release`) and add to `.PHONY` list
+- [ ] 1.3 Verify `make build-release` produces binary at `target/release/atlassy-cli`
+
+## 2. release-plz Configuration
+
+- [ ] 2.1 Create `release-plz.toml` at repository root with workspace settings: `publish = false`, `git_only = true`, `release_always = false`, `semver_check = false`, `features_always_increment_minor = true`, `release = false`
+- [ ] 2.2 Add `[[package]]` section for `atlassy-cli` with `release = true` and `changelog_include` listing all 4 internal crates
+
+## 3. Release PR Workflow
+
+- [ ] 3.1 Create `.github/workflows/release-plz.yml` with trigger on push to `main`
+- [ ] 3.2 Add `release-plz-pr` job: checkout with `fetch-depth: 0` and `persist-credentials: false`, install release-plz, run `release-plz release-pr`
+- [ ] 3.3 Add `release-plz-release` job: checkout with `fetch-depth: 0` and `persist-credentials: false`, install release-plz, run `release-plz release`
+- [ ] 3.4 Set workflow permissions: `contents: write`, `pull-requests: write`
+
+## 4. Binary Build Workflow
+
+- [ ] 4.1 Create `.github/workflows/release-build.yml` with trigger on tag push matching `v*`
+- [ ] 4.2 Define build matrix with 4 entries: `x86_64-unknown-linux-gnu` / `ubuntu-latest`, `aarch64-unknown-linux-gnu` / `ubuntu-24.04-arm`, `x86_64-apple-darwin` / `macos-15-intel`, `aarch64-apple-darwin` / `macos-latest`
+- [ ] 4.3 Add build job steps: checkout, setup Rust toolchain (`dtolnay/rust-toolchain@stable`), `cargo build -p atlassy-cli --release`
+- [ ] 4.4 Add packaging step: create tarball `atlassy-cli-{tag}-{target}.tar.gz` containing binary and LICENSE
+- [ ] 4.5 Add upload step: `gh release upload` to attach tarball to existing GitHub Release
+- [ ] 4.6 Add checksums job: download all 4 tarballs, generate `checksums.txt` with SHA256 hashes, upload to GitHub Release
+
+## 5. README Install Instructions
+
+- [ ] 5.1 Add Installation section to `README.md` with `curl | tar` commands for all 4 platforms (macOS Apple Silicon, macOS Intel, Linux x86_64, Linux ARM64)
+
+## 6. Commit and Verify
+
+- [ ] 6.1 Commit all new and modified files with message `ci: add release pipeline with release-plz and cross-platform builds`
+- [ ] 6.2 Document manual prerequisite: enable "Allow GitHub Actions to create and approve pull requests" in GitHub repo settings
