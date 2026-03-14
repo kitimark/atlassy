@@ -150,22 +150,24 @@ Two GitHub Actions workflows coordinate the release process:
 **`release-plz.yml`** — triggered on push to `main`:
 
 1. `release-plz release-pr`: Analyzes commits since the last release tag. If releasable changes exist, creates or updates a PR that bumps `version` in workspace `Cargo.toml` and generates/updates `CHANGELOG.md`.
-2. `release-plz release`: After the release PR is merged, creates a git tag (e.g., `v0.2.0`) and a GitHub Release with the changelog as the body.
+2. `release-plz release`: With `release_always = false`, this only triggers when the latest commit comes from a merged release PR (detected by the `release-plz-` branch prefix). It creates a git tag (e.g., `v0.2.0`) and a GitHub Release with the changelog as the body. On non-release-PR pushes, this job is a no-op.
 
-The release PR goes through the existing CI pipeline (`test` job: fmt-check, clippy, tests) before merge.
+This gives controlled releases: feature and fix PRs accumulate in the release PR, and the release happens only when the operator merges it. The release PR goes through the existing CI pipeline (`test` job: fmt-check, clippy, tests) before merge.
+
+Both workflows use `actions/checkout@v4` with `fetch-depth: 0` (full history for commit analysis) and `persist-credentials: false` (required by release-plz), consistent with the `@v4` version used in the Phase 1 CI workflow.
 
 **`release-build.yml`** — triggered on tag push matching `v*`:
 
-Builds release binaries for 4 targets and uploads them to the existing GitHub Release.
+Builds release binaries for 4 targets and uploads them to the existing GitHub Release. All 4 targets use native builds on architecture-matched runners — no cross-compilation tooling required. GitHub now provides ARM64 Linux runners (`ubuntu-24.04-arm`) and Intel macOS runners (`macos-15-intel`) as standard hosted runners.
 
 | Target | Runner | Build Method |
 |--------|--------|-------------|
 | `x86_64-unknown-linux-gnu` | `ubuntu-latest` | Native |
-| `aarch64-unknown-linux-gnu` | `ubuntu-latest` | `cross` (Docker-based cross-compilation) |
-| `x86_64-apple-darwin` | `macos-13` | Native |
-| `aarch64-apple-darwin` | `macos-latest` (M1) | Native |
+| `aarch64-unknown-linux-gnu` | `ubuntu-24.04-arm` | Native |
+| `x86_64-apple-darwin` | `macos-15-intel` | Native |
+| `aarch64-apple-darwin` | `macos-latest` | Native |
 
-Each build produces a tarball: `atlassy-cli-{tag}-{target}.tar.gz`.
+Each build produces a tarball (e.g., `atlassy-cli-v0.2.0-x86_64-unknown-linux-gnu.tar.gz`) containing the binary and LICENSE file. A separate `checksums.txt` release asset contains SHA256 hashes of all 4 tarballs.
 
 ### Configuration
 
@@ -179,6 +181,7 @@ Each build produces a tarball: `atlassy-cli-{tag}-{target}.tar.gz`.
 | `release` (atlassy-cli) | `true` | Only the CLI binary produces releases |
 | `semver_check` | `false` | CLI binary, no library API surface |
 | `features_always_increment_minor` | `true` | `feat` bumps minor in 0.x |
+| `release_always` | `false` | Only release when the release PR is merged, not on every push to main |
 | `changelog_include` | all 4 internal crates | Commits to any crate appear in CLI changelog |
 
 **Files:**
@@ -189,6 +192,10 @@ Each build produces a tarball: `atlassy-cli-{tag}-{target}.tar.gz`.
 | `.github/workflows/release-plz.yml` | New | Release PR + tag/release automation |
 | `.github/workflows/release-build.yml` | New | Cross-platform binary builds on tag |
 | `Makefile` | Modified | Add `build-release` target (`cargo build -p atlassy-cli --release`) |
+
+### Initial Release Bootstrapping
+
+No pre-tagging is required. With `git_only = true` and no existing git tags, release-plz falls back to the version in `Cargo.toml` (`0.1.0`) and treats the package as an initial release. The first release PR will bump to `0.2.0` (assuming at least one `feat:` commit exists) with a full changelog covering the entire project history. This is intentional — the first release documents the complete development record.
 
 ### Prerequisites
 
