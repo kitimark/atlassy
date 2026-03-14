@@ -142,17 +142,19 @@ When `target_path` is `None` in a route-specific `RunMode` variant, the pipeline
 
 ### Requirement: RunMode variants accept optional target path
 
-`RunMode::SimpleScopedProseUpdate` and `RunMode::SimpleScopedTableCellUpdate` SHALL have `target_path` typed as `Option<String>`. `RunMode::SimpleScopedUpdate` SHALL keep `target_path` as `String` (no auto-discovery for ambiguous route). Synthetic and test variants SHALL keep their path fields as `String`.
+`RunMode::SimpleScopedProseUpdate` and `RunMode::SimpleScopedTableCellUpdate` SHALL have `target_path` typed as `Option<String>`. Synthetic and test variants SHALL keep their path fields as `String`. The `RunMode::SimpleScopedUpdate` variant SHALL be removed as dead code - it is superseded by the route-specific variants and cannot support auto-discovery due to route ambiguity.
 
 #### Scenario: SimpleScopedProseUpdate accepts None
 
 - **WHEN** a `RunMode::SimpleScopedProseUpdate` is constructed with `target_path: None`
 - **THEN** the variant is valid and triggers auto-discovery at runtime
 
-#### Scenario: SimpleScopedUpdate still requires explicit path
+#### Scenario: SimpleScopedUpdate is removed
 
-- **WHEN** a `RunMode::SimpleScopedUpdate` is constructed
-- **THEN** `target_path` is `String` (non-optional, required)
+- **WHEN** the `RunMode` enum is inspected
+- **THEN** no `SimpleScopedUpdate` variant exists
+- **AND** no `ManifestMode::SimpleScopedUpdate` variant exists
+- **AND** no CLI mode string `"simple-scoped-update"` is accepted
 
 ### Requirement: Target index selects among discovery candidates
 
