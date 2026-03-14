@@ -4,9 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-atlassy-confluence = { path = "../atlassy-confluence" }
-atlassy-contracts = { path = "../atlassy-contracts" }
-atlassy-pipeline = { path = "../atlassy-pipeline" }
+atlassy-confluence = { path = "../atlassy-confluence", version = "0.1.0" }
+atlassy-contracts = { path = "../atlassy-contracts", version = "0.1.0" }
+atlassy-pipeline = { path = "../atlassy-pipeline", version = "0.1.0" }
 chrono.workspace = true
 clap.workspace = true
 serde.workspace = true
