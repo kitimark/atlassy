@@ -129,15 +129,15 @@ The repo is hosted at `github.com/kitimark/atlassy`. The Makefile has targets fo
 
 **Rationale**: App tokens are short-lived, least-privileged, and support workflow chaining from release-created tags while keeping bot ownership explicit.
 
-### D12: Explicit repository context for checksums download
+### D12: Explicit repository context for checksums download and upload
 
-**Choice**: Use `gh release download ... -R kitimark/atlassy` in the checksums job.
+**Choice**: Use `-R kitimark/atlassy` for both `gh release download` and `gh release upload` in the checksums job.
 
 **Alternatives considered**:
 - Add checkout step to checksums job: Valid but unnecessary overhead.
 - Rely on implicit repository context: Fails in standalone jobs without a `.git` directory.
 
-**Rationale**: Explicit repository scoping makes checksums generation reliable regardless of checkout state.
+**Rationale**: Explicit repository scoping makes checksums generation and upload reliable regardless of checkout state.
 
 ### D13: Explicit versions for internal path dependencies in releasable crates
 
