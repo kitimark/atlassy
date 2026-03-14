@@ -70,14 +70,14 @@ The repo is hosted at `github.com/kitimark/atlassy`. The Makefile has targets fo
 
 **Rationale**: GitHub now provides native ARM64 Linux runners (`ubuntu-24.04-arm`) and Intel macOS runners (`macos-15-intel`) as standard hosted runners, free on public repos. All 4 targets can use identical build steps (`cargo build -p atlassy-cli --release`). No cross-compilation tooling, no Docker, no special configuration. Note: `macos-13` is no longer listed in the GitHub runner table; `macos-15-intel` is the correct label for Intel macOS.
 
-### D5: `actions/checkout@v4` with `persist-credentials: false`
+### D5: `actions/checkout@v6` with `persist-credentials: false`
 
-**Choice**: Use `@v4` in release workflows, matching Phase 1 CI.
+**Choice**: Use `actions/checkout@v6` in release workflows with `fetch-depth: 0` and `persist-credentials: false`.
 
 **Alternatives considered**:
-- `actions/checkout@v6`: Recommended by release-plz quickstart. Defaults to `persist-credentials: false`.
+- `actions/checkout@v4`: Matches Phase 1 CI checkout version.
 
-**Rationale**: Consistency with existing CI. All runners (ubuntu-24.04, macos-15) support both versions. Using `@v4` with explicit `persist-credentials: false` and `fetch-depth: 0` achieves the same behavior release-plz requires without diverging from the established CI pattern.
+**Rationale**: release-plz upstream examples use checkout v6, and this keeps release workflow dependencies on current major versions while preserving the same required behavior (`fetch-depth: 0`, `persist-credentials: false`).
 
 ### D6: `gh release upload` over `softprops/action-gh-release`
 
@@ -148,22 +148,33 @@ The repo is hosted at `github.com/kitimark/atlassy`. The Makefile has targets fo
 
 **Rationale**: release-plz validates packageability against historical baselines; explicit versions are required for those checks to pass.
 
+### D14: Use `release-plz/action@v0.5` instead of CLI installation
+
+**Choice**: Run release-plz through `release-plz/action@v0.5` in both release jobs, while continuing to generate a GitHub App token in each job.
+
+**Alternatives considered**:
+- Install and run CLI directly (`cargo install --locked release-plz`, then `release-plz release-pr/release`).
+
+**Rationale**: the action path avoids repeated source compilation in every run, reduces workflow runtime, and matches how the release-plz project runs its own release workflow.
+
 ## Risks / Trade-offs
 
 - [ARM64 Linux runner (`ubuntu-24.04-arm`) is a partner image] → Preinstalled software may differ from `ubuntu-latest`. Mitigated by installing Rust toolchain explicitly via `dtolnay/rust-toolchain@stable`.
 - [First release changelog includes full project history (133 commits)] → May be long but provides complete record. Subsequent releases will have focused changelogs.
 - [GitHub App bootstrap is partially manual] → Creating/installing the App and private key issuance cannot be fully automated from CLI. Mitigated by one-time admin bootstrap, then storing `APP_ID` and `APP_PRIVATE_KEY` in Actions secrets.
 - [App secrets missing or invalid] → release-plz workflow cannot create the app token. Mitigated by preflight checks and fail-fast messaging in workflow steps.
+- [Version-tag action pinning is mutable] → Tags can move over time. Mitigated by periodic dependency maintenance and pinning to explicit major/minor tags instead of floating branches.
 - [`release_always = false` adds one extra merge step per release] → Acceptable trade-off for controlled release timing. The release PR also serves as a review checkpoint.
 - [No crates.io publishing] → `cargo install atlassy-cli` won't work until Phase 2b. Mitigated by documenting `curl | tar` install in README.
 
 ## Migration Plan
 
 1. Configure GitHub App and store `APP_ID`/`APP_PRIVATE_KEY` in repo Actions secrets.
-2. Update `release-plz.yml` to generate an app token and use it for both release-plz jobs.
-3. Update `release-build.yml` checksums job to use explicit repo context for `gh release download`.
-4. Trigger a release cycle and verify release PR, tag/release creation, build workflow execution, and final asset set.
-5. If automatic build trigger does not occur, run `release-build` via `workflow_dispatch` for the release tag and investigate token/config drift.
+2. Update `release-plz.yml` to use version-tag pinned actions (`checkout@v6`, `create-github-app-token@v3`, `release-plz/action@v0.5`) and preserve app-token auth for both jobs.
+3. Add release PR concurrency control (`release-plz-${{ github.ref }}`) and keep fail-fast app-secret validation.
+4. Update `release-build.yml` checksums job to use explicit repo context for both `gh release download` and `gh release upload`.
+5. Trigger a release cycle and verify release PR, tag/release creation, build workflow execution, and final asset set.
+6. If automatic build trigger does not occur, run `release-build` via `workflow_dispatch` for the release tag and investigate token/config drift.
 
 ## Open Questions
 

@@ -12,7 +12,7 @@ The repository SHALL contain a `release-plz.toml` at the workspace root that con
 - **THEN** `atlassy-pipeline`, `atlassy-adf`, `atlassy-confluence`, and `atlassy-contracts` are skipped for release processing because `release = false` at workspace level
 
 ### Requirement: Release PR workflow
-The repository SHALL contain `.github/workflows/release-plz.yml` triggered on push to `main`. The workflow SHALL run two jobs: `release-plz release-pr` to create or update a release PR, and `release-plz release` to create a git tag and GitHub Release when a release PR is merged. Both jobs SHALL pass `--git-token` to release-plz.
+The repository SHALL contain `.github/workflows/release-plz.yml` triggered on push to `main`. The workflow SHALL run two jobs using `release-plz/action@v0.5`: one with `command: release-pr` to create or update a release PR, and one with `command: release` to create a git tag and GitHub Release when a release PR is merged. Both jobs SHALL pass the generated GitHub token via `GITHUB_TOKEN` environment variable.
 
 #### Scenario: Feature commit pushed to main
 - **WHEN** a commit with type `feat:` is pushed to `main`
@@ -41,6 +41,16 @@ The release workflow SHALL generate a short-lived token using `actions/create-gi
 - **WHEN** either `APP_ID` or `APP_PRIVATE_KEY` is not configured
 - **THEN** the workflow fails before running release-plz with a clear error
 
+### Requirement: Release PR job uses concurrency control
+The `release-plz-pr` job SHALL define a concurrency group keyed by branch (`release-plz-${{ github.ref }}`) with `cancel-in-progress: false` to prevent overlapping release PR updates.
+
+#### Scenario: Multiple pushes arrive while release-plz-pr is running
+- **WHEN** a second push to `main` occurs before the previous `release-plz-pr` job completes
+- **THEN** the next `release-plz-pr` job waits for the active run instead of running concurrently
+
+### Requirement: Release PR goes through CI checks
+Release PRs created by release-plz SHALL run the existing repository CI checks and require them to pass before merge.
+
 #### Scenario: Release PR goes through CI
 - **WHEN** release-plz creates a release PR
 - **THEN** the existing `test` job (fmt-check, clippy, tests) runs on the PR and MUST pass before merge
@@ -56,8 +66,15 @@ The release pipeline SHALL use `features_always_increment_minor = true` so that 
 - **WHEN** all unreleased commits are `fix:` type (no `feat:`)
 - **THEN** the release PR proposes a patch version bump
 
-### Requirement: Workflow uses checkout v4 with full history
-Both release workflows SHALL use `actions/checkout@v4` with `fetch-depth: 0` and `persist-credentials: false`. This is consistent with the Phase 1 CI workflow checkout version.
+### Requirement: Workflow actions are pinned by version tag
+The release workflow SHALL pin core actions by version tag: `actions/checkout@v6`, `actions/create-github-app-token@v3`, and `release-plz/action@v0.5`.
+
+#### Scenario: Workflow references action versions
+- **WHEN** `.github/workflows/release-plz.yml` is reviewed
+- **THEN** checkout, app-token generation, and release-plz execution steps each reference an explicit version tag rather than an unpinned branch
+
+### Requirement: Workflow uses checkout v6 with full history
+Both release workflow jobs SHALL use `actions/checkout@v6` with `fetch-depth: 0` and `persist-credentials: false`.
 
 #### Scenario: Checkout configuration
 - **WHEN** release-plz.yml checks out the repository

@@ -37,5 +37,14 @@
 - [x] 6.4 Switch `.github/workflows/release-plz.yml` to GitHub App token flow (`actions/create-github-app-token`) using `APP_ID` and `APP_PRIVATE_KEY`
 - [x] 6.5 Add fail-fast preflight checks in `release-plz.yml` for missing `APP_ID` / `APP_PRIVATE_KEY` secrets before running release-plz
 - [x] 6.6 Fix `.github/workflows/release-build.yml` checksums job to use explicit repository context for `gh release download` and `gh release upload` (no `.git` dependency)
-- [ ] 6.7 Re-run release flow and verify release-plz creates/updates release PR and merged release triggers `release-build.yml`
+- [ ] 6.7 Re-run release flow on a newly generated release version and verify release-plz creates/updates release PR and merged release triggers `release-build.yml`
 - [x] 6.8 Verify release has 5 assets (4 tarballs + `checksums.txt`) and smoke-test checksum + extracted binary via `gh` CLI commands in `design.md`
+
+## 7. release-plz Action Migration (Version-Tag Pinned)
+
+- [ ] 7.1 Replace CLI install/run steps in `.github/workflows/release-plz.yml` with `release-plz/action@v0.5` (`command: release-pr` and `command: release`)
+- [ ] 7.2 Pin release workflow actions by version tag: `actions/checkout@v6` and `actions/create-github-app-token@v3`
+- [ ] 7.3 Add `concurrency` control to `release-plz-pr` job (`group: release-plz-${{ github.ref }}`, `cancel-in-progress: false`)
+- [ ] 7.4 Push a conventional-commit change and verify action-based release-plz creates or updates a release PR
+- [ ] 7.5 Merge the generated release PR and verify a tag-triggered `release-build.yml` run starts automatically
+- [ ] 7.6 Verify the new release includes 5 assets (4 tarballs + `checksums.txt`) and checksum validation succeeds
