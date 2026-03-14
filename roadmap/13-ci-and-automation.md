@@ -101,7 +101,7 @@ EOF
 - `"required_pull_request_reviews": null` does not require PR reviews (single-contributor project).
 - Requires `gh` authenticated with `repo` scope (verified available).
 
-## Phase 2: Release Pipeline (Planned)
+## Phase 2a: Release Pipeline (Planned)
 
 ### Scope
 
@@ -212,7 +212,31 @@ No pre-tagging is required. With `git_only = true` and no existing git tags, rel
 - First release PR is created automatically after merging the implementation.
 - Merging the release PR creates a git tag and GitHub Release with changelog body.
 - All 4 binary tarballs are attached to the GitHub Release.
+- `README.md` includes platform-specific install instructions for all 4 targets.
 - Existing CI (`test` job) is unaffected and gates release PRs.
+
+## Phase 2b: crates.io Publishing (Deferred)
+
+### Scope
+
+Publish all 5 workspace crates to crates.io, enabling `cargo install atlassy-cli` (built-in to every Rust toolchain, compiles from source) and `cargo binstall atlassy-cli` (third-party tool, downloads pre-built binary from GitHub Releases — no compilation).
+
+### Why All 5 Crates
+
+`atlassy-cli` depends on the 4 internal crates via path. When `cargo publish` runs, Cargo replaces path references with version requirements and resolves them on crates.io. If the internal crates aren't published, publish fails. release-plz handles dependency-order publishing automatically for workspaces.
+
+### Candidate Work
+
+- Add `license`, `description`, `repository` fields to workspace `Cargo.toml` (inherited by all 5 crates).
+- Generate and add `CARGO_REGISTRY_TOKEN` as a GitHub repository secret.
+- Update `release-plz.toml`: remove `git_only = true`, set `publish = true` and `release = true` at workspace level, set `git_release_enable = false` at workspace level and `git_release_enable = true` for `atlassy-cli` only.
+- Verify all 5 crate names are available on crates.io before first publish.
+- Update `README.md` with `cargo install` and `cargo binstall` instructions.
+
+### Signals to Start
+
+- Phase 2a release pipeline is stable and producing GitHub Releases.
+- User demand for `cargo install` support or crates.io ecosystem discoverability.
 
 ## Phase 3: Extended Automation (Deferred)
 
@@ -230,7 +254,7 @@ Additional CI capabilities beyond test/build/release.
 
 ### Signals to Start
 
-- Phase 2 release pipeline is stable and producing releases.
+- Phase 2a release pipeline is stable and producing releases.
 - Project has multiple contributors or external CI consumers.
 - Live smoke tests are needed for regression detection beyond local QA.
 
