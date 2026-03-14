@@ -8,7 +8,7 @@ use cli_args::{CreateSubpageArgs, RunArgs, RunBatchArgs, RunReadinessArgs};
 
 #[derive(Debug, Parser)]
 #[command(name = "atlassy")]
-#[command(about = "Atlassy CLI for v1 pipeline execution and readiness automation")]
+#[command(about = "Atlassy CLI for v1 pipeline execution and release readiness automation")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
