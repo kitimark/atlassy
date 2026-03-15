@@ -48,6 +48,7 @@ jobs:
         uses: release-plz/action@v0.5
         with:
           command: release-pr
+          verbose: "true"
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
