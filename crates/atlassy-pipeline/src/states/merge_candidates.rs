@@ -4,6 +4,7 @@ use atlassy_contracts::{
 };
 
 use super::adf_block_ops::AdfBlockOpsOutput;
+use super::locked_boundary::check_locked_boundary;
 use crate::util::meta;
 use crate::{ArtifactStore, PipelineError, RunRequest, StateTracker};
 
@@ -105,17 +106,8 @@ pub(crate) fn run_merge_candidates_state(
         .collect::<Vec<_>>();
 
     for operation in table_operations.iter().chain(block_operations.iter()) {
-        for path in operation_paths(operation) {
-            if locked_paths
-                .iter()
-                .any(|locked_path| path_is_within_locked_boundary(&path, locked_path))
-            {
-                return Err(PipelineError::Hard {
-                    state: PipelineState::MergeCandidates,
-                    code: ErrorCode::RouteViolation,
-                    message: format!("operation path `{path}` overlaps locked structural boundary"),
-                });
-            }
+        if let Some(error) = check_locked_boundary(operation, &locked_paths) {
+            return Err(error);
         }
     }
 
@@ -135,13 +127,6 @@ pub(crate) fn run_merge_candidates_state(
         &Diagnostics::default(),
     )?;
     Ok(output)
-}
-
-fn path_is_within_locked_boundary(path: &str, locked_path: &str) -> bool {
-    path == locked_path
-        || path
-            .strip_prefix(locked_path)
-            .is_some_and(|suffix| suffix.starts_with('/'))
 }
 
 fn paths_overlap(left: &str, right: &str) -> bool {

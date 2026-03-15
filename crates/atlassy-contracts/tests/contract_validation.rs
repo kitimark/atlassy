@@ -122,6 +122,72 @@ fn operation_insert_and_remove_round_trip_serde() {
 
 #[test]
 fn block_op_enum_round_trip_serde() {
+    let cases = vec![
+        (
+            BlockOp::Insert {
+                parent_path: "/content".to_string(),
+                index: 0,
+                block: serde_json::json!({"type": "paragraph"}),
+            },
+            "insert",
+        ),
+        (
+            BlockOp::Remove {
+                target_path: "/content/0".to_string(),
+            },
+            "remove",
+        ),
+        (
+            BlockOp::InsertSection {
+                parent_path: "/content".to_string(),
+                index: 1,
+                heading_level: 2,
+                heading_text: "FAQ".to_string(),
+                body_blocks: vec![
+                    serde_json::json!({"type": "paragraph", "content": [{"type": "text", "text": "A"}]}),
+                    serde_json::json!({"type": "paragraph", "content": [{"type": "text", "text": "B"}]}),
+                ],
+            },
+            "insert_section",
+        ),
+        (
+            BlockOp::RemoveSection {
+                heading_path: "/content/1".to_string(),
+            },
+            "remove_section",
+        ),
+        (
+            BlockOp::InsertTable {
+                parent_path: "/content".to_string(),
+                index: 2,
+                rows: 2,
+                cols: 3,
+                header_row: true,
+            },
+            "insert_table",
+        ),
+        (
+            BlockOp::InsertList {
+                parent_path: "/content".to_string(),
+                index: 3,
+                ordered: false,
+                items: vec!["One".to_string(), "Two".to_string()],
+            },
+            "insert_list",
+        ),
+    ];
+
+    for (block_op, expected_op_tag) in cases {
+        let encoded = serde_json::to_value(&block_op).unwrap();
+        assert_eq!(encoded["op"], serde_json::json!(expected_op_tag));
+
+        let decoded: BlockOp = serde_json::from_value(encoded).unwrap();
+        assert_eq!(decoded, block_op);
+    }
+}
+
+#[test]
+fn existing_block_op_variants_remain_unchanged() {
     let insert = BlockOp::Insert {
         parent_path: "/content".to_string(),
         index: 0,
@@ -135,12 +201,11 @@ fn block_op_enum_round_trip_serde() {
     let remove_json = serde_json::to_value(&remove).unwrap();
 
     assert_eq!(insert_json["op"], serde_json::json!("insert"));
-    assert_eq!(remove_json["op"], serde_json::json!("remove"));
+    assert_eq!(insert_json["parent_path"], serde_json::json!("/content"));
+    assert_eq!(insert_json["index"], serde_json::json!(0));
 
-    let insert_decoded: BlockOp = serde_json::from_value(insert_json).unwrap();
-    let remove_decoded: BlockOp = serde_json::from_value(remove_json).unwrap();
-    assert_eq!(insert_decoded, insert);
-    assert_eq!(remove_decoded, remove);
+    assert_eq!(remove_json["op"], serde_json::json!("remove"));
+    assert_eq!(remove_json["target_path"], serde_json::json!("/content/0"));
 }
 
 #[test]

@@ -3,6 +3,7 @@ mod adf_table_edit;
 mod classify;
 mod extract_prose;
 mod fetch;
+mod locked_boundary;
 mod md_assist_edit;
 mod merge_candidates;
 mod patch;

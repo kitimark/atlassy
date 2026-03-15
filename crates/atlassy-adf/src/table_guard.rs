@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::index::{collect_text, path_has_ancestor_type};
-use crate::path::{document_order_sort, is_json_pointer, is_within_allowed_scope};
-use crate::{AdfError, EDITABLE_PROSE_TYPES, SCOPE_ANCHOR_TYPES, TargetRoute};
+use crate::path::{document_order_sort, is_json_pointer, is_within_allowed_scope, parent_path};
+use crate::{AdfError, SCOPE_ANCHOR_TYPES, TargetRoute, is_editable_prose};
 
 pub fn discover_target_path(
     node_path_index: &BTreeMap<String, String>,
@@ -22,7 +22,7 @@ pub fn discover_target_path(
                 path_has_ancestor_type(path, node_path_index, &["table", "tableRow", "tableCell"]);
             match route {
                 TargetRoute::Prose => {
-                    path_has_ancestor_type(path, node_path_index, EDITABLE_PROSE_TYPES)
+                    has_editable_prose_ancestor(path, node_path_index)
                         && !path_has_ancestor_type(path, node_path_index, SCOPE_ANCHOR_TYPES)
                         && !in_table
                 }
@@ -43,6 +43,19 @@ pub fn discover_target_path(
         })?;
 
     Ok(format!("{selected}/text"))
+}
+
+fn has_editable_prose_ancestor(path: &str, node_path_index: &BTreeMap<String, String>) -> bool {
+    let mut current = path.to_string();
+    while let Some(parent) = parent_path(&current) {
+        if let Some(node_type) = node_path_index.get(&parent)
+            && is_editable_prose(node_type)
+        {
+            return true;
+        }
+        current = parent;
+    }
+    false
 }
 
 pub fn is_table_cell_text_path(path: &str, node_path_index: &BTreeMap<String, String>) -> bool {

@@ -58,6 +58,8 @@ pub(crate) fn to_hard_error(source_state: PipelineState, error: AdfError) -> Pip
         AdfError::OperationConflict(_) => ErrorCode::RouteViolation,
         AdfError::ScopeResolutionFailed => ErrorCode::ScopeMiss,
         AdfError::TargetDiscoveryFailed { .. } => ErrorCode::TargetDiscoveryFailed,
+        AdfError::SectionBoundaryInvalid(_) => ErrorCode::SectionBoundaryInvalid,
+        AdfError::StructuralCompositionFailed(_) => ErrorCode::StructuralCompositionFailed,
         AdfError::InvalidSelector(_)
         | AdfError::InvalidPath(_)
         | AdfError::DuplicatePath(_)

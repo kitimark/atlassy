@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use atlassy_adf::EDITABLE_PROSE_TYPES;
+use atlassy_adf::is_editable_prose;
 use atlassy_contracts::{
     ClassifyInput, ClassifyOutput, Diagnostics, FetchOutput, PipelineState, StateEnvelope,
 };
@@ -61,7 +61,7 @@ fn route_for_node(
         return "table_adf";
     }
 
-    if EDITABLE_PROSE_TYPES.contains(&node_type) {
+    if is_editable_prose(node_type) {
         "editable_prose"
     } else {
         "locked_structural"

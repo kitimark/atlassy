@@ -1,6 +1,7 @@
 use atlassy_adf::{
-    check_structural_validity, is_table_cell_text_path, is_table_shape_or_attr_path,
-    is_within_allowed_scope, path_has_ancestor_type, EDITABLE_PROSE_TYPES, SCOPE_ANCHOR_TYPES,
+    SCOPE_ANCHOR_TYPES, check_structural_validity, is_editable_prose, is_insertable_type,
+    is_removable_type, is_table_cell_text_path, is_table_shape_or_attr_path,
+    is_within_allowed_scope, path_has_ancestor_type,
 };
 use atlassy_contracts::{
     Diagnostics, ErrorCode, ErrorInfo, FetchOutput, MergeCandidatesOutput, Operation, PatchOutput,
@@ -8,6 +9,7 @@ use atlassy_contracts::{
 };
 use serde_json::Value;
 
+use super::locked_boundary::check_locked_boundary;
 use crate::util::meta;
 use crate::{ArtifactStore, PipelineError, RunRequest, StateTracker};
 
@@ -35,6 +37,13 @@ pub(crate) fn run_verify_state(
     let verify_result = check_forced_fail(request.force_verify_fail, &mut diagnostics)
         .or_else(|| {
             check_table_shape_integrity(
+                &input.payload.operations,
+                &fetch.payload.node_path_index,
+                &mut diagnostics,
+            )
+        })
+        .or_else(|| {
+            check_locked_boundary_violations(
                 &input.payload.operations,
                 &fetch.payload.node_path_index,
                 &mut diagnostics,
@@ -117,12 +126,62 @@ fn check_table_shape_integrity(
     Some(VerifyResult::Fail)
 }
 
+fn check_locked_boundary_violations(
+    operations: &[Operation],
+    node_path_index: &std::collections::BTreeMap<String, String>,
+    diagnostics: &mut Diagnostics,
+) -> Option<VerifyResult> {
+    let locked_paths = node_path_index
+        .iter()
+        .filter(|(path, node_type)| is_locked_structural_path(path, node_type, node_path_index))
+        .map(|(path, _)| path.as_str())
+        .collect::<Vec<_>>();
+
+    for operation in operations {
+        if let Some(error) = check_locked_boundary(operation, &locked_paths)
+            && let PipelineError::Hard { code, message, .. } = error
+        {
+            diagnostics.errors.push(ErrorInfo {
+                code: code.to_string(),
+                message,
+                recovery: "avoid mutations that overlap locked structural boundaries".to_string(),
+            });
+            return Some(VerifyResult::Fail);
+        }
+    }
+
+    None
+}
+
+fn is_locked_structural_path(
+    path: &str,
+    node_type: &str,
+    node_path_index: &std::collections::BTreeMap<String, String>,
+) -> bool {
+    if path == "/" || node_type == "doc" || node_type == "text" {
+        return false;
+    }
+
+    if is_editable_prose(node_type) {
+        return false;
+    }
+
+    if matches!(node_type, "table" | "tableRow" | "tableCell") {
+        return false;
+    }
+
+    !path_has_ancestor_type(path, node_path_index, &["table", "tableRow", "tableCell"])
+}
+
 fn check_operation_legality(
     operations: &[Operation],
     original_scoped_adf: &Value,
     allowed_scope_paths: &[String],
     diagnostics: &mut Diagnostics,
 ) -> Option<VerifyResult> {
+    let mut insert_offsets: std::collections::BTreeMap<String, usize> =
+        std::collections::BTreeMap::new();
+
     for operation in operations {
         match operation {
             Operation::Replace { path, .. } => {
@@ -152,14 +211,15 @@ fn check_operation_legality(
                 }
 
                 let block_type = block.get("type").and_then(Value::as_str);
-                if !block_type.is_some_and(|value| EDITABLE_PROSE_TYPES.contains(&value)) {
+                if !block_type.is_some_and(is_insertable_type) {
                     diagnostics.errors.push(ErrorInfo {
                         code: ErrorCode::InsertPositionInvalid.to_string(),
                         message: format!(
                             "insert block type must be one of {:?}, got {:?}",
-                            EDITABLE_PROSE_TYPES, block_type
+                            atlassy_adf::INSERTABLE_BLOCK_TYPES,
+                            block_type
                         ),
-                        recovery: "insert only editable prose block types".to_string(),
+                        recovery: "insert only allowed block types".to_string(),
                     });
                     return Some(VerifyResult::Fail);
                 }
@@ -180,17 +240,24 @@ fn check_operation_legality(
                     });
                     return Some(VerifyResult::Fail);
                 };
-                if *index > parent_array.len() {
+
+                let offset = insert_offsets.get(parent_path).copied().unwrap_or(0);
+                if *index > parent_array.len() + offset {
                     diagnostics.errors.push(ErrorInfo {
                         code: ErrorCode::InsertPositionInvalid.to_string(),
                         message: format!(
-                            "insert index {index} out of bounds for `{parent_path}` with length {}",
-                            parent_array.len()
+                            "insert index {index} out of bounds for `{parent_path}` with effective length {}",
+                            parent_array.len() + offset
                         ),
                         recovery: "use an index in [0, parent_len]".to_string(),
                     });
                     return Some(VerifyResult::Fail);
                 }
+
+                insert_offsets
+                    .entry(parent_path.clone())
+                    .and_modify(|count| *count += 1)
+                    .or_insert(1);
             }
             Operation::Remove { target_path } => {
                 if !is_within_allowed_scope(target_path, allowed_scope_paths) {
@@ -214,14 +281,15 @@ fn check_operation_legality(
                 };
 
                 let node_type = target_node.get("type").and_then(Value::as_str);
-                if !node_type.is_some_and(|value| EDITABLE_PROSE_TYPES.contains(&value)) {
+                if !node_type.is_some_and(is_removable_type) {
                     diagnostics.errors.push(ErrorInfo {
                         code: ErrorCode::RemoveAnchorMissing.to_string(),
                         message: format!(
                             "remove target `{target_path}` must be one of {:?}, got {:?}",
-                            EDITABLE_PROSE_TYPES, node_type
+                            atlassy_adf::REMOVABLE_BLOCK_TYPES,
+                            node_type
                         ),
-                        recovery: "remove only editable prose blocks".to_string(),
+                        recovery: "remove only allowed block types".to_string(),
                     });
                     return Some(VerifyResult::Fail);
                 }

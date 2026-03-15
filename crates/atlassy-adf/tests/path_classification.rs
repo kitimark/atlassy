@@ -61,7 +61,7 @@ fn document_order_sort_shared_prefix() {
 fn scope_anchor_types_is_subset_of_editable_prose() {
     for scope_anchor_type in SCOPE_ANCHOR_TYPES {
         assert!(
-            EDITABLE_PROSE_TYPES.contains(scope_anchor_type),
+            is_editable_prose(scope_anchor_type),
             "scope anchor type must be editable prose: {scope_anchor_type}"
         );
     }

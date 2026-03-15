@@ -293,6 +293,29 @@ pub enum BlockOp {
     Remove {
         target_path: String,
     },
+    InsertSection {
+        parent_path: String,
+        index: usize,
+        heading_level: u8,
+        heading_text: String,
+        body_blocks: Vec<serde_json::Value>,
+    },
+    RemoveSection {
+        heading_path: String,
+    },
+    InsertTable {
+        parent_path: String,
+        index: usize,
+        rows: usize,
+        cols: usize,
+        header_row: bool,
+    },
+    InsertList {
+        parent_path: String,
+        index: usize,
+        ordered: bool,
+        items: Vec<String>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -69,9 +69,19 @@ fn compare_structural_ops(left: &StructuralOp, right: &StructuralOp) -> Ordering
         return parent_order;
     }
 
-    let index_order = right.index.cmp(&left.index);
-    if index_order != Ordering::Equal {
-        return index_order;
+    if left.kind == right.kind {
+        let index_order = match left.kind {
+            StructuralOpKind::Insert => left.index.cmp(&right.index),
+            StructuralOpKind::Remove => right.index.cmp(&left.index),
+        };
+        if index_order != Ordering::Equal {
+            return index_order;
+        }
+    } else {
+        let index_order = right.index.cmp(&left.index);
+        if index_order != Ordering::Equal {
+            return index_order;
+        }
     }
 
     match (left.kind, right.kind) {
@@ -191,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn sort_operations_orders_replaces_before_structural_and_descending_indices() {
+    fn sort_operations_orders_replaces_before_structural_with_insert_ascending() {
         let operations = vec![
             Operation::Insert {
                 parent_path: "/content".to_string(),
@@ -220,11 +230,11 @@ mod tests {
         ));
         assert!(matches!(
             sorted[2],
-            Operation::Insert { index, .. } if index == 2
+            Operation::Insert { index, .. } if index == 1
         ));
         assert!(matches!(
             sorted[3],
-            Operation::Insert { index, .. } if index == 1
+            Operation::Insert { index, .. } if index == 2
         ));
     }
 
@@ -273,7 +283,7 @@ mod tests {
                 ref parent_path,
                 index,
                 ..
-            } if parent_path == "/content/3/content" && index == 4
+            } if parent_path == "/content/3/content" && index == 2
         ));
         assert!(matches!(
             sorted[1],
@@ -281,7 +291,7 @@ mod tests {
                 ref parent_path,
                 index,
                 ..
-            } if parent_path == "/content/3/content" && index == 2
+            } if parent_path == "/content/3/content" && index == 4
         ));
     }
 }

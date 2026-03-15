@@ -5,13 +5,16 @@ use serde_json::Value;
 use thiserror::Error;
 
 mod bootstrap;
+mod builders;
 mod index;
 mod ordering;
 mod patch;
 mod path;
+mod section;
 mod scope;
 mod structural_validity;
 mod table_guard;
+mod type_policy;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScopeResolution {
@@ -75,6 +78,10 @@ pub enum AdfError {
     PostMutationInvalid(String),
     #[error("operation conflict: {0}")]
     OperationConflict(String),
+    #[error("section boundary invalid: {0}")]
+    SectionBoundaryInvalid(String),
+    #[error("structural composition failed: {0}")]
+    StructuralCompositionFailed(String),
     #[error("no valid {route} target found in scope at index {index} (found {found})")]
     TargetDiscoveryFailed {
         route: String,
@@ -84,10 +91,13 @@ pub enum AdfError {
 }
 
 pub use bootstrap::*;
+pub use builders::*;
 pub use index::*;
 pub use ordering::*;
 pub use patch::*;
 pub use path::*;
+pub use section::*;
 pub use scope::*;
 pub use structural_validity::*;
 pub use table_guard::*;
+pub use type_policy::*;

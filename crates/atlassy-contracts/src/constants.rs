@@ -20,10 +20,12 @@ pub enum ErrorCode {
     BootstrapRequired,
     BootstrapInvalidState,
     TargetDiscoveryFailed,
+    SectionBoundaryInvalid,
+    StructuralCompositionFailed,
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 15] = [
+    pub const ALL: [Self; 17] = [
         Self::ScopeMiss,
         Self::RouteViolation,
         Self::SchemaInvalid,
@@ -39,6 +41,8 @@ impl ErrorCode {
         Self::BootstrapRequired,
         Self::BootstrapInvalidState,
         Self::TargetDiscoveryFailed,
+        Self::SectionBoundaryInvalid,
+        Self::StructuralCompositionFailed,
     ];
 
     pub const fn as_str(&self) -> &'static str {
@@ -58,6 +62,8 @@ impl ErrorCode {
             Self::BootstrapRequired => "ERR_BOOTSTRAP_REQUIRED",
             Self::BootstrapInvalidState => "ERR_BOOTSTRAP_INVALID_STATE",
             Self::TargetDiscoveryFailed => "ERR_TARGET_DISCOVERY_FAILED",
+            Self::SectionBoundaryInvalid => "ERR_SECTION_BOUNDARY_INVALID",
+            Self::StructuralCompositionFailed => "ERR_STRUCTURAL_COMPOSITION_FAILED",
         }
     }
 }
@@ -123,6 +129,14 @@ mod tests {
             (
                 ErrorCode::TargetDiscoveryFailed,
                 "ERR_TARGET_DISCOVERY_FAILED",
+            ),
+            (
+                ErrorCode::SectionBoundaryInvalid,
+                "ERR_SECTION_BOUNDARY_INVALID",
+            ),
+            (
+                ErrorCode::StructuralCompositionFailed,
+                "ERR_STRUCTURAL_COMPOSITION_FAILED",
             ),
         ];
 

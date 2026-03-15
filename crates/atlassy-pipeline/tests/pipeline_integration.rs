@@ -986,6 +986,255 @@ fn out_of_bounds_insert_fails_with_insert_position_invalid() {
     );
 }
 
+#[test]
+fn insert_section_run_inserts_heading_and_body_blocks() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-insert-section");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::InsertSection {
+        parent_path: "/content".to_string(),
+        index: 2,
+        heading_level: 2,
+        heading_text: "FAQ".to_string(),
+        body_blocks: vec![
+            serde_json::json!({
+                "type": "paragraph",
+                "content": [{"type": "text", "text": "Q1 answer"}]
+            }),
+            serde_json::json!({
+                "type": "paragraph",
+                "content": [{"type": "text", "text": "Q2 answer"}]
+            }),
+        ],
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("insert section run should succeed");
+    assert!(summary.success);
+    assert!(summary.applied_paths.contains(&"/content/2".to_string()));
+    assert!(summary.applied_paths.contains(&"/content/3".to_string()));
+    assert!(summary.applied_paths.contains(&"/content/4".to_string()));
+
+    let patch_output = read_state_output(temp.path(), "run-insert-section", "patch");
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][2]["type"],
+        serde_json::json!("heading")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][2]["content"][0]["text"],
+        serde_json::json!("FAQ")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][3]["content"][0]["text"],
+        serde_json::json!("Q1 answer")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][4]["content"][0]["text"],
+        serde_json::json!("Q2 answer")
+    );
+}
+
+#[test]
+fn remove_section_run_removes_heading_and_body_preserving_adjacent_content() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "multi_section_adf.json");
+
+    let mut request = sample_request("run-remove-section");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::RemoveSection {
+        heading_path: "/content/2".to_string(),
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("remove section run should succeed");
+    assert!(summary.success);
+    assert_eq!(
+        summary.applied_paths,
+        vec![
+            "/content/4".to_string(),
+            "/content/3".to_string(),
+            "/content/2".to_string(),
+        ]
+    );
+
+    let patch_output = read_state_output(temp.path(), "run-remove-section", "patch");
+    let content = patch_output["payload"]["candidate_page_adf"]["content"]
+        .as_array()
+        .expect("content should be array");
+    assert_eq!(content.len(), 2);
+    assert_eq!(content[0]["type"], serde_json::json!("heading"));
+    assert_eq!(
+        content[0]["content"][0]["text"],
+        serde_json::json!("Overview")
+    );
+    assert_eq!(
+        content[1]["content"][0]["text"],
+        serde_json::json!("Overview body")
+    );
+}
+
+#[test]
+fn insert_table_run_produces_valid_table_and_publishes() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-insert-table");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::InsertTable {
+        parent_path: "/content".to_string(),
+        index: 1,
+        rows: 3,
+        cols: 2,
+        header_row: true,
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("insert table run should succeed");
+    assert!(summary.success);
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+
+    let patch_output = read_state_output(temp.path(), "run-insert-table", "patch");
+    let table = &patch_output["payload"]["candidate_page_adf"]["content"][1];
+    assert_eq!(table["type"], serde_json::json!("table"));
+    assert_eq!(
+        table["content"][0]["content"][0]["type"],
+        serde_json::json!("tableHeader")
+    );
+    assert_eq!(
+        table["content"][1]["content"][0]["type"],
+        serde_json::json!("tableCell")
+    );
+}
+
+#[test]
+fn insert_list_run_produces_valid_list_and_publishes() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-insert-list");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::InsertList {
+        parent_path: "/content".to_string(),
+        index: 2,
+        ordered: false,
+        items: vec![
+            "Item A".to_string(),
+            "Item B".to_string(),
+            "Item C".to_string(),
+        ],
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("insert list run should succeed");
+    assert!(summary.success);
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+
+    let patch_output = read_state_output(temp.path(), "run-insert-list", "patch");
+    let list = &patch_output["payload"]["candidate_page_adf"]["content"][2];
+    assert_eq!(list["type"], serde_json::json!("bulletList"));
+    assert_eq!(list["content"].as_array().unwrap().len(), 3);
+}
+
+#[test]
+fn mixed_insert_section_and_replace_run_succeeds() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-mixed-insert-section-replace");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: Some("/content/1/content/0/text".to_string()),
+        markdown: "Updated prose body".to_string(),
+    };
+    request.block_ops = vec![BlockOp::InsertSection {
+        parent_path: "/content".to_string(),
+        index: 2,
+        heading_level: 3,
+        heading_text: "Follow-up".to_string(),
+        body_blocks: vec![serde_json::json!({
+            "type": "paragraph",
+            "content": [{"type": "text", "text": "Inserted body"}]
+        })],
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("mixed replace + insert section should succeed");
+    assert!(summary.success);
+    assert!(summary
+        .applied_paths
+        .contains(&"/content/1/content/0/text".to_string()));
+    assert!(summary.applied_paths.contains(&"/content/2".to_string()));
+    assert!(summary.applied_paths.contains(&"/content/3".to_string()));
+
+    let patch_output = read_state_output(temp.path(), "run-mixed-insert-section-replace", "patch");
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["content"][0]["text"],
+        serde_json::json!("Updated prose body")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][2]["type"],
+        serde_json::json!("heading")
+    );
+}
+
+#[test]
+fn out_of_scope_insert_section_fails_before_patch() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-out-of-scope-insert-section");
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::InsertSection {
+        parent_path: "/content".to_string(),
+        index: 2,
+        heading_level: 2,
+        heading_text: "Blocked".to_string(),
+        body_blocks: vec![],
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("out-of-scope insert section should fail");
+    assert_hard_error(
+        error,
+        PipelineState::AdfBlockOps,
+        ErrorCode::OutOfScopeMutation.as_str(),
+    );
+}
+
+#[test]
+fn remove_section_non_heading_target_fails_with_section_boundary_error() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-remove-section-non-heading");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::RemoveSection {
+        heading_path: "/content/1".to_string(),
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("remove section on paragraph should fail");
+    assert_hard_error(
+        error,
+        PipelineState::AdfBlockOps,
+        ErrorCode::SectionBoundaryInvalid.as_str(),
+    );
+}
+
 // --- Bootstrap empty-page detection integration tests ---
 
 fn make_orchestrator_with_empty_page(artifact_root: &Path) -> Orchestrator<StubConfluenceClient> {

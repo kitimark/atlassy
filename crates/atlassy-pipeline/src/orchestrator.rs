@@ -320,6 +320,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     code if code == ErrorCode::TableShapeChange.as_str() => {
                         ErrorCode::TableShapeChange
                     }
+                    code if code == ErrorCode::RouteViolation.as_str() => ErrorCode::RouteViolation,
                     code if code == ErrorCode::OutOfScopeMutation.as_str() => {
                         ErrorCode::OutOfScopeMutation
                     }
@@ -331,6 +332,12 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     }
                     code if code == ErrorCode::PostMutationSchemaInvalid.as_str() => {
                         ErrorCode::PostMutationSchemaInvalid
+                    }
+                    code if code == ErrorCode::SectionBoundaryInvalid.as_str() => {
+                        ErrorCode::SectionBoundaryInvalid
+                    }
+                    code if code == ErrorCode::StructuralCompositionFailed.as_str() => {
+                        ErrorCode::StructuralCompositionFailed
                     }
                     _ => ErrorCode::SchemaInvalid,
                 })
