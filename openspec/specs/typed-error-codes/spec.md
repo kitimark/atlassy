@@ -5,7 +5,7 @@ Define a typed, closed-set error code taxonomy for pipeline hard errors while pr
 ## Requirements
 
 ### Requirement: Error codes are a closed typed enum
-The `ErrorCode` enum MUST include variants for all pipeline failure modes including Insert/Remove operation failures. Three new variants MUST be added: `InsertPositionInvalid`, `RemoveAnchorMissing`, `PostMutationSchemaInvalid`.
+The `ErrorCode` enum MUST include variants for all pipeline failure modes including Insert/Remove operation failures, section operation failures, and builder validation failures. Five new variants MUST be added: `InsertPositionInvalid`, `RemoveAnchorMissing`, `PostMutationSchemaInvalid`, `SectionBoundaryInvalid`, `StructuralCompositionFailed`.
 
 #### Scenario: InsertPositionInvalid error code
 - **WHEN** an insert operation fails due to out-of-bounds index, invalid parent path, or disallowed block type
@@ -19,9 +19,17 @@ The `ErrorCode` enum MUST include variants for all pipeline failure modes includ
 - **WHEN** post-mutation ADF fails structural validity checks
 - **THEN** the error code MUST be `ERR_POST_MUTATION_SCHEMA_INVALID`
 
+#### Scenario: SectionBoundaryInvalid error code
+- **WHEN** a RemoveSection targets a non-heading block or an unresolvable path
+- **THEN** the error code MUST be `ERR_SECTION_BOUNDARY_INVALID`
+
+#### Scenario: StructuralCompositionFailed error code
+- **WHEN** a builder function fails to construct valid ADF (e.g., zero rows/cols for table, invalid heading level)
+- **THEN** the error code MUST be `ERR_STRUCTURAL_COMPOSITION_FAILED`
+
 #### Scenario: New error codes appear in ALL constant and tests
 - **WHEN** the `ErrorCode::ALL` array is checked
-- **THEN** it MUST include `InsertPositionInvalid`, `RemoveAnchorMissing`, and `PostMutationSchemaInvalid`
+- **THEN** it MUST include `InsertPositionInvalid`, `RemoveAnchorMissing`, `PostMutationSchemaInvalid`, `SectionBoundaryInvalid`, and `StructuralCompositionFailed`
 - **AND** `as_str()` and `Display` tests MUST cover all new variants
 
 ### Requirement: Stable string representation
