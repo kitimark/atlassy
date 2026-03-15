@@ -4,9 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-atlassy-adf = { path = "../atlassy-adf", version = "0.1.0" }
-atlassy-confluence = { path = "../atlassy-confluence", version = "0.1.0" }
-atlassy-contracts = { path = "../atlassy-contracts", version = "0.1.0" }
+atlassy-adf = { path = "../atlassy-adf" }
+atlassy-confluence = { path = "../atlassy-confluence" }
+atlassy-contracts = { path = "../atlassy-contracts" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
