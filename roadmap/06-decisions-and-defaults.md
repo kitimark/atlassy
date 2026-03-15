@@ -17,17 +17,20 @@
 - Decision: tables are editable in v1 via ADF-native path, cell text only.
 - Rationale: balances usability gains with low structural risk.
 - Deferred: row/column operations and full restructuring are tracked in `ideas/2026-03-advanced-table-editing-modes.md`.
+- Structural phases note: table topology changes (row/column add/remove) are scheduled for Phase 9 (D-017, D-018).
 
 ### D-004: Locked structural policy
 
 - Decision: unsupported structural blocks remain locked in v1.
 - Default set: media, macros/extensions, layouts, mentions, status, panels, embeds, and non-whitelisted nodes.
 - Rationale: avoid lossy or unsafe edits until dedicated support exists.
+- Structural phases note: `locked_structural` policy will be relaxed for block-level insert/delete operations (not attribute editing) in Phase 7. Container nodes become insert/delete targets while preserving their wrapper structure.
 
 ### D-005: Patch strategy
 
 - Decision: path-targeted ADF patch operations only.
 - Rationale: minimize mutation scope and reduce conflict amplification.
+- Structural phases note: patch strategy expands to include `Insert` and `Remove` operations in Phase 6 (D-017). Reverse-document-order processing maintains path stability (D-020).
 
 ### D-006: Verification gates
 
@@ -108,6 +111,35 @@
 - Rationale: KPI experiment page setup requires structural variety (tables, expand macros, locked blocks). Manual Confluence UI editing does not scale and is non-reproducible. The underlying `publish_page()` capability exists but was unexposed.
 - Discovery: `ideas/2026-03-raw-adf-page-seeding.md`.
 
+## Decision Log (Structural Phases)
+
+### D-017: Patch operation type strategy
+
+- Decision: expand `PatchOperation` to support `Replace`, `Insert`, and `Remove` operation kinds via a typed enum.
+- Rationale: v1's `replace`-only constraint prevents structural editing. Typed operations enable compile-time safety for different mutation semantics. `Insert` adds a new ADF block at a specified position. `Remove` deletes an existing ADF block. `Replace` retains v1 behavior (text-value replacement at leaf paths).
+- Constraint: `Insert` and `Remove` require post-mutation ADF schema validation. `Replace` does not (it preserves structure by construction).
+- Phase: 6.
+
+### D-018: Block insert/delete scope (Phase 6)
+
+- Decision: Phase 6 enables insert/delete for all `editable_prose` types (paragraph, heading, bulletList, orderedList, listItem, blockquote, codeBlock). Table structure insert and locked structural block insert are deferred to Phase 7+.
+- Rationale: start with the least risky structural changes. Prose blocks have the simplest ADF schema constraints and the most predictable insertion/deletion semantics. Phase 7 extends to tables and containers once the foundation is validated.
+- Constraint: scope anchor headings (headings used in `scope_selectors`) are blocked from deletion unless explicit re-scoping is provided.
+
+### D-019: Revised KPI framework for structural operations
+
+- Decision: replace Foundation KPI framework with Structural metrics as the primary pass/fail gate. Retire `context_reduction_ratio` and `scoped_section_tokens` as hard targets. Adopt `operation_success_rate`, `schema_validity_rate`, `operation_precision`, `structural_integrity`, `conflict_rate`, `publish_latency`.
+- Rationale: Foundation KPIs measured "how much less context do we fetch for text edits." Structural KPIs measure "do structural operations work correctly and safely." The context reduction metric becomes less meaningful when the goal is content modification rather than minimal-change editing.
+- Phase: 6+.
+
+### D-020: Reverse-order patch processing for insert/delete
+
+- Decision: process insert and delete patch operations in reverse document order (highest index first) to prevent cascading index shifts.
+- Rationale: avoids the complexity of a full stable-ID addressing refactor while enabling correct multi-operation scenarios. The current JSON Pointer addressing system is positional (array indices); inserting at `/content/2` would invalidate all subsequent sibling paths. Processing bottom-up eliminates this problem for non-overlapping operations.
+- Constraint: operations within the same parent array must be sorted by descending index before application. Overlapping operations (insert and delete at the same position) require explicit ordering rules.
+- Upgrade path: if reverse-order processing proves insufficient for complex multi-operation scenarios, stable-ID-based node addressing can be introduced as a future decision.
+- Phase: 6.
+
 ## Default Route Matrix
 
 Authoritative ADF schema reference: [http://go.atlassian.com/adf-json-schema](http://go.atlassian.com/adf-json-schema) (43 node types, 16 mark types as of 2026-03).
@@ -139,6 +171,8 @@ All node types not listed above fall to `locked_structural` via the catch-all ar
 | Divider | rule |
 | Root | doc (never classified; structural root only) |
 
+Structural phases note: `locked_structural` applies to text *edit* operations in Foundation phases. Phase 7 relaxes the lock for block-level *insert/delete* operations (not attribute editing). Container nodes become targets for inserting new child blocks or removing existing ones, while the container wrapper itself is preserved.
+
 ### Container routing note
 
 Container nodes (panel, expand, nestedExpand, layoutSection, layoutColumn, bodiedExtension) are themselves `locked_structural`, but their child nodes are routed individually. A paragraph inside a panel is classified as `editable_prose`; a table inside an expand is classified as `table_adf`. The container wrapper is preserved unchanged; only the inner content is eligible for editing.
@@ -160,3 +194,6 @@ Marks are never read, modified, or validated by the pipeline. Patch operations t
 - Any expansion of `table_adf` beyond cell text requires a new decision entry and updated verifier rules.
 - Any expansion of Markdown conversion scope requires explicit fidelity test evidence.
 - Any relaxation of explicit lifecycle controls (implicit create or implicit bootstrap) requires a new decision entry and readiness evidence update.
+- Any expansion of patch operations beyond `Replace` requires D-017 implementation and post-mutation schema validation (Gate 8).
+- Any relaxation of `locked_structural` for block-level operations requires Phase 7 readiness gates (Gate 9).
+- Any multi-page operation requires Phase 8 rollback infrastructure and orchestration safety gates (Gate 10).

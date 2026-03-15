@@ -1,6 +1,10 @@
-# PoC Scope (v1)
+# PoC Scope
 
 ## Objective
+
+Define validation scope for Atlassy capabilities across Foundation (text replacement) and Structural (insert/edit/delete operations) phases.
+
+## Foundation Objective (Phases 0-5)
 
 Validate that ADF-canonical routing with prose Markdown assist and ADF table-cell edits reduces token waste without fidelity regression.
 
@@ -70,3 +74,66 @@ Lifecycle release-enablement reference:
 - Conflict handling shows bounded retry behavior (one scoped retry max).
 - Lifecycle matrix passes (blank subpage create success, empty-first-edit bootstrap required fail, bootstrap success, bootstrap-on-non-empty hard fail).
 - Decision log is updated with measured outcomes and recommended next scope.
+
+## Structural Validation Scope (Phases 6-9)
+
+### Structural Objective
+
+Validate that insert, edit, and delete operations on ADF blocks produce correct, schema-valid results across single pages and page hierarchies.
+
+### Phase 6 Validation: Block Operation Foundation
+
+- Insert prose blocks (paragraph, heading) at valid positions within scope.
+- Delete prose blocks within scope.
+- Mixed operations: insert + delete + replace in same run.
+- Backward compatibility: Foundation replace-only operations produce identical results.
+- Post-mutation schema validation catches invalid ADF before publish.
+- Error handling: invalid insert positions, missing removal targets, schema violations.
+
+### Phase 7 Validation: Structural Composition
+
+- Section operations: insert and delete full sections (heading + body).
+- Table creation: insert new tables with specified dimensions.
+- List creation: insert new lists with specified items.
+- Container insert/delete: insert child blocks into panels, expands, layouts.
+- Template blocks: predefined structural patterns produce consistent output.
+
+### Phase 8 Validation: Multi-Page Content Control
+
+- Content-bearing sub-page creation with specified ADF structure.
+- Coordinated multi-page edits with dependency ordering.
+- Rollback on partial failure: completed pages revert cleanly.
+- Provenance tracking across multi-page operations.
+
+### Phase 9 Validation: Advanced Operations
+
+- Table topology changes: row/column add/remove.
+- Structural block attribute editing: media metadata, macro parameters.
+- MCP server integration: all operations available via MCP with same safety guarantees.
+
+### Structural Edit Patterns
+
+- Pattern D: insert-only (add paragraphs, headings within scope).
+- Pattern E: delete-only (remove paragraphs, headings within scope).
+- Pattern F: mixed insert/edit/delete (structural modification + text replacement in same run).
+- Pattern G: multi-page (coordinated operations across parent + child pages, Phase 8+).
+- Patterns A/B/C from Foundation retained for backward-compatibility regression testing.
+
+### Structural Instrumentation
+
+- `operation_success_rate`
+- `schema_validity_rate`
+- `operation_precision`
+- `structural_integrity`
+- `conflict_rate`
+- `publish_latency`
+- `context_reduction_ratio` (diagnostic only)
+- `scoped_section_tokens` (diagnostic only)
+
+### Structural Exit Gates
+
+- All Structural edit patterns pass verifier checks including post-mutation schema validation.
+- No unintended side effects on non-target blocks (`operation_precision` = 100%).
+- Backward compatibility: Foundation test suite passes unchanged.
+- Phase-specific readiness gate (8/9/10) passes.
+- Decision log is updated with measured outcomes.

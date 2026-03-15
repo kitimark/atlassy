@@ -2,7 +2,7 @@
 
 ## Status
 
-Incubating (deferred from v1)
+Promoted to roadmap Phase 8 (Multi-Page Content Control). See `roadmap/03-phased-roadmap.md`.
 
 ## Plain Problem Points
 

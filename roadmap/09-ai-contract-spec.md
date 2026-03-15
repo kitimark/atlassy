@@ -1,13 +1,16 @@
-# AI-Facing Pipeline Contract (v1)
+# AI-Facing Pipeline Contract
 
 ## Contract Metadata
 
-- `contract_version`: `1.0.0`
+- `contract_version`: `2.0.0`
 - `pipeline_version`: `v1`
 - `canonical_representation`: `adf`
 - `routes`: `editable_prose | table_adf | locked_structural`
 - `path_format`: `json_pointer` (RFC 6901)
+- `operation_kinds`: `replace | insert | remove`
 - `state_order`: `fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> merge_candidates -> patch -> verify -> publish`
+
+Contract version `1.0.0` (Foundation) is fully backward compatible. Structural additions (2.0.0) are additive; existing `replace`-only payloads remain valid.
 
 ## Global Rules
 
@@ -25,6 +28,8 @@
 
 ## Error Taxonomy
 
+### Foundation Error Codes
+
 - `ERR_SCOPE_MISS`: requested target cannot be resolved.
 - `ERR_ROUTE_VIOLATION`: node edited through an invalid route.
 - `ERR_SCHEMA_INVALID`: candidate ADF fails schema validation.
@@ -34,6 +39,13 @@
 - `ERR_CONFLICT_RETRY_EXHAUSTED`: publish conflict after one scoped retry.
 - `ERR_BOOTSTRAP_REQUIRED`: page is effectively empty and `--bootstrap-empty-page` was not provided.
 - `ERR_BOOTSTRAP_INVALID_STATE`: `--bootstrap-empty-page` was provided but page is not empty.
+
+### Structural Error Codes
+
+- `ERR_INSERT_POSITION_INVALID`: insert target position does not exist, is out of bounds, or would violate ADF schema constraints.
+- `ERR_REMOVE_ANCHOR_MISSING`: removal target block does not exist at the specified path.
+- `ERR_POST_MUTATION_SCHEMA_INVALID`: resulting ADF after insert/delete operations fails schema validation.
+- `ERR_MULTI_PAGE_PARTIAL_FAILURE`: one or more pages in a multi-page operation failed; rollback initiated (Phase 8).
 
 ## State Contracts
 
@@ -80,6 +92,12 @@
 - Inputs: `scoped_adf`, `merged_candidate_nodes[]`.
 - Outputs: `patch_ops[]`, `candidate_page_adf`.
 - Constraints: path-targeted ops only; whole-body rewrite is disallowed.
+- Structural additions:
+  - Each `patch_op` includes `operation_kind`: `replace | insert | remove`.
+  - `insert` ops include `parent_path`, `index`, and `value` (the ADF node to insert).
+  - `remove` ops include `target_path` (the ADF node to delete).
+  - Operations are sorted by descending document position and applied in reverse order (D-020).
+  - Outputs add: `insert_count`, `remove_count`.
 
 ### `verify`
 
@@ -90,6 +108,10 @@
   - locked-node fingerprint unchanged
   - no out-of-scope mutation
   - route-policy compliance
+- Structural additions:
+  - Post-mutation ADF schema validation (required for any run containing insert or remove ops).
+  - Operation manifest cross-check: each changed path must correspond to a declared operation with matching kind.
+  - Intentional structural changes (declared in operation manifest) are distinguished from accidental mutations.
 
 ### `publish`
 
@@ -102,6 +124,7 @@
 - Halt on first hard error.
 - Persist replay artifacts per state: `state_input.json`, `state_output.json`, `diagnostics.json`.
 - Emit final summary: `success`, `applied_paths`, `blocked_paths`, `error_codes`, `token_metrics`, `empty_page_detected`, `bootstrap_applied`.
+- Structural additions: summary includes `insert_count`, `remove_count`, `replace_count`, `schema_validation_result`, and `operation_manifest[]` (list of declared operations with kinds and paths).
 
 ## Minimal Envelope Example
 

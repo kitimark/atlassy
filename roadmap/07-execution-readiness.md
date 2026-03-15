@@ -1,12 +1,13 @@
-# Execution Readiness (v1)
+# Execution Readiness
 
 ## Objective
 
-Define the minimum operational, quality, and governance conditions required to run the v1 PoC and make a defensible `go | iterate | stop` decision.
+Define the minimum operational, quality, and governance conditions required to run PoC experiments and make defensible `go | iterate | stop` decisions for each phase.
 
 ## Scope
 
-- Applies to v1 single-page scoped update flow plus lifecycle release-enablement checks.
+- Foundation (Gates 1-7): single-page scoped text-replacement flow plus lifecycle release-enablement checks.
+- Structural (Gates 8-10): block operation integrity, structural composition validation, and multi-page orchestration safety.
 - Uses KPI and experiment protocol from `04-kpi-and-experiments.md`.
 - Uses risk controls from `05-risks-and-mitigations.md`.
 - Uses pipeline and contract rules from `02-solution-architecture.md` and `09-ai-contract-spec.md`.
@@ -28,11 +29,15 @@ Define the minimum operational, quality, and governance conditions required to r
 
 - OpenSpec is the execution controller; roadmap docs remain strategic baseline.
 - Planned change IDs:
-  - `phase1-core-pipeline-skeleton-rust`
-  - `phase2-prose-assist-route-rust`
-  - `phase3-table-cell-route-rust`
-  - `phase4-poc-execution-metrics-rust`
-  - `phase5-hardening-readiness-rust`
+  - `phase1-core-pipeline-skeleton-rust` (Foundation, complete)
+  - `phase2-prose-assist-route-rust` (Foundation, complete)
+  - `phase3-table-cell-route-rust` (Foundation, complete)
+  - `phase4-poc-execution-metrics-rust` (Foundation, complete)
+  - `phase5-hardening-readiness-rust` (Foundation, complete)
+  - `phase6-block-operation-foundation` (Structural, planned)
+  - `phase7-structural-composition` (Structural, planned)
+  - `phase8-multi-page-content-control` (Structural, planned)
+  - `phase9-advanced-operations` (Structural, planned)
 - Work rule: no implementation task starts without a corresponding OpenSpec change artifact set (`proposal`, `specs`, `design`, `tasks`).
 
 ## Roles and Ownership
@@ -115,6 +120,35 @@ Define the minimum operational, quality, and governance conditions required to r
 - Bootstrap on non-empty page hard-fails deterministically.
 - Lifecycle evidence bundle is committed with clean provenance for decision review.
 
+### Gate 8: Block Operation Integrity (Phase 6)
+
+- Insert operations produce schema-valid ADF; post-mutation validation passes for all insert/delete runs.
+- Delete operations remove exactly the target block with no side effects on adjacent blocks.
+- Reverse-order processing produces correct results for multi-operation batches (insert + delete + replace in same run).
+- Existing v1 replace operations are unchanged (backward compatibility confirmed by v1 test suite).
+- New error codes (`ERR_INSERT_POSITION_INVALID`, `ERR_REMOVE_ANCHOR_MISSING`, `ERR_POST_MUTATION_SCHEMA_INVALID`) fire correctly for invalid operations.
+- Operation manifest cross-check in verify stage detects unmatched changes.
+- Structural KPI targets met: `operation_success_rate` >95%, `schema_validity_rate` 100%, `operation_precision` 100%.
+
+### Gate 9: Structural Composition Validation (Phase 7)
+
+- Section insert (heading + body blocks as unit) produces valid page structure and publishes.
+- Section delete (heading + all body content) removes exactly the target section.
+- Table creation (new table with specified dimensions) produces valid ADF.
+- List creation (new list with specified items) produces valid ADF.
+- Scope boundaries are respected for all compound structural operations.
+- `locked_structural` relaxation for insert/delete does not affect container wrapper preservation.
+- Template blocks produce consistent, schema-valid output.
+
+### Gate 10: Multi-Page Orchestration Safety (Phase 8)
+
+- Multi-page rollback works correctly on partial failure: completed pages revert to pre-operation state.
+- Page hierarchy awareness produces correct dependency ordering for cross-page operations.
+- Content-bearing sub-page creation publishes valid ADF structure.
+- Provenance tracking spans multi-page operations with per-page and batch-level metadata.
+- No orphaned state: partial failures do not leave pages in inconsistent intermediate states.
+- `ERR_MULTI_PAGE_PARTIAL_FAILURE` fires correctly and includes per-page failure details.
+
 ## Pre-Run Checklist
 
 - Confirm dataset page list and pattern matrix for the batch.
@@ -137,9 +171,17 @@ Define the minimum operational, quality, and governance conditions required to r
 
 Decision uses KPI and safety gates together:
 
-- `go`: all PoC pass rules in `04-kpi-and-experiments.md` pass, lifecycle matrix checks pass, and no unresolved safety violations.
-- `iterate`: safety gates hold, but one or more KPI targets miss and can be corrected without changing v1 scope.
-- `stop`: safety gates fail or target recovery requires expanding scope beyond v1 defaults.
+### Foundation (Phases 0-5)
+
+- `go`: all Foundation PoC pass rules in `04-kpi-and-experiments.md` pass, lifecycle matrix checks pass, and no unresolved safety violations.
+- `iterate`: safety gates hold, but one or more KPI targets miss and can be corrected within Foundation scope.
+- `stop`: safety gates fail or target recovery requires expanding scope beyond Foundation defaults.
+
+### Structural (Phases 6-9)
+
+- `go`: all Structural pass rules in `04-kpi-and-experiments.md` pass, phase-specific gate (8/9/10) passes, and no unresolved safety violations.
+- `iterate`: safety gates hold, but one or more Structural KPI targets miss and can be corrected within current phase scope.
+- `stop`: safety gates fail, post-mutation schema validation cannot be guaranteed, or structural operations produce non-deterministic results.
 
 ## Decision Meeting Inputs
 

@@ -9,9 +9,16 @@ This folder contains design and delivery planning for Atlassy.
 - Reduce context bloat in AI conversations by referencing focused files.
 - Use `roadmap/` for active committed planning; use `ideas/` for incubating concepts and historical source notes.
 
-## Roadmap Document Set (current)
+## Scope
 
-- All core v1 planning documents are now tracked in this folder.
+This roadmap spans two major versions:
+
+- **Foundation (Phases 0-5)**: token-efficient text-replacement pipeline. Complete. All 7 readiness gates pass, 159 tests pass.
+- **Structural (Phases 6-9)**: structural operations (insert/edit/delete ADF blocks), structural composition, multi-page content control, and advanced operations. Planning active; Phase 6 is next.
+
+Foundation sections within documents are preserved as historical record. Structural additions are clearly marked.
+
+## Roadmap Document Set (current)
 
 - `01-problem-points.md`
 - `02-solution-architecture.md`
@@ -37,3 +44,4 @@ This folder contains design and delivery planning for Atlassy.
 - Update decision docs when defaults change.
 - Treat `artifacts/` outputs as temporary execution data; keep durable policy in docs, not generated JSON.
 - Include commit provenance (`git_commit_sha`, `git_dirty`, `pipeline_version`) when recording KPI or readiness outcomes.
+- Preserve Foundation sections as historical record; add Structural content under clearly labeled headings.

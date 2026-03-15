@@ -1,12 +1,13 @@
-# Risks and Mitigations (v1)
+# Risks and Mitigations
 
 ## Objective
 
-Define the primary delivery and quality risks for v1, with concrete controls, detection signals, and response actions that preserve safety defaults.
+Define the primary delivery and quality risks for Foundation and Structural phases, with concrete controls, detection signals, and response actions that preserve safety defaults.
 
 ## Scope and Assumptions
 
-- Scope is limited to v1 pipeline behavior and PoC execution.
+- Foundation risks (R-001 through R-010): pipeline behavior and PoC execution.
+- Structural risks (R-011 through R-014): structural operations, index shift handling, multi-page orchestration.
 - Route policy and safety gates follow `06-decisions-and-defaults.md`.
 - KPI pass/fail logic follows `04-kpi-and-experiments.md`.
 - Deferred capabilities remain out of scope unless formally promoted.
@@ -191,17 +192,100 @@ Define the primary delivery and quality risks for v1, with concrete controls, de
   - Pause lifecycle release gating and triage bootstrap state classification.
   - Restore deterministic hard-fail behavior before readiness continuation.
 
-## Deferred-Scope Risk Notes
+## Structural Risk Register (Phases 6-9)
 
-- Advanced table operations are deferred to `ideas/2026-03-advanced-table-editing-modes.md`.
-- Structural block editing is deferred to `ideas/2026-03-structural-block-editing-support.md`.
-- Multi-page orchestration is deferred to `ideas/2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`.
+### R-011 ADF schema corruption from insert/delete
+
+- Description: insert or delete operations produce ADF that violates the Confluence schema, causing publish rejection or page corruption.
+- Likelihood: M.
+- Impact: H.
+- Priority: high.
+- Preventive controls:
+  - Post-mutation ADF schema validation required before publish (D-017).
+  - Reverse-order processing prevents cascading index shifts (D-020).
+  - Operation manifest cross-check in verify stage.
+- Detection signals:
+  - `ERR_POST_MUTATION_SCHEMA_INVALID`.
+  - Publish rejections with Confluence-side schema errors.
+- Response:
+  - Block publish, persist pre- and post-mutation ADF for analysis.
+  - Add fixture reproducing the invalid mutation.
+  - Verify schema validation coverage against ADF JSON Schema reference.
+
+### R-012 Cascading index shift errors
+
+- Description: insert or delete at one position invalidates paths for subsequent operations in the same batch.
+- Likelihood: M.
+- Impact: H.
+- Priority: high.
+- Preventive controls:
+  - Reverse-document-order processing (D-020).
+  - Operations within same parent array sorted by descending index.
+  - Integration tests with multi-operation batches targeting same parent.
+- Detection signals:
+  - Mismatched paths between operation manifest and actual changes.
+  - `ERR_INSERT_POSITION_INVALID` or `ERR_REMOVE_ANCHOR_MISSING` on valid-looking operations.
+  - `operation_precision` below 100%.
+- Response:
+  - Halt batch, dump operation ordering and path state.
+  - Add regression test for the failing operation combination.
+  - Evaluate stable-ID addressing if reverse-order proves insufficient.
+
+### R-013 Multi-page partial failure
+
+- Description: coordinated multi-page operation fails partway through, leaving some pages updated and others not.
+- Likelihood: M.
+- Impact: H.
+- Priority: high.
+- Preventive controls:
+  - Rollback checkpoints per page (Phase 8).
+  - Page-level isolation: each page operation is independently verifiable before batch commits.
+  - Atomic commit semantics: all pages succeed or all revert.
+- Detection signals:
+  - `ERR_MULTI_PAGE_PARTIAL_FAILURE`.
+  - Inconsistent page versions across a coordinated edit set.
+- Response:
+  - Trigger rollback for all completed pages.
+  - Persist per-page operation state for diagnosis.
+  - Require explicit operator approval before retrying multi-page operations.
+
+### R-014 Scope anchor deletion paradox
+
+- Description: deleting a heading that serves as a scope anchor makes subsequent scope resolution fail for the same selector.
+- Likelihood: L.
+- Impact: M.
+- Priority: medium.
+- Preventive controls:
+  - Scope anchors (headings used in `scope_selectors`) blocked from deletion by default (D-018).
+  - Explicit re-scoping required when deleting a scope anchor.
+  - Pre-operation scope anchor detection before processing delete ops.
+- Detection signals:
+  - `ERR_REMOVE_ANCHOR_MISSING` or scope resolution failure after deletion.
+  - Scope fallback to full-page fetch triggered by anchor removal.
+- Response:
+  - Block the delete operation with clear error message.
+  - Operator must provide updated scope selectors if anchor deletion is intended.
+
+## Promoted Scope Risk Notes
+
+The following previously deferred capabilities have been promoted into the Structural phases roadmap:
+
+- Advanced table operations: promoted to Phase 9 (from `ideas/2026-03-advanced-table-editing-modes.md`). Risks covered by R-003 (existing) and R-011 (new).
+- Structural block editing: promoted to Phase 7 and Phase 9 (from `ideas/2026-03-structural-block-editing-support.md`). Risks covered by R-011 and R-012.
+- Multi-page orchestration: promoted to Phase 8 (from `ideas/2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`). Risks covered by R-013.
 
 Lifecycle release-enablement reference (in v1 scope):
 
 - `roadmap/12-page-lifecycle-expansion-plan.md`
 
-Any pull-in of these scopes requires a decision-log update and new verifier rules before implementation.
+## Remaining Deferred-Scope Risk Notes
+
+- Block type conversion (paragraph to heading, etc.) remains deferred.
+- Inline node editing (mentions, status, emoji) remains deferred.
+- Multi-space orchestration remains deferred.
+- Stable-ID addressing is a potential future upgrade if reverse-order processing proves insufficient (D-020).
+
+Any pull-in of deferred scopes requires a decision-log update and new verifier rules before implementation.
 
 ## Operational Mitigation Playbook
 

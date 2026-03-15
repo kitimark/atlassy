@@ -2,7 +2,7 @@
 
 ## Status
 
-Incubating (deferred from v1)
+Promoted to roadmap Phase 7 (Structural Composition) and Phase 9 (Advanced Operations). See `roadmap/03-phased-roadmap.md`.
 
 ## Plain Problem Points
 

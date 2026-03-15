@@ -1,17 +1,18 @@
-# KPI and Experiments (v1)
+# KPI and Experiments
 
 ## Objective
 
-Define a reproducible measurement protocol for the CLI-first PoC that captures real-world value for AI-assisted editing, while preserving v1 safety defaults.
+Define reproducible measurement protocols for Atlassy capabilities: Foundation text-replacement PoC (Phases 0-5) and Structural operations (Phases 6-9) covering insert/edit/delete blocks across pages.
 
 ## Scope and Alignment
 
-- Dataset, edit patterns, and targets align with `08-poc-scope.md`.
+- Foundation PoC KPIs (Phases 0-5): dataset, edit patterns, and targets align with `08-poc-scope.md`.
+- Structural KPIs (Phases 6-9): structural operation metrics defined under D-019.
 - Route and safety constraints align with `06-decisions-and-defaults.md` and `09-ai-contract-spec.md`.
-- Comparisons are paired baseline vs optimized runs for the same page and edit intent.
-- v1 remains CLI-first; metrics are selected to predict future MCP usage value.
+- Foundation comparisons are paired baseline vs optimized runs for the same page and edit intent.
+- Structural comparisons measure operation correctness, schema validity, and precision.
 
-## KPI Definitions
+## Foundation PoC KPI Definitions (Phases 0-5)
 
 ### `context_reduction_ratio`
 
@@ -161,30 +162,118 @@ If any condition fails:
 - Recommendation: `go`, `iterate`, or `stop` with rationale.
 - Provenance stamp with `git_commit_sha`, `git_dirty`, and `pipeline_version`.
 
-## Current Checkpoint Snapshot
+## Foundation Checkpoint Snapshot
 
-- Latest readiness recommendation: `iterate`.
+- Foundation readiness recommendation: `iterate` (superseded by Structural KPI framework per D-019).
 - **2026-03-10 KPI revalidation v6 executed** (18 runs, 3 patterns, live runtime). Result: 18/18 runs succeeded, 9/9 pairs complete.
-- Lifecycle readiness packaging gap is closed for Gate 7 via attestation evidence (`artifacts/batch/attestations.json`); readiness now blocks on KPI targets rather than lifecycle evidence coverage.
-- Current KPI blockers: `context_reduction_ratio` optimized median `64.18%` (<70% threshold) and `publish_latency` p90 regression (`2604ms` optimized vs `2351ms` baseline).
+- Lifecycle readiness packaging gap is closed for Gate 7 via attestation evidence (`artifacts/batch/attestations.json`).
+- Foundation KPI blockers: `context_reduction_ratio` optimized median `64.18%` (<70% threshold) and `publish_latency` p90 regression (`2604ms` optimized vs `2351ms` baseline).
 - Pattern-level signal: A passes context target (`75.37%`), B remains primary reduction bottleneck (`11.96%`), C remains below global threshold (`64.18%`).
+- The Pattern B selector issue is expected to be addressable through Phase 6 structural operations (inserting/deleting blocks on mixed-content pages) rather than narrower scoped fetching.
 - Live evidence: `qa/evidence/2026-03-10-kpi-revalidation-v6/` (fresh-page run, Gate 7 pass, KPI-target miss).
 - Prior evidence: `qa/evidence/2026-03-08-kpi-revalidation-v5/` and `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.
 
-## Blocking Prerequisites for Re-Run
+## Structural KPI Framework (Phases 6-9)
 
-The following must be resolved before the KPI batch can be re-run with valid paired results:
+The Structural KPI framework replaces the Foundation framework as the primary measurement protocol (D-019). Foundation KPIs are retained as diagnostics but are no longer hard pass/fail gates.
 
-- **Pattern B selector strategy** (P0): narrow scoped selection for mixed prose/table pages so optimized context reduction exceeds threshold while preserving publish reliability.
-- **Publish latency regression analysis** (P0): identify and mitigate causes of optimized p90 latency regression versus baseline (2604ms vs 2351ms in v6).
-- **Reproducible page seeding flow** (P1): standardize scripted seeding for fresh KPI pages so reruns remain deterministic and auditable.
-- **Scoped KPI guardrails** (P1): add or extend integration coverage around scoped selector quality for mixed-content pages to prevent broad-scope regressions.
+### `operation_success_rate`
+
+- Definition: share of insert/edit/delete operations that complete with successful publish.
+- Formula: `count(publish_result=published) / count(all operations)`.
+- Unit: percentage.
+- Success direction: higher is better.
+- Target: >95% for in-scope operations.
+- Note: replaces Foundation `edit_success_rate` with expanded scope covering all operation types.
+
+### `schema_validity_rate`
+
+- Definition: share of post-mutation ADF documents that pass schema validation.
+- Formula: `count(schema_valid=true) / count(all operations with insert or remove)`.
+- Unit: percentage.
+- Success direction: higher is better.
+- Target: 100%.
+- Note: new metric; not applicable to Foundation replace-only operations which preserve structure by construction.
+
+### `operation_precision`
+
+- Definition: share of operations where only the declared target blocks were affected.
+- Formula: `count(changed_paths subset_of declared_operation_paths) / count(all operations)`.
+- Unit: percentage.
+- Success direction: higher is better.
+- Target: 100%.
+- Note: new metric; measures whether insert/delete operations have unintended side effects on adjacent blocks.
+
+### `structural_integrity`
+
+- Definition: share of operations where non-target structures are preserved, accounting for intentional structural changes declared in the operation manifest.
+- Formula: `count(non_target_diff=empty) / count(all operations)`.
+- Unit: percentage.
+- Success direction: higher is better.
+- Target: 100%.
+- Note: evolves from Foundation `structural_preservation`. The key difference is that Structural operations intentionally change structure, so the metric must distinguish intentional changes from accidental side effects.
+
+### `conflict_rate`
+
+- Definition: share of operations that encounter at least one publish conflict.
+- Formula: `count(retry_count > 0) / count(all operations)`.
+- Unit: percentage.
+- Success direction: lower is better.
+- Target: <10%, with hard cap of one scoped retry per operation.
+- Note: retained from Foundation; same definition and target.
+
+### `publish_latency`
+
+- Definition: elapsed wall-clock time from request start to publish result.
+- Formula: `publish_end_timestamp - request_start_timestamp`.
+- Unit: milliseconds.
+- Success direction: lower is better.
+- Target: median <3000 ms for scoped operations; p90 non-regressive vs replace-only baseline.
+- Note: retained from Foundation; structural operations may have higher baseline latency due to schema validation.
+
+### Demoted Foundation KPIs (diagnostic only)
+
+- `context_reduction_ratio`: reported but no hard pass/fail threshold. Structural operations change the nature of what is fetched; context reduction is less meaningful when the goal is content modification rather than minimal-change editing.
+- `scoped_section_tokens`: reported but no hard pass/fail threshold.
+
+## Structural Pass/Fail Rules
+
+Structural validation passes when all are true:
+
+- `operation_success_rate` is >95% for in-scope operations.
+- `schema_validity_rate` is 100% for all insert/delete operations.
+- `operation_precision` is 100% for all operations.
+- `structural_integrity` is 100% for all operations.
+- `conflict_rate` is <10% and no operation exceeds one scoped conflict retry.
+- `publish_latency` median for scoped operations is <3000 ms and p90 is non-regressive vs replace-only baseline.
+
+If any condition fails:
+
+- Mark phase as `iterate` if fixable within current phase scope.
+- Mark phase as `stop` if failures require relaxing structural safety constraints.
+
+## Structural Experiment Design
+
+### Operation Matrix
+
+- Pattern D: insert-only (add paragraphs, headings within scope).
+- Pattern E: delete-only (remove paragraphs, headings within scope).
+- Pattern F: mixed insert/edit/delete (structural modification + text replacement in same run).
+- Pattern G: multi-page (coordinated operations across parent + child pages, Phase 8+).
+- Patterns A/B/C from Foundation are retained for backward-compatibility regression testing.
+
+### Controlled Variables
+
+- Same page version window per operation.
+- Same runtime backend, verifier, and publish gates.
+- Post-mutation schema validation enabled for all insert/delete runs.
+- Multi-operation batches use reverse-document-order processing.
 
 ## Exit and Decision Update Workflow
 
 - Publish experiment report with attached artifact index.
 - Update `06-decisions-and-defaults.md` with measured outcomes and any default changes.
-- If all gates pass, mark PoC execution complete in `03-phased-roadmap.md`.
+- If all gates pass, mark phase execution complete in `03-phased-roadmap.md`.
 - If gates fail, open follow-up items under `ideas/` or update phase sequencing.
 
 ## Threats to Validity
@@ -193,3 +282,5 @@ The following must be resolved before the KPI batch can be re-run with valid pai
 - Small datasets may underrepresent enterprise page complexity.
 - External Confluence latency variance can affect publish latency metrics.
 - Run intents without stable selector discipline can inflate variance.
+- Insert/delete operations on small pages may not surface index-shift edge cases that appear on large pages.
+- Post-mutation schema validation may mask latent structural issues if the ADF schema itself is incomplete.

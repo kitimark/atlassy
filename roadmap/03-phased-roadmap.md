@@ -1,10 +1,14 @@
-# Phased Roadmap (v1)
+# Phased Roadmap
 
 ## Objective
 
-Deliver a token-efficient, minimal-change Confluence update pipeline that preserves ADF fidelity while meeting v1 safety and reliability constraints.
+Deliver a Confluence content control pipeline that enables insert, edit, and delete of ADF blocks across pages and sub-pages, while preserving ADF fidelity and structural safety.
+
+The Foundation phases (0-5) established a token-efficient, minimal-change text-replacement pipeline. The Structural phases (6-9) extend the system to full structural operations: block insertion, block deletion, structural composition, and multi-page orchestration.
 
 ## Guiding Constraints
+
+### Foundation Constraints (Phases 0-5)
 
 - ADF remains canonical for `fetch`, `patch`, `verify`, and `publish`.
 - Markdown is assist-only for `editable_prose`.
@@ -12,24 +16,45 @@ Deliver a token-efficient, minimal-change Confluence update pipeline that preser
 - Locked structural nodes must remain unchanged.
 - Publish conflicts allow one scoped rebase retry, then fail fast.
 
+### Structural Constraints (Phases 6-9)
+
+- Insert and delete operations are processed in reverse document order to maintain path stability (D-020).
+- Post-mutation ADF schema validation is required before publish for any insert or delete operation.
+- Structural operations respect scope boundaries; no operation may affect blocks outside `allowed_scope_paths`.
+- Multi-page operations require rollback checkpoints; partial failure must not leave inconsistent state.
+- Existing Foundation text-replacement behavior remains backward compatible throughout Structural phases.
+
 ## Phase Overview
 
 - Phase 0: Design baseline (complete)
-- Phase 1: Core pipeline skeleton
-- Phase 2: Prose assist route
-- Phase 3: Table cell edit route
-- Phase 4: PoC execution and metrics validation
-- Phase 5: Hardening and v1 readiness
+- Phase 1: Core pipeline skeleton (complete)
+- Phase 2: Prose assist route (complete)
+- Phase 3: Table cell edit route (complete)
+- Phase 4: PoC execution and metrics validation (complete)
+- Phase 5: Hardening and v1 readiness (complete)
+- Phase 6: Block operation foundation
+- Phase 7: Structural composition
+- Phase 8: Multi-page content control
+- Phase 9: Advanced operations
 
-## Implementation Checkpoint (2026-03-07)
+## Implementation Checkpoint (2026-03-15)
+
+### Foundation Status (Phases 0-5): Complete
 
 - Phase containers for phases 1-5 are implemented and archived under `openspec/changes/archive/`.
 - Stub and fixture-backed execution is operational (`run`, `run-batch`, `run-readiness`).
 - Live Confluence runtime (`LiveConfluenceClient`) is operational and validated in sandbox with committed evidence.
 - Lifecycle features (`create-subpage`, `--bootstrap-empty-page`) are implemented, tested, and validated against live Confluence.
 - Lifecycle matrix evidence is committed under `qa/evidence/2026-03-07-lifecycle-subpage-bootstrap/`.
-- KPI framework is revised to emphasize context reduction and scoped reliability (`context_reduction_ratio`, `edit_success_rate`, `structural_preservation`), with scoped-selector live revalidation pending.
-- Current recommendation remains `iterate` until revised KPI reruns complete.
+- All 7 readiness gates pass. 159 tests pass across 5 crates.
+- Foundation KPI status: `iterate` (context reduction at 64.18% vs 70% target; publish latency p90 regression). Root cause: Pattern B selector strategy on mixed-content pages.
+- Foundation KPI framework is superseded by Structural KPI framework (D-019). The Pattern B selector issue becomes addressable through Phase 6 structural operations rather than narrower scoped fetching.
+
+### Structural Status (Phases 6-9): Planning
+
+- Roadmap redesigned to target insert/edit/delete of ADF blocks across pages and sub-pages.
+- Decisions D-017 through D-020 define the architectural approach (patch operation types, block scope, revised KPIs, reverse-order processing).
+- Phase 6 (Block Operation Foundation) is the next implementation target.
 
 ## Phase 0: Design Baseline
 
@@ -157,6 +182,90 @@ Before paired KPI experiments can produce valid results, the following must be r
 - Readiness checklist is signed.
 - Final recommendation is documented (`go | iterate | stop`).
 
+## Phase 6: Block Operation Foundation
+
+### Scope
+
+- Expand `PatchOperation` from string `"replace"` to typed enum: `Replace`, `Insert`, `Remove` (D-017).
+- Implement reverse-document-order processing for insert and delete operations to handle index shifts (D-020).
+- `Insert`: add a new ADF block at a specified position within scope. Phase 6 scope limited to `editable_prose` types: paragraph, heading, bulletList, orderedList, listItem, blockquote, codeBlock (D-018).
+- `Remove`: delete an existing ADF block within scope. Same type scope as insert.
+- Post-mutation ADF schema validation: resulting document must pass schema checks before publish.
+- Update classification to handle newly inserted nodes (route assignment for blocks that did not exist at fetch time).
+- Update verification to distinguish intentional structural changes (declared in operation manifest) from accidental mutations.
+- New error codes: `ERR_INSERT_POSITION_INVALID`, `ERR_REMOVE_ANCHOR_MISSING`, `ERR_POST_MUTATION_SCHEMA_INVALID`.
+
+### Key Decisions
+
+- D-017: Patch operation type strategy
+- D-018: Block insert/delete scope (Phase 6)
+- D-019: Revised KPI framework for structural operations
+- D-020: Reverse-order patch processing
+
+### Acceptance Criteria
+
+- Insert a paragraph after an existing heading within scope: succeeds and publishes.
+- Delete a paragraph within scope: succeeds and publishes.
+- Insert at an invalid position (out of bounds, inside locked node): fails with `ERR_INSERT_POSITION_INVALID`.
+- Delete a scope anchor heading: blocked with `ERR_REMOVE_ANCHOR_MISSING` or requires explicit re-scoping.
+- Post-mutation ADF passes schema validation for all insert/delete operations.
+- Existing Foundation text-replacement functionality is unchanged (backward compatible).
+- Multi-operation batch (insert + delete + replace in same run): produces correct results via reverse-order processing.
+
+## Phase 7: Structural Composition
+
+### Scope
+
+- Section operations: insert a section (heading + body blocks) as a unit; delete an entire section (heading + all body content until next same-level heading).
+- Table creation: insert a new table with specified row/column dimensions and optional header row.
+- List creation: insert a new bulletList or orderedList with specified items.
+- Relaxation of `locked_structural` classification for block-level insert/delete operations (not attribute editing). Container nodes become insert/delete targets while preserving their wrapper structure.
+- Template blocks: predefined structural patterns for common content shapes (section with heading + paragraph + table, FAQ pattern, etc.).
+
+### Acceptance Criteria
+
+- Insert a new section (H2 + paragraph + table) into an existing page: succeeds and publishes.
+- Insert a new table with 3 rows x 2 columns: produces valid ADF and publishes.
+- Delete an entire section (heading + all body content): succeeds and publishes.
+- Insert a list with 5 items: produces valid ADF and publishes.
+- Operations respect scope boundaries: no mutation outside `allowed_scope_paths`.
+- Non-target content is completely untouched after compound structural operations.
+- Block type conversion is explicitly out of scope (no paragraph-to-heading conversion).
+
+## Phase 8: Multi-Page Content Control
+
+### Scope
+
+- Content-bearing sub-page creation: create new child pages with specified ADF structure (not just blank pages).
+- Multi-page edit plans: define a set of coordinated operations across a parent page and its sub-pages with dependency ordering.
+- Rollback checkpoints: on partial failure in a multi-page operation, roll back completed pages to their pre-operation state.
+- Page hierarchy awareness: scope resolution understands parent/child relationships for cross-page references.
+- Batch execution with page-level isolation: each page operation is independently verifiable before the batch commits.
+
+### Acceptance Criteria
+
+- Create a sub-page with specified heading/paragraph/table structure: succeeds and publishes.
+- Edit content across parent + child pages in a single coordinated operation: all pages updated atomically.
+- Failure on one page in a multi-page operation: other pages are rolled back to pre-operation state.
+- Provenance tracking spans multi-page operations with per-page and batch-level metadata.
+- Multi-page edit plan rejects cycles or unresolvable dependencies.
+
+## Phase 9: Advanced Operations
+
+### Scope
+
+- Table topology changes: row add/remove, column add/remove within existing tables with strict bounds checking. Promoted from `ideas/2026-03-advanced-table-editing-modes.md`.
+- Structural block attribute editing: metadata-safe updates for selected media and panel attributes, constrained macro/extension parameter edits. Promoted from `ideas/2026-03-structural-block-editing-support.md`.
+- MCP server integration: expose the full insert/edit/delete/multi-page pipeline as MCP tools for AI agents. Promoted from `ideas/2026-03-mcp-server-integration.md`.
+
+### Acceptance Criteria
+
+- Add a row to an existing table: produces valid ADF and publishes.
+- Remove a column from an existing table: produces valid ADF and publishes.
+- Edit a panel's attributes without affecting its content: succeeds and publishes.
+- MCP server exposes all pipeline operations with the same safety guarantees as the CLI.
+- All Foundation and Structural safety gates (verification, scope enforcement, schema validation) apply equally to advanced operations.
+
 ## Dependencies and Planning Tracks
 
 - Problem framing: `01-problem-points.md`
@@ -168,23 +277,34 @@ Before paired KPI experiments can produce valid results, the following must be r
 
 ## OpenSpec Change Map
 
+### Foundation (complete)
+
 - `phase1-core-pipeline-skeleton-rust`
 - `phase2-prose-assist-route-rust`
 - `phase3-table-cell-route-rust`
 - `phase4-poc-execution-metrics-rust`
 - `phase5-hardening-readiness-rust`
 
+### Structural (planned)
+
+- `phase6-block-operation-foundation`
+- `phase7-structural-composition`
+- `phase8-multi-page-content-control`
+- `phase9-advanced-operations`
+
 These change IDs are planned execution containers under OpenSpec and should be used to track proposal/design/tasks and implementation progress.
 
-## Explicitly Deferred Beyond v1
+## Explicitly Deferred
 
-- Table row/column add/remove
-- Table merge/split and table attribute changes
-- Structural transformations for macros/media/layouts
-- Multi-page orchestration and autonomous conflict resolution
+- Block type conversion (e.g., paragraph to heading, list to paragraphs).
+- Inline node editing (mentions, status, emoji, date).
+- Multi-space orchestration (cross-space page operations).
+- Fully autonomous conflict resolution without human review.
+- Stable-ID-based node addressing (upgrade from reverse-order processing if limitations are hit).
 
-See:
+Previously deferred items now scheduled:
 
-- `ideas/2026-03-advanced-table-editing-modes.md`
-- `ideas/2026-03-structural-block-editing-support.md`
-- `ideas/2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`
+- Table row/column add/remove: Phase 9 (from `ideas/2026-03-advanced-table-editing-modes.md`).
+- Structural block attribute editing: Phase 9 (from `ideas/2026-03-structural-block-editing-support.md`).
+- Multi-page orchestration: Phase 8 (from `ideas/2026-03-multi-page-orchestration-and-autonomous-conflict-resolution.md`).
+- MCP server integration: Phase 9 (from `ideas/2026-03-mcp-server-integration.md`).
