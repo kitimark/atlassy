@@ -1,6 +1,7 @@
 use atlassy_adf::{
-    build_list, build_section, build_table, find_section_range, is_insertable_type,
-    is_removable_type, is_within_allowed_scope, AdfError,
+    build_list, build_section, build_table, build_table_cell, build_table_header, build_table_row,
+    find_section_range, is_attr_editable_type, is_insertable_type, is_removable_type,
+    is_within_allowed_scope, AdfError,
 };
 use atlassy_contracts::{
     BlockOp, Diagnostics, FetchOutput, Operation, PipelineState, StateEnvelope,
@@ -122,6 +123,26 @@ fn translate_block_op(
             items,
         } => translate_insert_list(parent_path, *index, *ordered, items, allowed_scope_paths)
             .map(|op| vec![op]),
+        BlockOp::InsertRow {
+            table_path,
+            index,
+            cells,
+        } => translate_insert_row(table_path, *index, cells, allowed_scope_paths, scoped_adf)
+            .map(|op| vec![op]),
+        BlockOp::RemoveRow { table_path, index } => {
+            translate_remove_row(table_path, *index, allowed_scope_paths, scoped_adf)
+                .map(|op| vec![op])
+        }
+        BlockOp::InsertColumn { table_path, index } => {
+            translate_insert_column(table_path, *index, allowed_scope_paths, scoped_adf)
+        }
+        BlockOp::RemoveColumn { table_path, index } => {
+            translate_remove_column(table_path, *index, allowed_scope_paths, scoped_adf)
+        }
+        BlockOp::UpdateAttrs { target_path, attrs } => {
+            translate_update_attrs(target_path, attrs, allowed_scope_paths, scoped_adf)
+                .map(|op| vec![op])
+        }
     }
 }
 
@@ -271,6 +292,328 @@ fn translate_insert_list(
         parent_path: parent_path.to_string(),
         index,
         block,
+    })
+}
+
+fn translate_insert_row(
+    table_path: &str,
+    index: usize,
+    cells: &[String],
+    allowed_scope_paths: &[String],
+    scoped_adf: &Value,
+) -> Result<Operation, AdfError> {
+    if !is_within_allowed_scope(table_path, allowed_scope_paths) {
+        return Err(AdfError::OutOfScope(table_path.to_string()));
+    }
+
+    let table = scoped_adf.pointer(table_path).ok_or_else(|| {
+        AdfError::TableRowInvalid(format!("table path `{table_path}` does not resolve"))
+    })?;
+    if table.get("type").and_then(Value::as_str) != Some("table") {
+        return Err(AdfError::TableRowInvalid(format!(
+            "target `{table_path}` is not a table"
+        )));
+    }
+
+    let rows = table
+        .get("content")
+        .and_then(Value::as_array)
+        .ok_or_else(|| AdfError::TableRowInvalid("table content must be an array".to_string()))?;
+
+    if rows.is_empty() {
+        return Err(AdfError::TableRowInvalid(
+            "cannot insert row into empty table".to_string(),
+        ));
+    }
+    if index > rows.len() {
+        return Err(AdfError::TableRowInvalid(format!(
+            "row index {index} out of bounds for table with {} rows",
+            rows.len()
+        )));
+    }
+
+    let expected_cols = rows
+        .first()
+        .and_then(|row| row.get("content"))
+        .and_then(Value::as_array)
+        .map(|cells| cells.len())
+        .filter(|count| *count > 0)
+        .ok_or_else(|| {
+            AdfError::TableRowInvalid("table rows must contain at least one cell".to_string())
+        })?;
+
+    for (row_index, row) in rows.iter().enumerate() {
+        let row_cells = row
+            .get("content")
+            .and_then(Value::as_array)
+            .ok_or_else(|| {
+                AdfError::TableRowInvalid(format!(
+                    "table row {row_index} is missing a content array"
+                ))
+            })?;
+        if row_cells.len() != expected_cols {
+            return Err(AdfError::TableRowInvalid(format!(
+                "table row {row_index} has {} cells; expected {expected_cols}",
+                row_cells.len()
+            )));
+        }
+    }
+
+    if cells.len() != expected_cols {
+        return Err(AdfError::TableRowInvalid(format!(
+            "new row has {} cells; expected {expected_cols}",
+            cells.len()
+        )));
+    }
+
+    let row_cells = cells
+        .iter()
+        .map(|cell| build_table_cell(cell))
+        .collect::<Vec<_>>();
+    let row = build_table_row(&row_cells);
+
+    Ok(Operation::Insert {
+        parent_path: format!("{table_path}/content"),
+        index,
+        block: row,
+    })
+}
+
+fn translate_remove_row(
+    table_path: &str,
+    index: usize,
+    allowed_scope_paths: &[String],
+    scoped_adf: &Value,
+) -> Result<Operation, AdfError> {
+    if !is_within_allowed_scope(table_path, allowed_scope_paths) {
+        return Err(AdfError::OutOfScope(table_path.to_string()));
+    }
+
+    let table = scoped_adf.pointer(table_path).ok_or_else(|| {
+        AdfError::TableRowInvalid(format!("table path `{table_path}` does not resolve"))
+    })?;
+    if table.get("type").and_then(Value::as_str) != Some("table") {
+        return Err(AdfError::TableRowInvalid(format!(
+            "target `{table_path}` is not a table"
+        )));
+    }
+
+    let rows = table
+        .get("content")
+        .and_then(Value::as_array)
+        .ok_or_else(|| AdfError::TableRowInvalid("table content must be an array".to_string()))?;
+
+    if rows.len() <= 1 {
+        return Err(AdfError::TableRowInvalid(
+            "cannot remove last remaining row from table".to_string(),
+        ));
+    }
+    if index >= rows.len() {
+        return Err(AdfError::TableRowInvalid(format!(
+            "row index {index} out of bounds for table with {} rows",
+            rows.len()
+        )));
+    }
+
+    Ok(Operation::Remove {
+        target_path: format!("{table_path}/content/{index}"),
+    })
+}
+
+fn translate_insert_column(
+    table_path: &str,
+    index: usize,
+    allowed_scope_paths: &[String],
+    scoped_adf: &Value,
+) -> Result<Vec<Operation>, AdfError> {
+    if !is_within_allowed_scope(table_path, allowed_scope_paths) {
+        return Err(AdfError::OutOfScope(table_path.to_string()));
+    }
+
+    let table = scoped_adf.pointer(table_path).ok_or_else(|| {
+        AdfError::TableColumnInvalid(format!("table path `{table_path}` does not resolve"))
+    })?;
+    if table.get("type").and_then(Value::as_str) != Some("table") {
+        return Err(AdfError::TableColumnInvalid(format!(
+            "target `{table_path}` is not a table"
+        )));
+    }
+
+    let rows = table
+        .get("content")
+        .and_then(Value::as_array)
+        .ok_or_else(|| {
+            AdfError::TableColumnInvalid("table content must be an array".to_string())
+        })?;
+
+    if rows.is_empty() {
+        return Err(AdfError::TableColumnInvalid(
+            "cannot insert column into empty table".to_string(),
+        ));
+    }
+
+    let expected_cols = rows
+        .first()
+        .and_then(|row| row.get("content"))
+        .and_then(Value::as_array)
+        .map(|cells| cells.len())
+        .filter(|count| *count > 0)
+        .ok_or_else(|| {
+            AdfError::TableColumnInvalid("table rows must contain at least one cell".to_string())
+        })?;
+
+    if index > expected_cols {
+        return Err(AdfError::TableColumnInvalid(format!(
+            "column index {index} out of bounds for table with {expected_cols} columns"
+        )));
+    }
+
+    let mut operations = Vec::with_capacity(rows.len());
+    for (row_index, row) in rows.iter().enumerate() {
+        let row_cells = row
+            .get("content")
+            .and_then(Value::as_array)
+            .ok_or_else(|| {
+                AdfError::TableColumnInvalid(format!(
+                    "table row {row_index} is missing a content array"
+                ))
+            })?;
+        if row_cells.len() != expected_cols {
+            return Err(AdfError::TableColumnInvalid(format!(
+                "table row {row_index} has {} cells; expected {expected_cols}",
+                row_cells.len()
+            )));
+        }
+
+        let is_header_row = row_cells
+            .first()
+            .and_then(|cell| cell.get("type"))
+            .and_then(Value::as_str)
+            == Some("tableHeader");
+        let block = if is_header_row {
+            build_table_header("")
+        } else {
+            build_table_cell("")
+        };
+
+        operations.push(Operation::Insert {
+            parent_path: format!("{table_path}/content/{row_index}/content"),
+            index,
+            block,
+        });
+    }
+
+    Ok(operations)
+}
+
+fn translate_remove_column(
+    table_path: &str,
+    index: usize,
+    allowed_scope_paths: &[String],
+    scoped_adf: &Value,
+) -> Result<Vec<Operation>, AdfError> {
+    if !is_within_allowed_scope(table_path, allowed_scope_paths) {
+        return Err(AdfError::OutOfScope(table_path.to_string()));
+    }
+
+    let table = scoped_adf.pointer(table_path).ok_or_else(|| {
+        AdfError::TableColumnInvalid(format!("table path `{table_path}` does not resolve"))
+    })?;
+    if table.get("type").and_then(Value::as_str) != Some("table") {
+        return Err(AdfError::TableColumnInvalid(format!(
+            "target `{table_path}` is not a table"
+        )));
+    }
+
+    let rows = table
+        .get("content")
+        .and_then(Value::as_array)
+        .ok_or_else(|| {
+            AdfError::TableColumnInvalid("table content must be an array".to_string())
+        })?;
+
+    if rows.is_empty() {
+        return Err(AdfError::TableColumnInvalid(
+            "cannot remove column from empty table".to_string(),
+        ));
+    }
+
+    let expected_cols = rows
+        .first()
+        .and_then(|row| row.get("content"))
+        .and_then(Value::as_array)
+        .map(|cells| cells.len())
+        .filter(|count| *count > 0)
+        .ok_or_else(|| {
+            AdfError::TableColumnInvalid("table rows must contain at least one cell".to_string())
+        })?;
+
+    if expected_cols <= 1 {
+        return Err(AdfError::TableColumnInvalid(
+            "cannot remove last remaining column".to_string(),
+        ));
+    }
+    if index >= expected_cols {
+        return Err(AdfError::TableColumnInvalid(format!(
+            "column index {index} out of bounds for table with {expected_cols} columns"
+        )));
+    }
+
+    let mut operations = Vec::with_capacity(rows.len());
+    for (row_index, row) in rows.iter().enumerate() {
+        let row_cells = row
+            .get("content")
+            .and_then(Value::as_array)
+            .ok_or_else(|| {
+                AdfError::TableColumnInvalid(format!(
+                    "table row {row_index} is missing a content array"
+                ))
+            })?;
+        if row_cells.len() != expected_cols {
+            return Err(AdfError::TableColumnInvalid(format!(
+                "table row {row_index} has {} cells; expected {expected_cols}",
+                row_cells.len()
+            )));
+        }
+
+        operations.push(Operation::Remove {
+            target_path: format!("{table_path}/content/{row_index}/content/{index}"),
+        });
+    }
+
+    Ok(operations)
+}
+
+fn translate_update_attrs(
+    target_path: &str,
+    attrs: &Value,
+    allowed_scope_paths: &[String],
+    scoped_adf: &Value,
+) -> Result<Operation, AdfError> {
+    if !is_within_allowed_scope(target_path, allowed_scope_paths) {
+        return Err(AdfError::OutOfScope(target_path.to_string()));
+    }
+    if !attrs.is_object() {
+        return Err(AdfError::AttrSchemaViolation(format!(
+            "attrs payload for `{target_path}` must be an object"
+        )));
+    }
+
+    let target = scoped_adf.pointer(target_path).ok_or_else(|| {
+        AdfError::AttrUpdateBlocked(format!("target path `{target_path}` does not resolve"))
+    })?;
+    let node_type = target.get("type").and_then(Value::as_str).ok_or_else(|| {
+        AdfError::AttrUpdateBlocked(format!("target `{target_path}` is missing node type"))
+    })?;
+    if !is_attr_editable_type(node_type) {
+        return Err(AdfError::AttrUpdateBlocked(format!(
+            "node type `{node_type}` at `{target_path}` is not attr-editable"
+        )));
+    }
+
+    Ok(Operation::UpdateAttrs {
+        target_path: target_path.to_string(),
+        attrs: attrs.clone(),
     })
 }
 

@@ -70,6 +70,7 @@ fn main() -> Result<(), DynError> {
                 args.target_path,
                 args.target_index,
                 args.new_value,
+                args.block_ops_json,
                 args.force_verify_fail,
                 args.bootstrap_empty_page,
                 args.runtime_backend.as_str(),

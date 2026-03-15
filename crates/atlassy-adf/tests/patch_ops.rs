@@ -68,6 +68,47 @@ fn applies_replace_operation_to_candidate_payload() {
 }
 
 #[test]
+fn apply_update_attrs_merges_creates_and_rejects_missing_target() {
+    let base = base_adf();
+
+    let merged = apply_operations(
+        &base,
+        &[Operation::UpdateAttrs {
+            target_path: "/content/0".to_string(),
+            attrs: json!({"localId": "heading-local", "level": 3}),
+        }],
+    )
+    .unwrap();
+    assert_eq!(merged.pointer("/content/0/attrs/level"), Some(&json!(3)));
+    assert_eq!(
+        merged.pointer("/content/0/attrs/localId"),
+        Some(&json!("heading-local"))
+    );
+
+    let created = apply_operations(
+        &base,
+        &[Operation::UpdateAttrs {
+            target_path: "/content/2".to_string(),
+            attrs: json!({"id": "para-2"}),
+        }],
+    )
+    .unwrap();
+    assert_eq!(
+        created.pointer("/content/2/attrs/id"),
+        Some(&json!("para-2"))
+    );
+
+    let missing = apply_operations(
+        &base,
+        &[Operation::UpdateAttrs {
+            target_path: "/content/99".to_string(),
+            attrs: json!({"id": "missing"}),
+        }],
+    );
+    assert!(matches!(missing, Err(AdfError::AttrUpdateBlocked(_))));
+}
+
+#[test]
 fn apply_insert_supports_beginning_middle_and_end_positions() {
     let base = base_adf();
 
@@ -184,6 +225,10 @@ fn validate_operations_checks_insert_remove_scope_and_whole_body_rewrite() {
         Operation::Remove {
             target_path: "/content/1".to_string(),
         },
+        Operation::UpdateAttrs {
+            target_path: "/content/0".to_string(),
+            attrs: json!({"level": 3}),
+        },
     ];
     assert!(validate_operations(&valid, &allowed_scope_paths).is_ok());
 
@@ -213,4 +258,13 @@ fn validate_operations_checks_insert_remove_scope_and_whole_body_rewrite() {
         validate_operations(&whole_body, &allowed_scope_paths),
         Err(AdfError::WholeBodyRewriteDisallowed)
     );
+
+    let non_object_attrs = vec![Operation::UpdateAttrs {
+        target_path: "/content/1".to_string(),
+        attrs: json!("not-object"),
+    }];
+    assert!(matches!(
+        validate_operations(&non_object_attrs, &allowed_scope_paths),
+        Err(AdfError::AttrSchemaViolation(_))
+    ));
 }

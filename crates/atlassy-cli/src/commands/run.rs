@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use atlassy_confluence::{ConfluenceError, LiveConfluenceClient, StubConfluenceClient, StubPage};
 use atlassy_contracts::{
-    ErrorCode, PipelineState, FLOW_OPTIMIZED, PATTERN_A, RUNTIME_LIVE, RUNTIME_STUB,
+    BlockOp, ErrorCode, PipelineState, FLOW_OPTIMIZED, PATTERN_A, RUNTIME_LIVE, RUNTIME_STUB,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest};
 use chrono::Utc;
@@ -81,6 +81,7 @@ pub fn execute_run_command(
     target_path: Option<String>,
     target_index: Option<usize>,
     new_value: Option<String>,
+    block_ops_json: Option<String>,
     force_verify_fail: bool,
     bootstrap_empty_page: bool,
     runtime_mode: &str,
@@ -111,12 +112,23 @@ pub fn execute_run_command(
         provenance,
         run_mode,
         target_index: target_index.unwrap_or_default(),
-        block_ops: vec![],
+        block_ops: parse_block_ops(block_ops_json)?,
         force_verify_fail,
         bootstrap_empty_page,
     };
 
     run_single_request(request, artifacts_dir, runtime_mode)
+}
+
+fn parse_block_ops(raw: Option<String>) -> Result<Vec<BlockOp>, DynError> {
+    match raw {
+        Some(value) => {
+            let block_ops = serde_json::from_str::<Vec<BlockOp>>(&value)
+                .map_err(|error| format!("invalid --block-ops-json payload: {error}"))?;
+            Ok(block_ops)
+        }
+        None => Ok(Vec::new()),
+    }
 }
 
 pub fn hash_edit_intent(edit_intent: &str) -> String {

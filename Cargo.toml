@@ -5,6 +5,7 @@ members = [
   "crates/atlassy-adf",
   "crates/atlassy-confluence",
   "crates/atlassy-contracts",
+  "crates/atlassy-mcp",
 ]
 resolver = "2"
 

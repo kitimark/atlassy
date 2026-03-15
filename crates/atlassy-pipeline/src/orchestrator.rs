@@ -339,6 +339,18 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     code if code == ErrorCode::StructuralCompositionFailed.as_str() => {
                         ErrorCode::StructuralCompositionFailed
                     }
+                    code if code == ErrorCode::TableRowInvalid.as_str() => {
+                        ErrorCode::TableRowInvalid
+                    }
+                    code if code == ErrorCode::TableColumnInvalid.as_str() => {
+                        ErrorCode::TableColumnInvalid
+                    }
+                    code if code == ErrorCode::AttrUpdateBlocked.as_str() => {
+                        ErrorCode::AttrUpdateBlocked
+                    }
+                    code if code == ErrorCode::AttrSchemaViolation.as_str() => {
+                        ErrorCode::AttrSchemaViolation
+                    }
                     _ => ErrorCode::SchemaInvalid,
                 })
                 .unwrap_or(ErrorCode::SchemaInvalid);
@@ -431,5 +443,6 @@ fn operation_paths(operation: &Operation) -> Vec<String> {
             parent_path, index, ..
         } => vec![format!("{parent_path}/{index}")],
         Operation::Remove { target_path } => vec![target_path.clone()],
+        Operation::UpdateAttrs { target_path, .. } => vec![target_path.clone()],
     }
 }

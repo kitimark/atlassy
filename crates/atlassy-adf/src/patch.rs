@@ -53,6 +53,22 @@ pub fn validate_operations(
                     return Err(AdfError::OutOfScope(target_path.clone()));
                 }
             }
+            Operation::UpdateAttrs { target_path, attrs } => {
+                if !is_json_pointer(target_path) {
+                    return Err(AdfError::InvalidPath(target_path.clone()));
+                }
+                if target_path == "/" || target_path.is_empty() {
+                    return Err(AdfError::WholeBodyRewriteDisallowed);
+                }
+                if !is_within_allowed_scope(target_path, allowed_scope_paths) {
+                    return Err(AdfError::OutOfScope(target_path.clone()));
+                }
+                if !attrs.is_object() {
+                    return Err(AdfError::AttrSchemaViolation(format!(
+                        "update attrs payload at `{target_path}` must be an object"
+                    )));
+                }
+            }
         }
     }
     Ok(())
@@ -80,6 +96,9 @@ pub fn apply_operations(base: &Value, operations: &[Operation]) -> Result<Value,
                 block,
             } => apply_insert(&mut candidate, parent_path, *index, block)?,
             Operation::Remove { target_path } => apply_remove(&mut candidate, target_path)?,
+            Operation::UpdateAttrs { target_path, attrs } => {
+                apply_update_attrs(&mut candidate, target_path, attrs)?
+            }
         }
     }
     Ok(candidate)
@@ -133,6 +152,39 @@ pub fn apply_remove(candidate: &mut Value, target_path: &str) -> Result<(), AdfE
     }
 
     parent_array.remove(index);
+    Ok(())
+}
+
+pub fn apply_update_attrs(
+    candidate: &mut Value,
+    target_path: &str,
+    attrs: &Value,
+) -> Result<(), AdfError> {
+    let attr_patch = attrs.as_object().ok_or_else(|| {
+        AdfError::AttrSchemaViolation(format!(
+            "update attrs payload at `{target_path}` must be an object"
+        ))
+    })?;
+
+    let target = candidate.pointer_mut(target_path).ok_or_else(|| {
+        AdfError::AttrUpdateBlocked(format!("target path `{target_path}` does not resolve"))
+    })?;
+
+    let target_obj = target.as_object_mut().ok_or_else(|| {
+        AdfError::AttrUpdateBlocked(format!("target path `{target_path}` is not an object node"))
+    })?;
+
+    if let Some(existing_attrs) = target_obj.get_mut("attrs") {
+        let existing_obj = existing_attrs.as_object_mut().ok_or_else(|| {
+            AdfError::AttrSchemaViolation(format!("target `{target_path}` has non-object attrs"))
+        })?;
+        for (key, value) in attr_patch {
+            existing_obj.insert(key.clone(), value.clone());
+        }
+        return Ok(());
+    }
+
+    target_obj.insert("attrs".to_string(), Value::Object(attr_patch.clone()));
     Ok(())
 }
 

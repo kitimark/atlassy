@@ -64,6 +64,116 @@ fn make_orchestrator_with_fixture(
     Orchestrator::new(StubConfluenceClient::new(pages), artifact_root)
 }
 
+fn make_orchestrator_with_adf(
+    artifact_root: &Path,
+    adf: serde_json::Value,
+) -> Orchestrator<StubConfluenceClient> {
+    let mut pages = HashMap::new();
+    pages.insert("18841604".to_string(), StubPage { version: 7, adf });
+
+    Orchestrator::new(StubConfluenceClient::new(pages), artifact_root)
+}
+
+fn table_with_header_and_rows_fixture() -> serde_json::Value {
+    serde_json::json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            {
+                "type": "heading",
+                "attrs": {"level": 2},
+                "content": [{"type": "text", "text": "Overview"}]
+            },
+            {
+                "type": "table",
+                "content": [
+                    {
+                        "type": "tableRow",
+                        "content": [
+                            {
+                                "type": "tableHeader",
+                                "content": [{"type": "paragraph", "content": [{"type": "text", "text": "H1"}]}]
+                            },
+                            {
+                                "type": "tableHeader",
+                                "content": [{"type": "paragraph", "content": [{"type": "text", "text": "H2"}]}]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "tableRow",
+                        "content": [
+                            {
+                                "type": "tableCell",
+                                "content": [{"type": "paragraph", "content": [{"type": "text", "text": "A1"}]}]
+                            },
+                            {
+                                "type": "tableCell",
+                                "content": [{"type": "paragraph", "content": [{"type": "text", "text": "A2"}]}]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "tableRow",
+                        "content": [
+                            {
+                                "type": "tableCell",
+                                "content": [{"type": "paragraph", "content": [{"type": "text", "text": "B1"}]}]
+                            },
+                            {
+                                "type": "tableCell",
+                                "content": [{"type": "paragraph", "content": [{"type": "text", "text": "B2"}]}]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    })
+}
+
+fn panel_fixture() -> serde_json::Value {
+    serde_json::json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            {
+                "type": "heading",
+                "attrs": {"level": 2},
+                "content": [{"type": "text", "text": "Overview"}]
+            },
+            {
+                "type": "panel",
+                "attrs": {"panelType": "info"},
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "Panel body"}]
+                    }
+                ]
+            }
+        ]
+    })
+}
+
+fn extension_fixture() -> serde_json::Value {
+    serde_json::json!({
+        "type": "doc",
+        "version": 1,
+        "content": [
+            {
+                "type": "heading",
+                "attrs": {"level": 2},
+                "content": [{"type": "text", "text": "Overview"}]
+            },
+            {
+                "type": "extension",
+                "attrs": {"extensionKey": "macro-key"}
+            }
+        ]
+    })
+}
+
 #[derive(Debug, Clone)]
 struct PublishTransportErrorClient {
     page_version: u64,
@@ -1143,6 +1253,234 @@ fn insert_list_run_produces_valid_list_and_publishes() {
     let list = &patch_output["payload"]["candidate_page_adf"]["content"][2];
     assert_eq!(list["type"], serde_json::json!("bulletList"));
     assert_eq!(list["content"].as_array().unwrap().len(), 3);
+}
+
+#[test]
+fn insert_row_run_adds_row_with_matching_cell_count() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_adf(temp.path(), table_with_header_and_rows_fixture());
+
+    let mut request = sample_request("run-insert-row");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::InsertRow {
+        table_path: "/content/1".to_string(),
+        index: 2,
+        cells: vec!["X1".to_string(), "X2".to_string()],
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("insert row run should succeed");
+    assert!(summary.success);
+
+    let patch_output = read_state_output(temp.path(), "run-insert-row", "patch");
+    let table_rows = patch_output["payload"]["candidate_page_adf"]["content"][1]["content"]
+        .as_array()
+        .expect("table rows should be array");
+    assert_eq!(table_rows.len(), 4);
+    assert_eq!(
+        table_rows[2]["content"][0]["content"][0]["content"][0]["text"],
+        serde_json::json!("X1")
+    );
+    assert_eq!(
+        table_rows[2]["content"][1]["content"][0]["content"][0]["text"],
+        serde_json::json!("X2")
+    );
+}
+
+#[test]
+fn remove_row_run_removes_target_row_and_preserves_remaining_rows() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_adf(temp.path(), table_with_header_and_rows_fixture());
+
+    let mut request = sample_request("run-remove-row");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::RemoveRow {
+        table_path: "/content/1".to_string(),
+        index: 1,
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("remove row run should succeed");
+    assert!(summary.success);
+
+    let patch_output = read_state_output(temp.path(), "run-remove-row", "patch");
+    let table_rows = patch_output["payload"]["candidate_page_adf"]["content"][1]["content"]
+        .as_array()
+        .expect("table rows should be array");
+    assert_eq!(table_rows.len(), 2);
+    assert_eq!(
+        table_rows[1]["content"][0]["content"][0]["content"][0]["text"],
+        serde_json::json!("B1")
+    );
+}
+
+#[test]
+fn insert_column_run_adds_cells_to_all_rows() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_adf(temp.path(), table_with_header_and_rows_fixture());
+
+    let mut request = sample_request("run-insert-column");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::InsertColumn {
+        table_path: "/content/1".to_string(),
+        index: 1,
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("insert column run should succeed");
+    assert!(summary.success);
+
+    let patch_output = read_state_output(temp.path(), "run-insert-column", "patch");
+    let table_rows = patch_output["payload"]["candidate_page_adf"]["content"][1]["content"]
+        .as_array()
+        .expect("table rows should be array");
+
+    for row in table_rows {
+        assert_eq!(row["content"].as_array().unwrap().len(), 3);
+    }
+    assert_eq!(
+        table_rows[0]["content"][1]["type"],
+        serde_json::json!("tableHeader")
+    );
+    assert_eq!(
+        table_rows[1]["content"][1]["type"],
+        serde_json::json!("tableCell")
+    );
+}
+
+#[test]
+fn remove_column_run_removes_cells_from_all_rows() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator =
+        make_orchestrator_with_adf(temp.path(), table_with_header_and_rows_fixture());
+
+    let mut request = sample_request("run-remove-column");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::RemoveColumn {
+        table_path: "/content/1".to_string(),
+        index: 1,
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("remove column run should succeed");
+    assert!(summary.success);
+
+    let patch_output = read_state_output(temp.path(), "run-remove-column", "patch");
+    let table_rows = patch_output["payload"]["candidate_page_adf"]["content"][1]["content"]
+        .as_array()
+        .expect("table rows should be array");
+    for row in table_rows {
+        assert_eq!(row["content"].as_array().unwrap().len(), 1);
+    }
+}
+
+#[test]
+fn update_attrs_run_updates_panel_attrs_without_touching_content() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_adf(temp.path(), panel_fixture());
+
+    let mut request = sample_request("run-update-attrs-panel");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::UpdateAttrs {
+        target_path: "/content/1".to_string(),
+        attrs: serde_json::json!({"panelType": "warning"}),
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("update attrs on panel should succeed");
+    assert!(summary.success);
+
+    let patch_output = read_state_output(temp.path(), "run-update-attrs-panel", "patch");
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["attrs"]["panelType"],
+        serde_json::json!("warning")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["content"][0]["content"][0]
+            ["text"],
+        serde_json::json!("Panel body")
+    );
+}
+
+#[test]
+fn update_attrs_on_non_attr_editable_node_is_rejected() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_adf(temp.path(), extension_fixture());
+
+    let mut request = sample_request("run-update-attrs-extension-rejected");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::UpdateAttrs {
+        target_path: "/content/1".to_string(),
+        attrs: serde_json::json!({"title": "bad"}),
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("update attrs on extension should fail");
+    assert_hard_error(
+        error,
+        PipelineState::AdfBlockOps,
+        ErrorCode::AttrUpdateBlocked.as_str(),
+    );
+}
+
+#[test]
+fn update_attrs_with_disallowed_key_fails_attr_schema_validation() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_adf(temp.path(), panel_fixture());
+
+    let mut request = sample_request("run-update-attrs-schema-invalid");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::UpdateAttrs {
+        target_path: "/content/1".to_string(),
+        attrs: serde_json::json!({"dangerousKey": true}),
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("disallowed attr key should fail verify");
+    assert_hard_error(
+        error,
+        PipelineState::Verify,
+        ErrorCode::AttrSchemaViolation.as_str(),
+    );
+}
+
+#[test]
+fn replace_inside_panel_is_blocked_by_locked_boundary() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_adf(temp.path(), panel_fixture());
+
+    let mut request = sample_request("run-replace-panel-blocked");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: Some("/content/1/content/0/content/0/text".to_string()),
+        markdown: "Attempted replace".to_string(),
+    };
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("replace inside panel should fail verify");
+    assert_hard_error(
+        error,
+        PipelineState::Verify,
+        ErrorCode::RouteViolation.as_str(),
+    );
 }
 
 #[test]

@@ -32,6 +32,27 @@ pub fn build_heading(level: u8, text: &str) -> Result<Value, AdfError> {
     }))
 }
 
+pub fn build_table_cell(content: &str) -> Value {
+    json!({
+        "type": "tableCell",
+        "content": [build_paragraph(content)],
+    })
+}
+
+pub fn build_table_header(content: &str) -> Value {
+    json!({
+        "type": "tableHeader",
+        "content": [build_paragraph(content)],
+    })
+}
+
+pub fn build_table_row(cells: &[Value]) -> Value {
+    json!({
+        "type": "tableRow",
+        "content": cells,
+    })
+}
+
 pub fn build_table(rows: usize, cols: usize, header_row: bool) -> Result<Value, AdfError> {
     if rows == 0 || cols == 0 {
         return Err(AdfError::StructuralCompositionFailed(format!(
@@ -41,23 +62,17 @@ pub fn build_table(rows: usize, cols: usize, header_row: bool) -> Result<Value, 
 
     let mut table_rows = Vec::with_capacity(rows);
     for row_index in 0..rows {
-        let cell_type = if header_row && row_index == 0 {
-            "tableHeader"
-        } else {
-            "tableCell"
-        };
         let mut cells = Vec::with_capacity(cols);
         for _ in 0..cols {
-            cells.push(json!({
-                "type": cell_type,
-                "content": [build_paragraph("")],
-            }));
+            let cell = if header_row && row_index == 0 {
+                build_table_header("")
+            } else {
+                build_table_cell("")
+            };
+            cells.push(cell);
         }
 
-        table_rows.push(json!({
-            "type": "tableRow",
-            "content": cells,
-        }));
+        table_rows.push(build_table_row(&cells));
     }
 
     Ok(json!({

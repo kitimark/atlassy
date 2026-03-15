@@ -280,6 +280,10 @@ pub enum Operation {
     Remove {
         target_path: String,
     },
+    UpdateAttrs {
+        target_path: String,
+        attrs: serde_json::Value,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -315,6 +319,27 @@ pub enum BlockOp {
         index: usize,
         ordered: bool,
         items: Vec<String>,
+    },
+    InsertRow {
+        table_path: String,
+        index: usize,
+        cells: Vec<String>,
+    },
+    RemoveRow {
+        table_path: String,
+        index: usize,
+    },
+    InsertColumn {
+        table_path: String,
+        index: usize,
+    },
+    RemoveColumn {
+        table_path: String,
+        index: usize,
+    },
+    UpdateAttrs {
+        target_path: String,
+        attrs: serde_json::Value,
     },
 }
 

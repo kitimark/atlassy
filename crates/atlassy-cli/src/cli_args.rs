@@ -25,6 +25,8 @@ pub struct RunArgs {
     #[arg(long)]
     pub new_value: Option<String>,
     #[arg(long)]
+    pub block_ops_json: Option<String>,
+    #[arg(long)]
     pub force_verify_fail: bool,
     #[arg(long)]
     pub bootstrap_empty_page: bool,

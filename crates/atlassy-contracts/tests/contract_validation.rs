@@ -98,7 +98,7 @@ fn merge_patch_and_verify_payloads_use_operations_field() {
 }
 
 #[test]
-fn operation_insert_and_remove_round_trip_serde() {
+fn operation_insert_remove_and_update_attrs_round_trip_serde() {
     let insert = Operation::Insert {
         parent_path: "/content".to_string(),
         index: 2,
@@ -107,17 +107,25 @@ fn operation_insert_and_remove_round_trip_serde() {
     let remove = Operation::Remove {
         target_path: "/content/2".to_string(),
     };
+    let update_attrs = Operation::UpdateAttrs {
+        target_path: "/content/2".to_string(),
+        attrs: serde_json::json!({"panelType": "warning"}),
+    };
 
     let insert_json = serde_json::to_value(&insert).unwrap();
     let remove_json = serde_json::to_value(&remove).unwrap();
+    let update_attrs_json = serde_json::to_value(&update_attrs).unwrap();
 
     assert_eq!(insert_json["op"], serde_json::json!("insert"));
     assert_eq!(remove_json["op"], serde_json::json!("remove"));
+    assert_eq!(update_attrs_json["op"], serde_json::json!("update_attrs"));
 
     let insert_decoded: Operation = serde_json::from_value(insert_json).unwrap();
     let remove_decoded: Operation = serde_json::from_value(remove_json).unwrap();
+    let update_attrs_decoded: Operation = serde_json::from_value(update_attrs_json).unwrap();
     assert_eq!(insert_decoded, insert);
     assert_eq!(remove_decoded, remove);
+    assert_eq!(update_attrs_decoded, update_attrs);
 }
 
 #[test]
@@ -174,6 +182,42 @@ fn block_op_enum_round_trip_serde() {
                 items: vec!["One".to_string(), "Two".to_string()],
             },
             "insert_list",
+        ),
+        (
+            BlockOp::InsertRow {
+                table_path: "/content/1".to_string(),
+                index: 1,
+                cells: vec!["A".to_string(), "B".to_string()],
+            },
+            "insert_row",
+        ),
+        (
+            BlockOp::RemoveRow {
+                table_path: "/content/1".to_string(),
+                index: 1,
+            },
+            "remove_row",
+        ),
+        (
+            BlockOp::InsertColumn {
+                table_path: "/content/1".to_string(),
+                index: 1,
+            },
+            "insert_column",
+        ),
+        (
+            BlockOp::RemoveColumn {
+                table_path: "/content/1".to_string(),
+                index: 1,
+            },
+            "remove_column",
+        ),
+        (
+            BlockOp::UpdateAttrs {
+                target_path: "/content/0".to_string(),
+                attrs: serde_json::json!({"panelType": "note"}),
+            },
+            "update_attrs",
         ),
     ];
 

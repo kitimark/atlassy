@@ -48,7 +48,7 @@ fn extract_path_info(
     operation: &Operation,
 ) -> Result<Option<(String, usize, StructuralOpKind)>, AdfError> {
     match operation {
-        Operation::Replace { .. } => Ok(None),
+        Operation::Replace { .. } | Operation::UpdateAttrs { .. } => Ok(None),
         Operation::Insert {
             parent_path, index, ..
         } => Ok(Some((
@@ -120,6 +120,7 @@ fn detect_remove_prefix_conflicts(operations: &[Operation]) -> Result<(), AdfErr
 fn operation_conflict_path(operation: &Operation) -> Result<String, AdfError> {
     match operation {
         Operation::Replace { path, .. } => Ok(path.clone()),
+        Operation::UpdateAttrs { target_path, .. } => Ok(target_path.clone()),
         Operation::Insert {
             parent_path, index, ..
         } => Ok(format!("{parent_path}/{index}")),
@@ -190,6 +191,10 @@ mod tests {
             Operation::Replace {
                 path: "/content/0/content/0/text".to_string(),
                 value: json!("a"),
+            },
+            Operation::UpdateAttrs {
+                target_path: "/content/1".to_string(),
+                attrs: json!({"panelType": "warning"}),
             },
             Operation::Replace {
                 path: "/content/1/content/0/text".to_string(),
@@ -293,5 +298,29 @@ mod tests {
                 ..
             } if parent_path == "/content/3/content" && index == 4
         ));
+    }
+
+    #[test]
+    fn sort_operations_places_update_attrs_with_replace_before_structural_ops() {
+        let operations = vec![
+            Operation::Insert {
+                parent_path: "/content".to_string(),
+                index: 1,
+                block: json!({"type": "paragraph"}),
+            },
+            Operation::UpdateAttrs {
+                target_path: "/content/0".to_string(),
+                attrs: json!({"panelType": "note"}),
+            },
+            Operation::Replace {
+                path: "/content/0/content/0/text".to_string(),
+                value: json!("updated"),
+            },
+        ];
+
+        let sorted = sort_operations(&operations).unwrap();
+        assert!(matches!(sorted[0], Operation::UpdateAttrs { .. }));
+        assert!(matches!(sorted[1], Operation::Replace { .. }));
+        assert!(matches!(sorted[2], Operation::Insert { .. }));
     }
 }

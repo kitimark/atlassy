@@ -82,6 +82,14 @@ pub enum AdfError {
     SectionBoundaryInvalid(String),
     #[error("structural composition failed: {0}")]
     StructuralCompositionFailed(String),
+    #[error("table row invalid: {0}")]
+    TableRowInvalid(String),
+    #[error("table column invalid: {0}")]
+    TableColumnInvalid(String),
+    #[error("attribute update blocked: {0}")]
+    AttrUpdateBlocked(String),
+    #[error("attribute schema violation: {0}")]
+    AttrSchemaViolation(String),
     #[error("no valid {route} target found in scope at index {index} (found {found})")]
     TargetDiscoveryFailed {
         route: String,

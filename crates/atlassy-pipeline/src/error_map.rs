@@ -60,6 +60,10 @@ pub(crate) fn to_hard_error(source_state: PipelineState, error: AdfError) -> Pip
         AdfError::TargetDiscoveryFailed { .. } => ErrorCode::TargetDiscoveryFailed,
         AdfError::SectionBoundaryInvalid(_) => ErrorCode::SectionBoundaryInvalid,
         AdfError::StructuralCompositionFailed(_) => ErrorCode::StructuralCompositionFailed,
+        AdfError::TableRowInvalid(_) => ErrorCode::TableRowInvalid,
+        AdfError::TableColumnInvalid(_) => ErrorCode::TableColumnInvalid,
+        AdfError::AttrUpdateBlocked(_) => ErrorCode::AttrUpdateBlocked,
+        AdfError::AttrSchemaViolation(_) => ErrorCode::AttrSchemaViolation,
         AdfError::InvalidSelector(_)
         | AdfError::InvalidPath(_)
         | AdfError::DuplicatePath(_)

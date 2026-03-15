@@ -1,7 +1,7 @@
 use atlassy_adf::{
-    build_heading, build_list, build_paragraph, build_section, build_table, build_text,
-    check_structural_validity, find_section_range, is_editable_prose, is_insertable_type,
-    is_removable_type, AdfError,
+    build_heading, build_list, build_paragraph, build_section, build_table, build_table_cell,
+    build_table_header, build_table_row, build_text, check_structural_validity, find_section_range,
+    is_attr_editable_type, is_editable_prose, is_insertable_type, is_removable_type, AdfError,
 };
 use serde_json::json;
 
@@ -68,6 +68,25 @@ fn build_table_supports_header_and_rejects_zero_dimensions() {
         build_table(2, 0, false),
         Err(AdfError::StructuralCompositionFailed(_))
     ));
+}
+
+#[test]
+fn build_table_row_cell_and_header_construct_valid_shapes() {
+    let header = build_table_header("H");
+    let cell = build_table_cell("C");
+    let row = build_table_row(&[header.clone(), cell.clone()]);
+
+    assert_eq!(header["type"], json!("tableHeader"));
+    assert_eq!(header["content"][0]["type"], json!("paragraph"));
+    assert_eq!(header["content"][0]["content"][0]["text"], json!("H"));
+
+    assert_eq!(cell["type"], json!("tableCell"));
+    assert_eq!(cell["content"][0]["type"], json!("paragraph"));
+    assert_eq!(cell["content"][0]["content"][0]["text"], json!("C"));
+
+    assert_eq!(row["type"], json!("tableRow"));
+    assert_eq!(row["content"][0], header);
+    assert_eq!(row["content"][1], cell);
 }
 
 #[test]
@@ -188,9 +207,16 @@ fn type_policy_functions_cover_expected_categories() {
     assert!(!is_editable_prose("table"));
     assert!(is_insertable_type("table"));
     assert!(is_removable_type("table"));
+    assert!(is_insertable_type("tableRow"));
+    assert!(is_removable_type("tableRow"));
 
     assert!(!is_insertable_type("panel"));
     assert!(!is_removable_type("panel"));
+
+    assert!(is_attr_editable_type("panel"));
+    assert!(is_attr_editable_type("expand"));
+    assert!(is_attr_editable_type("mediaSingle"));
+    assert!(!is_attr_editable_type("paragraph"));
 }
 
 #[test]

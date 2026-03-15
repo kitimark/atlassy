@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::error::Error;
 
-use atlassy_contracts::{ErrorCode, ProvenanceStamp, RUNTIME_STUB, RunSummary};
+use atlassy_contracts::{BlockOp, ErrorCode, ProvenanceStamp, RunSummary, RUNTIME_STUB};
 use chrono::Utc;
 use serde::de::Error as DeError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -81,6 +81,8 @@ pub struct ManifestRunEntry {
     pub timestamp: String,
     #[serde(default)]
     pub mode: ManifestMode,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub block_ops: Vec<BlockOp>,
     pub target_path: Option<String>,
     #[serde(default)]
     pub target_index: Option<u32>,

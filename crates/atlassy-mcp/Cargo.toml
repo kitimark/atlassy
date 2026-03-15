@@ -1,0 +1,15 @@
+[package]
+name = "atlassy-mcp"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+atlassy-confluence = { path = "../atlassy-confluence" }
+atlassy-contracts = { path = "../atlassy-contracts" }
+atlassy-pipeline = { path = "../atlassy-pipeline" }
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

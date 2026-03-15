@@ -35,6 +35,82 @@ pub fn check_structural_validity(adf: &Value) -> Result<(), AdfError> {
                 )));
             }
         }
+
+        walk_for_table_validation(node)?;
+    }
+
+    Ok(())
+}
+
+fn walk_for_table_validation(node: &Value) -> Result<(), AdfError> {
+    if node.get("type").and_then(Value::as_str) == Some("table") {
+        check_table_column_consistency(node)?;
+    }
+
+    match node {
+        Value::Object(map) => {
+            for child in map.values() {
+                walk_for_table_validation(child)?;
+            }
+        }
+        Value::Array(items) => {
+            for child in items {
+                walk_for_table_validation(child)?;
+            }
+        }
+        _ => {}
+    }
+
+    Ok(())
+}
+
+fn check_table_column_consistency(table: &Value) -> Result<(), AdfError> {
+    let rows = table
+        .get("content")
+        .and_then(Value::as_array)
+        .ok_or_else(|| {
+            AdfError::PostMutationInvalid("table.content must be an array".to_string())
+        })?;
+
+    if rows.is_empty() {
+        return Err(AdfError::PostMutationInvalid(
+            "table.content must contain at least one row".to_string(),
+        ));
+    }
+
+    let mut expected_cols: Option<usize> = None;
+    for (row_index, row) in rows.iter().enumerate() {
+        if row.get("type").and_then(Value::as_str) != Some("tableRow") {
+            return Err(AdfError::PostMutationInvalid(format!(
+                "table row at index {row_index} must have type `tableRow`"
+            )));
+        }
+
+        let cells = row
+            .get("content")
+            .and_then(Value::as_array)
+            .ok_or_else(|| {
+                AdfError::PostMutationInvalid(format!(
+                    "table row at index {row_index} must have content array"
+                ))
+            })?;
+
+        if cells.is_empty() {
+            return Err(AdfError::PostMutationInvalid(format!(
+                "table row at index {row_index} must contain at least one cell"
+            )));
+        }
+
+        match expected_cols {
+            Some(expected) if expected != cells.len() => {
+                return Err(AdfError::PostMutationInvalid(format!(
+                    "table row at index {row_index} has {} cells; expected {expected}",
+                    cells.len()
+                )));
+            }
+            None => expected_cols = Some(cells.len()),
+            _ => {}
+        }
     }
 
     Ok(())
@@ -100,6 +176,86 @@ mod tests {
                     "type": "heading",
                     "attrs": {"level": 7},
                     "content": [{"type": "text", "text": "Oops"}]
+                }
+            ]
+        });
+
+        assert!(matches!(
+            check_structural_validity(&adf),
+            Err(AdfError::PostMutationInvalid(_))
+        ));
+    }
+
+    #[test]
+    fn check_structural_validity_accepts_consistent_table_column_counts() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "tableRow",
+                            "content": [
+                                {"type": "tableHeader", "content": []},
+                                {"type": "tableHeader", "content": []}
+                            ]
+                        },
+                        {
+                            "type": "tableRow",
+                            "content": [
+                                {"type": "tableCell", "content": []},
+                                {"type": "tableCell", "content": []}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        assert!(check_structural_validity(&adf).is_ok());
+    }
+
+    #[test]
+    fn check_structural_validity_rejects_inconsistent_table_column_counts() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "tableRow",
+                            "content": [
+                                {"type": "tableHeader", "content": []},
+                                {"type": "tableHeader", "content": []}
+                            ]
+                        },
+                        {
+                            "type": "tableRow",
+                            "content": [
+                                {"type": "tableCell", "content": []}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        assert!(matches!(
+            check_structural_validity(&adf),
+            Err(AdfError::PostMutationInvalid(_))
+        ));
+    }
+
+    #[test]
+    fn check_structural_validity_rejects_empty_table() {
+        let adf = json!({
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": []
                 }
             ]
         });

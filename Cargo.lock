@@ -113,6 +113,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "atlassy-mcp"
+version = "0.1.2"
+dependencies = [
+ "atlassy-confluence",
+ "atlassy-contracts",
+ "atlassy-pipeline",
+ "chrono",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "atlassy-pipeline"
 version = "0.1.2"
 dependencies = [

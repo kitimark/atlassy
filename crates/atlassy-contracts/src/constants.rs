@@ -26,10 +26,14 @@ pub enum ErrorCode {
     RollbackConflict,
     DependencyCycle,
     PageCreationFailed,
+    TableRowInvalid,
+    TableColumnInvalid,
+    AttrUpdateBlocked,
+    AttrSchemaViolation,
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 21] = [
+    pub const ALL: [Self; 25] = [
         Self::ScopeMiss,
         Self::RouteViolation,
         Self::SchemaInvalid,
@@ -51,6 +55,10 @@ impl ErrorCode {
         Self::RollbackConflict,
         Self::DependencyCycle,
         Self::PageCreationFailed,
+        Self::TableRowInvalid,
+        Self::TableColumnInvalid,
+        Self::AttrUpdateBlocked,
+        Self::AttrSchemaViolation,
     ];
 
     pub const fn as_str(&self) -> &'static str {
@@ -76,6 +84,10 @@ impl ErrorCode {
             Self::RollbackConflict => "ERR_ROLLBACK_CONFLICT",
             Self::DependencyCycle => "ERR_DEPENDENCY_CYCLE",
             Self::PageCreationFailed => "ERR_PAGE_CREATION_FAILED",
+            Self::TableRowInvalid => "ERR_TABLE_ROW_INVALID",
+            Self::TableColumnInvalid => "ERR_TABLE_COLUMN_INVALID",
+            Self::AttrUpdateBlocked => "ERR_ATTR_UPDATE_BLOCKED",
+            Self::AttrSchemaViolation => "ERR_ATTR_SCHEMA_VIOLATION",
         }
     }
 }
@@ -157,6 +169,10 @@ mod tests {
             (ErrorCode::RollbackConflict, "ERR_ROLLBACK_CONFLICT"),
             (ErrorCode::DependencyCycle, "ERR_DEPENDENCY_CYCLE"),
             (ErrorCode::PageCreationFailed, "ERR_PAGE_CREATION_FAILED"),
+            (ErrorCode::TableRowInvalid, "ERR_TABLE_ROW_INVALID"),
+            (ErrorCode::TableColumnInvalid, "ERR_TABLE_COLUMN_INVALID"),
+            (ErrorCode::AttrUpdateBlocked, "ERR_ATTR_UPDATE_BLOCKED"),
+            (ErrorCode::AttrSchemaViolation, "ERR_ATTR_SCHEMA_VIOLATION"),
         ];
 
         assert_eq!(cases.len(), ErrorCode::ALL.len());

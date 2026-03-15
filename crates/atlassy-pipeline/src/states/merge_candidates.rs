@@ -4,7 +4,7 @@ use atlassy_contracts::{
 };
 
 use super::adf_block_ops::AdfBlockOpsOutput;
-use super::locked_boundary::check_locked_boundary;
+use super::locked_boundary::{check_locked_boundary, LockedPath};
 use crate::util::meta;
 use crate::{ArtifactStore, PipelineError, RunRequest, StateTracker};
 
@@ -102,7 +102,10 @@ pub(crate) fn run_merge_candidates_state(
                 && node.path != "/"
                 && node.node_type.as_str() != "doc"
         })
-        .map(|node| node.path.as_str())
+        .map(|node| LockedPath {
+            path: node.path.as_str(),
+            node_type: node.node_type.as_str(),
+        })
         .collect::<Vec<_>>();
 
     for operation in table_operations.iter().chain(block_operations.iter()) {
@@ -146,6 +149,7 @@ fn operation_paths(operation: &Operation) -> Vec<String> {
             parent_path, index, ..
         } => vec![format!("{parent_path}/{index}")],
         Operation::Remove { target_path } => vec![target_path.clone()],
+        Operation::UpdateAttrs { target_path, .. } => vec![target_path.clone()],
     }
 }
 
