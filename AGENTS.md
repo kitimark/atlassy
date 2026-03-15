@@ -42,7 +42,9 @@ Examples:
 - Adding `ERR_INSERT_POSITION_INVALID` error code → `feat` (new error handling)
 - Extracting verify checks into separate functions with identical behavior → `refactor`
 - Updating roadmap docs → `docs`
-- Archiving an OpenSpec change → `chore`
+- Creating OpenSpec change artifacts (proposal, design, specs, tasks) → `docs(openspec)`
+- Archiving an OpenSpec change → `chore(openspec)`
+- Syncing delta specs to main specs → `docs(openspec)`
 
 ### Choosing the Scope
 

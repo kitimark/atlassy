@@ -70,6 +70,8 @@ The critical distinction between `feat` and `refactor`:
 - Using `refactor` when adding new `Operation` variants or error codes → should be `feat` (new capability)
 - Using `refactor(pipeline)` for changes spanning pipeline + contracts + adf → should omit scope: `refactor: ...`
 - Using `feat` for renaming types or extracting modules → should be `refactor` (same behavior, different structure)
+- Using `feat(openspec)` for creating change artifacts → should be `docs(openspec)` (planning documents, not code)
+- Using `docs(openspec)` for archiving a change → should be `chore(openspec)` (maintenance/bookkeeping)
 
 ### Scopes
 
