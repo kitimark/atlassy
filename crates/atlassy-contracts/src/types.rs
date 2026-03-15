@@ -257,11 +257,12 @@ pub struct AdfTableEditOutput {
 pub struct MergeCandidatesInput {
     pub prose_changed_paths: Vec<String>,
     pub table_changed_paths: Vec<String>,
+    pub block_operations: Vec<Operation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MergeCandidatesOutput {
-    pub changed_paths: Vec<String>,
+    pub operations: Vec<Operation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -271,26 +272,33 @@ pub enum Operation {
         path: String,
         value: serde_json::Value,
     },
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum BlockOpKind {
-    Insert,
-    Remove,
+    Insert {
+        parent_path: String,
+        index: usize,
+        block: serde_json::Value,
+    },
+    Remove {
+        target_path: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct BlockOp {
-    pub kind: BlockOpKind,
-    pub path: String,
-    pub value: Option<serde_json::Value>,
+#[serde(tag = "op", rename_all = "snake_case")]
+pub enum BlockOp {
+    Insert {
+        parent_path: String,
+        index: usize,
+        block: serde_json::Value,
+    },
+    Remove {
+        target_path: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PatchInput {
     pub scoped_adf: serde_json::Value,
-    pub changed_paths: Vec<String>,
+    pub operations: Vec<Operation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -312,7 +320,7 @@ pub struct VerifyInput {
     pub original_scoped_adf: serde_json::Value,
     pub candidate_page_adf: serde_json::Value,
     pub allowed_scope_paths: Vec<String>,
-    pub changed_paths: Vec<String>,
+    pub operations: Vec<Operation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

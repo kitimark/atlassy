@@ -58,6 +58,110 @@ fn patch_output_serializes_operation_replace_with_patch_ops_key() {
 }
 
 #[test]
+fn merge_patch_and_verify_payloads_use_operations_field() {
+    let operations = vec![
+        Operation::Replace {
+            path: "/content/0/content/0/text".to_string(),
+            value: serde_json::json!("after"),
+        },
+        Operation::Insert {
+            parent_path: "/content".to_string(),
+            index: 1,
+            block: serde_json::json!({"type": "paragraph", "content": []}),
+        },
+        Operation::Remove {
+            target_path: "/content/2".to_string(),
+        },
+    ];
+
+    let merge = MergeCandidatesOutput {
+        operations: operations.clone(),
+    };
+    let patch = PatchInput {
+        scoped_adf: serde_json::json!({"type": "doc", "content": []}),
+        operations: operations.clone(),
+    };
+    let verify = VerifyInput {
+        original_scoped_adf: serde_json::json!({"type": "doc", "content": []}),
+        candidate_page_adf: serde_json::json!({"type": "doc", "content": []}),
+        allowed_scope_paths: vec!["/content".to_string()],
+        operations,
+    };
+
+    let merge_json = serde_json::to_value(&merge).unwrap();
+    let patch_json = serde_json::to_value(&patch).unwrap();
+    let verify_json = serde_json::to_value(&verify).unwrap();
+
+    assert!(merge_json.get("operations").is_some());
+    assert!(patch_json.get("operations").is_some());
+    assert!(verify_json.get("operations").is_some());
+}
+
+#[test]
+fn operation_insert_and_remove_round_trip_serde() {
+    let insert = Operation::Insert {
+        parent_path: "/content".to_string(),
+        index: 2,
+        block: serde_json::json!({"type": "paragraph", "content": []}),
+    };
+    let remove = Operation::Remove {
+        target_path: "/content/2".to_string(),
+    };
+
+    let insert_json = serde_json::to_value(&insert).unwrap();
+    let remove_json = serde_json::to_value(&remove).unwrap();
+
+    assert_eq!(insert_json["op"], serde_json::json!("insert"));
+    assert_eq!(remove_json["op"], serde_json::json!("remove"));
+
+    let insert_decoded: Operation = serde_json::from_value(insert_json).unwrap();
+    let remove_decoded: Operation = serde_json::from_value(remove_json).unwrap();
+    assert_eq!(insert_decoded, insert);
+    assert_eq!(remove_decoded, remove);
+}
+
+#[test]
+fn block_op_enum_round_trip_serde() {
+    let insert = BlockOp::Insert {
+        parent_path: "/content".to_string(),
+        index: 0,
+        block: serde_json::json!({"type": "paragraph"}),
+    };
+    let remove = BlockOp::Remove {
+        target_path: "/content/0".to_string(),
+    };
+
+    let insert_json = serde_json::to_value(&insert).unwrap();
+    let remove_json = serde_json::to_value(&remove).unwrap();
+
+    assert_eq!(insert_json["op"], serde_json::json!("insert"));
+    assert_eq!(remove_json["op"], serde_json::json!("remove"));
+
+    let insert_decoded: BlockOp = serde_json::from_value(insert_json).unwrap();
+    let remove_decoded: BlockOp = serde_json::from_value(remove_json).unwrap();
+    assert_eq!(insert_decoded, insert);
+    assert_eq!(remove_decoded, remove);
+}
+
+#[test]
+fn operation_replace_serialization_remains_unchanged() {
+    let replace = Operation::Replace {
+        path: "/content/1/content/0/text".to_string(),
+        value: serde_json::json!("updated"),
+    };
+
+    let serialized = serde_json::to_value(&replace).unwrap();
+    assert_eq!(
+        serialized,
+        serde_json::json!({
+            "op": "replace",
+            "path": "/content/1/content/0/text",
+            "value": "updated"
+        })
+    );
+}
+
+#[test]
 fn changed_paths_must_be_unique_and_sorted() {
     let valid = vec!["/a".to_string(), "/b".to_string()];
     assert!(validate_changed_paths(&valid).is_ok());
@@ -136,15 +240,13 @@ fn markdown_mapping_must_be_one_to_one_and_in_scope() {
         },
     ];
 
-    assert!(
-        validate_markdown_mapping(
-            &markdown_blocks,
-            &valid_map,
-            &["/content/1".to_string(), "/content/2".to_string()],
-            &["/content".to_string()]
-        )
-        .is_ok()
-    );
+    assert!(validate_markdown_mapping(
+        &markdown_blocks,
+        &valid_map,
+        &["/content/1".to_string(), "/content/2".to_string()],
+        &["/content".to_string()]
+    )
+    .is_ok());
 
     let duplicate_block_map = vec![
         MarkdownMapEntry {

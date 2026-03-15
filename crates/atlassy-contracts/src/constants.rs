@@ -8,6 +8,9 @@ pub enum ErrorCode {
     ScopeMiss,
     RouteViolation,
     SchemaInvalid,
+    InsertPositionInvalid,
+    RemoveAnchorMissing,
+    PostMutationSchemaInvalid,
     OutOfScopeMutation,
     LockedNodeMutation,
     TableShapeChange,
@@ -20,10 +23,13 @@ pub enum ErrorCode {
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 12] = [
+    pub const ALL: [Self; 15] = [
         Self::ScopeMiss,
         Self::RouteViolation,
         Self::SchemaInvalid,
+        Self::InsertPositionInvalid,
+        Self::RemoveAnchorMissing,
+        Self::PostMutationSchemaInvalid,
         Self::OutOfScopeMutation,
         Self::LockedNodeMutation,
         Self::TableShapeChange,
@@ -40,6 +46,9 @@ impl ErrorCode {
             Self::ScopeMiss => "ERR_SCOPE_MISS",
             Self::RouteViolation => "ERR_ROUTE_VIOLATION",
             Self::SchemaInvalid => "ERR_SCHEMA_INVALID",
+            Self::InsertPositionInvalid => "ERR_INSERT_POSITION_INVALID",
+            Self::RemoveAnchorMissing => "ERR_REMOVE_ANCHOR_MISSING",
+            Self::PostMutationSchemaInvalid => "ERR_POST_MUTATION_SCHEMA_INVALID",
             Self::OutOfScopeMutation => "ERR_OUT_OF_SCOPE_MUTATION",
             Self::LockedNodeMutation => "ERR_LOCKED_NODE_MUTATION",
             Self::TableShapeChange => "ERR_TABLE_SHAPE_CHANGE",
@@ -88,6 +97,15 @@ mod tests {
             (ErrorCode::ScopeMiss, "ERR_SCOPE_MISS"),
             (ErrorCode::RouteViolation, "ERR_ROUTE_VIOLATION"),
             (ErrorCode::SchemaInvalid, "ERR_SCHEMA_INVALID"),
+            (
+                ErrorCode::InsertPositionInvalid,
+                "ERR_INSERT_POSITION_INVALID",
+            ),
+            (ErrorCode::RemoveAnchorMissing, "ERR_REMOVE_ANCHOR_MISSING"),
+            (
+                ErrorCode::PostMutationSchemaInvalid,
+                "ERR_POST_MUTATION_SCHEMA_INVALID",
+            ),
             (ErrorCode::OutOfScopeMutation, "ERR_OUT_OF_SCOPE_MUTATION"),
             (ErrorCode::LockedNodeMutation, "ERR_LOCKED_NODE_MUTATION"),
             (ErrorCode::TableShapeChange, "ERR_TABLE_SHAPE_CHANGE"),

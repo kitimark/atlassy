@@ -4,13 +4,13 @@ use std::path::Path;
 use atlassy_adf::{bootstrap_scaffold, build_node_path_index, is_page_effectively_empty};
 use atlassy_confluence::ConfluenceClient;
 use atlassy_contracts::{
-    ErrorCode, PipelineState, PublishResult, RunSummary, VerifyResult,
-    validate_run_summary_telemetry,
+    validate_run_summary_telemetry, ErrorCode, Operation, PipelineState, PublishResult, RunSummary,
+    VerifyResult,
 };
 
 use crate::error_map::to_hard_error;
 use crate::util::{add_duration_suffix, compute_section_bytes, estimate_tokens};
-use crate::{ArtifactStore, PipelineError, RunRequest, StateTracker, states};
+use crate::{states, ArtifactStore, PipelineError, RunRequest, StateTracker};
 
 pub struct Orchestrator<C: ConfluenceClient> {
     client: C,
@@ -244,8 +244,9 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             estimate_tokens(&table_edit)?,
         );
 
-        let adf_block_ops = states::run_adf_block_ops_state(&self.artifact_store, request, tracker)
-            .map_err(|error| self.hard_fail(summary, PipelineState::AdfBlockOps, error))?;
+        let adf_block_ops =
+            states::run_adf_block_ops_state(&self.artifact_store, request, tracker, &fetch)
+                .map_err(|error| self.hard_fail(summary, PipelineState::AdfBlockOps, error))?;
         summary.state_token_usage.insert(
             PipelineState::AdfBlockOps.as_str().to_string(),
             estimate_tokens(&adf_block_ops)?,
@@ -258,6 +259,7 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             &classify,
             &md_edit,
             &table_edit,
+            &adf_block_ops,
         )
         .map_err(|error| self.hard_fail(summary, PipelineState::MergeCandidates, error))?;
         summary.state_token_usage.insert(
@@ -265,16 +267,9 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             estimate_tokens(&merged)?,
         );
 
-        let patch = states::run_patch_state(
-            &self.artifact_store,
-            request,
-            tracker,
-            &fetch,
-            &merged,
-            &md_edit,
-            &table_edit,
-        )
-        .map_err(|error| self.hard_fail(summary, PipelineState::Patch, error))?;
+        let patch =
+            states::run_patch_state(&self.artifact_store, request, tracker, &fetch, &merged)
+                .map_err(|error| self.hard_fail(summary, PipelineState::Patch, error))?;
         summary.state_token_usage.insert(
             PipelineState::Patch.as_str().to_string(),
             estimate_tokens(&patch)?,
@@ -328,6 +323,15 @@ impl<C: ConfluenceClient> Orchestrator<C> {
                     code if code == ErrorCode::OutOfScopeMutation.as_str() => {
                         ErrorCode::OutOfScopeMutation
                     }
+                    code if code == ErrorCode::InsertPositionInvalid.as_str() => {
+                        ErrorCode::InsertPositionInvalid
+                    }
+                    code if code == ErrorCode::RemoveAnchorMissing.as_str() => {
+                        ErrorCode::RemoveAnchorMissing
+                    }
+                    code if code == ErrorCode::PostMutationSchemaInvalid.as_str() => {
+                        ErrorCode::PostMutationSchemaInvalid
+                    }
                     _ => ErrorCode::SchemaInvalid,
                 })
                 .unwrap_or(ErrorCode::SchemaInvalid);
@@ -379,7 +383,12 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             });
         }
 
-        summary.applied_paths = merged.payload.changed_paths;
+        summary.applied_paths = merged
+            .payload
+            .operations
+            .iter()
+            .flat_map(operation_paths)
+            .collect();
         summary.token_metrics = summary.state_token_usage.clone();
         summary.retry_tokens = if summary.retry_count > 0 {
             summary
@@ -405,5 +414,15 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             summary.error_codes.push(code.to_string());
         }
         error
+    }
+}
+
+fn operation_paths(operation: &Operation) -> Vec<String> {
+    match operation {
+        Operation::Replace { path, .. } => vec![path.clone()],
+        Operation::Insert {
+            parent_path, index, ..
+        } => vec![format!("{parent_path}/{index}")],
+        Operation::Remove { target_path } => vec![target_path.clone()],
     }
 }

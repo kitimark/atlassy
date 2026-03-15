@@ -52,6 +52,10 @@ pub(crate) fn to_hard_error(source_state: PipelineState, error: AdfError) -> Pip
     let code = match error {
         AdfError::OutOfScope(_) => ErrorCode::OutOfScopeMutation,
         AdfError::WholeBodyRewriteDisallowed => ErrorCode::RouteViolation,
+        AdfError::InsertPositionInvalid(_) => ErrorCode::InsertPositionInvalid,
+        AdfError::RemoveTargetNotFound(_) => ErrorCode::RemoveAnchorMissing,
+        AdfError::PostMutationInvalid(_) => ErrorCode::PostMutationSchemaInvalid,
+        AdfError::OperationConflict(_) => ErrorCode::RouteViolation,
         AdfError::ScopeResolutionFailed => ErrorCode::ScopeMiss,
         AdfError::TargetDiscoveryFailed { .. } => ErrorCode::TargetDiscoveryFailed,
         AdfError::InvalidSelector(_)

@@ -10,6 +10,7 @@ mod ordering;
 mod patch;
 mod path;
 mod scope;
+mod structural_validity;
 mod table_guard;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,6 +67,14 @@ pub enum AdfError {
     OutOfScope(String),
     #[error("mapping integrity failure: {0}")]
     MappingIntegrity(String),
+    #[error("insert position invalid: {0}")]
+    InsertPositionInvalid(String),
+    #[error("remove target not found: {0}")]
+    RemoveTargetNotFound(String),
+    #[error("post-mutation ADF invalid: {0}")]
+    PostMutationInvalid(String),
+    #[error("operation conflict: {0}")]
+    OperationConflict(String),
     #[error("no valid {route} target found in scope at index {index} (found {found})")]
     TargetDiscoveryFailed {
         route: String,
@@ -80,4 +89,5 @@ pub use ordering::*;
 pub use patch::*;
 pub use path::*;
 pub use scope::*;
+pub use structural_validity::*;
 pub use table_guard::*;

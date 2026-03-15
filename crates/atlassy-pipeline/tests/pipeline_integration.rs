@@ -7,8 +7,8 @@ use atlassy_confluence::{
     StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    ContractError, ErrorCode, FLOW_OPTIMIZED, Operation, PATTERN_A, PIPELINE_VERSION,
-    PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
+    BlockOp, ContractError, ErrorCode, Operation, PipelineState, ProvenanceStamp, TableOperation,
+    FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, RUNTIME_STUB,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
@@ -453,13 +453,12 @@ fn replay_artifacts_exist_for_successful_run() {
         assert!(state_dir.join("diagnostics.json").exists());
     }
 
-    assert!(
-        temp.path()
-            .join("artifacts")
-            .join("run-success-artifacts")
-            .join("summary.json")
-            .exists()
-    );
+    assert!(temp
+        .path()
+        .join("artifacts")
+        .join("run-success-artifacts")
+        .join("summary.json")
+        .exists());
 }
 
 #[test]
@@ -543,12 +542,12 @@ fn extract_prose_mapping_is_deterministic() {
     second.run_mode = RunMode::NoOp;
     orchestrator.run(second).expect("second run should succeed");
 
-    let map_a =
-        read_state_output(temp.path(), "run-map-a", "extract_prose")["payload"]["md_to_adf_map"]
-            .clone();
-    let map_b =
-        read_state_output(temp.path(), "run-map-b", "extract_prose")["payload"]["md_to_adf_map"]
-            .clone();
+    let map_a = read_state_output(temp.path(), "run-map-a", "extract_prose")["payload"]
+        ["md_to_adf_map"]
+        .clone();
+    let map_b = read_state_output(temp.path(), "run-map-b", "extract_prose")["payload"]
+        ["md_to_adf_map"]
+        .clone();
     assert_eq!(map_a, map_b);
 }
 
@@ -772,6 +771,218 @@ fn table_state_artifacts_include_candidates_and_allowed_ops() {
     assert_eq!(
         table_output["payload"]["allowed_ops"],
         serde_json::json!(["cell_text_update"])
+    );
+}
+
+#[test]
+fn insert_only_run_produces_correct_adf_and_publishes() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-insert-only");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::Insert {
+        parent_path: "/content".to_string(),
+        index: 1,
+        block: serde_json::json!({
+            "type": "paragraph",
+            "content": [{"type": "text", "text": "Inserted block"}]
+        }),
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("insert-only run should succeed");
+    assert!(summary.success);
+    assert_eq!(summary.applied_paths, vec!["/content/1".to_string()]);
+
+    let patch_output = read_state_output(temp.path(), "run-insert-only", "patch");
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["type"],
+        serde_json::json!("paragraph")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["content"][0]["text"],
+        serde_json::json!("Inserted block")
+    );
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+}
+
+#[test]
+fn remove_only_run_produces_correct_adf_and_publishes() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-remove-only");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::Remove {
+        target_path: "/content/1".to_string(),
+    }];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("remove-only run should succeed");
+    assert!(summary.success);
+    assert_eq!(summary.applied_paths, vec!["/content/1".to_string()]);
+
+    let patch_output = read_state_output(temp.path(), "run-remove-only", "patch");
+    assert!(patch_output["payload"]["candidate_page_adf"]["content"]
+        .as_array()
+        .expect("content should be array")
+        .iter()
+        .all(|block| block["type"] != serde_json::json!("paragraph")));
+    assert_eq!(orchestrator.client().publish_attempts(), 1);
+}
+
+#[test]
+fn mixed_insert_replace_remove_run_produces_expected_result() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-mixed-ops");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: Some("/content/1/content/0/text".to_string()),
+        markdown: "Updated prose body".to_string(),
+    };
+    request.block_ops = vec![
+        BlockOp::Insert {
+            parent_path: "/content".to_string(),
+            index: 2,
+            block: serde_json::json!({
+                "type": "paragraph",
+                "content": [{"type": "text", "text": "Inserted sibling"}]
+            }),
+        },
+        BlockOp::Remove {
+            target_path: "/content/0".to_string(),
+        },
+    ];
+
+    let summary = orchestrator
+        .run(request)
+        .expect("mixed operation run should succeed");
+    assert!(summary.success);
+    assert!(summary
+        .applied_paths
+        .contains(&"/content/1/content/0/text".to_string()));
+    assert!(summary.applied_paths.contains(&"/content/2".to_string()));
+    assert!(summary.applied_paths.contains(&"/content/0".to_string()));
+
+    let patch_output = read_state_output(temp.path(), "run-mixed-ops", "patch");
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][0]["content"][0]["text"],
+        serde_json::json!("Updated prose body")
+    );
+    assert_eq!(
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["content"][0]["text"],
+        serde_json::json!("Inserted sibling")
+    );
+}
+
+#[test]
+fn replace_only_run_remains_backward_compatible() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-replace-only");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::SimpleScopedProseUpdate {
+        target_path: Some("/content/1/content/0/text".to_string()),
+        markdown: "Updated prose body".to_string(),
+    };
+
+    let summary = orchestrator
+        .run(request)
+        .expect("replace-only run should succeed");
+    assert!(summary.success);
+    assert_eq!(
+        summary.applied_paths,
+        vec!["/content/1/content/0/text".to_string()]
+    );
+
+    let patch_output = read_state_output(temp.path(), "run-replace-only", "patch");
+    let patch_ops: Vec<Operation> =
+        serde_json::from_value(patch_output["payload"]["patch_ops"].clone())
+            .expect("patch_ops should deserialize");
+    assert!(patch_ops
+        .iter()
+        .all(|operation| matches!(operation, Operation::Replace { .. })));
+}
+
+#[test]
+fn out_of_scope_insert_fails_before_patch() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-out-of-scope-insert");
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::Insert {
+        parent_path: "/content".to_string(),
+        index: 2,
+        block: serde_json::json!({
+            "type": "paragraph",
+            "content": [{"type": "text", "text": "Out of scope"}]
+        }),
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("out-of-scope insert should fail");
+    assert_hard_error(
+        error,
+        PipelineState::AdfBlockOps,
+        ErrorCode::OutOfScopeMutation.as_str(),
+    );
+}
+
+#[test]
+fn scope_anchor_remove_fails_with_remove_anchor_missing() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-remove-scope-anchor");
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::Remove {
+        target_path: "/content/0".to_string(),
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("scope anchor remove should fail");
+    assert_hard_error(
+        error,
+        PipelineState::Verify,
+        ErrorCode::RemoveAnchorMissing.as_str(),
+    );
+}
+
+#[test]
+fn out_of_bounds_insert_fails_with_insert_position_invalid() {
+    let temp = tempfile::tempdir().expect("tempdir should be created");
+    let mut orchestrator = make_orchestrator_with_fixture(temp.path(), "prose_only_adf.json");
+
+    let mut request = sample_request("run-insert-out-of-bounds");
+    request.scope_selectors = vec![];
+    request.run_mode = RunMode::NoOp;
+    request.block_ops = vec![BlockOp::Insert {
+        parent_path: "/content".to_string(),
+        index: 99,
+        block: serde_json::json!({
+            "type": "paragraph",
+            "content": [{"type": "text", "text": "Too far"}]
+        }),
+    }];
+
+    let error = orchestrator
+        .run(request)
+        .expect_err("out-of-bounds insert should fail");
+    assert_hard_error(
+        error,
+        PipelineState::Patch,
+        ErrorCode::InsertPositionInvalid.as_str(),
     );
 }
 
