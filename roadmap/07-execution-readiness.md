@@ -34,6 +34,7 @@ Define the minimum operational, quality, and governance conditions required to r
   - `phase3-table-cell-route-rust` (Foundation, complete)
   - `phase4-poc-execution-metrics-rust` (Foundation, complete)
   - `phase5-hardening-readiness-rust` (Foundation, complete)
+  - `phase5.5-structural-refactor` (Structural, planned)
   - `phase6-block-operation-foundation` (Structural, planned)
   - `phase7-structural-composition` (Structural, planned)
   - `phase8-multi-page-content-control` (Structural, planned)
@@ -119,6 +120,16 @@ Define the minimum operational, quality, and governance conditions required to r
 - Empty-page first edit with `--bootstrap-empty-page` succeeds without route-policy regression.
 - Bootstrap on non-empty page hard-fails deterministically.
 - Lifecycle evidence bundle is committed with clean provenance for decision review.
+
+### Gate 7.5: Refactoring Integrity (Phase 5.5)
+
+- All 159 existing tests pass with zero behavior change after type consolidation.
+- `Operation::Replace` produces byte-identical ADF output to previous `PatchOperation { op: "replace" }`.
+- `PatchCandidate`, `PatchOperation`, and `PatchOp` types are removed from the codebase.
+- `AdfBlockOps` pipeline state exists as a no-op pass-through.
+- Verify stage uses extracted check functions with identical behavior to previous monolithic function.
+- No new features, no new operation types, no new error codes.
+- `cargo test --workspace` passes with zero warnings.
 
 ### Gate 8: Block Operation Integrity (Phase 6)
 

@@ -142,7 +142,7 @@ Start here: `openspec/README.md`.
 ## Current Status
 
 - **Foundation (Phases 0-5): complete.** All 5 implementation phases delivered. Live Confluence runtime operational. 159 tests pass. All 7 readiness gates pass. 3 releases shipped (v0.1.0 through v0.1.2).
-- **Structural (Phases 6-9): planning active.** Roadmap redesigned for structural operations. Decisions D-017 through D-020 define the architectural approach. Phase 6 (Block Operation Foundation) is the next implementation target.
+- **Structural (Phases 5.5-9): planning active.** Roadmap redesigned for structural operations. Decisions D-017 through D-021 define the architectural approach. Phase 5.5 (Structural Refactor) is the next implementation target: type consolidation and pipeline preparation with zero behavior change, followed by Phase 6 (Block Operation Foundation).
 - Foundation KPI framework superseded by Structural KPI framework (D-019). The Pattern B context reduction issue is expected to be addressable through Phase 6 structural operations.
 
 ## Project Structure

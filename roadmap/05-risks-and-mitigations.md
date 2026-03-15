@@ -266,6 +266,24 @@ Define the primary delivery and quality risks for Foundation and Structural phas
   - Block the delete operation with clear error message.
   - Operator must provide updated scope selectors if anchor deletion is intended.
 
+### R-015 Refactoring regression during type consolidation
+
+- Description: Phase 5.5 type consolidation (replacing 3 types with 1 `Operation` enum) introduces subtle behavioral changes despite the intent of zero behavior change.
+- Likelihood: L.
+- Impact: H.
+- Priority: medium.
+- Preventive controls:
+  - All 159 existing tests must pass before and after refactoring (Gate 7.5).
+  - Byte-identical ADF output verification for `Operation::Replace` vs previous `PatchOperation`.
+  - Incremental refactoring: one type replacement at a time, tests run after each step.
+  - No new features mixed with refactoring work (D-021).
+- Detection signals:
+  - Any test failure during Phase 5.5 indicates incorrect refactoring.
+  - ADF output diff between pre- and post-refactoring runs.
+- Response:
+  - Revert the specific refactoring step that caused the failure.
+  - Add a regression test capturing the failure before re-attempting.
+
 ## Promoted Scope Risk Notes
 
 The following previously deferred capabilities have been promoted into the Structural phases roadmap:

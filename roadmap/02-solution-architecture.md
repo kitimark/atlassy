@@ -88,6 +88,49 @@ The Foundation phases (0-5) established a minimal-change text-replacement pipeli
 - If `verify` fails, block publish and return deterministic failure reasons.
 - If publish conflicts after one rebase retry, return a reviewer artifact instead of repeated retries.
 
+## Phase 5.5 Refactoring Scope
+
+Phase 5.5 restructures the type system and pipeline interfaces before adding new behavior. All changes are structural — zero behavior change, all existing tests pass.
+
+### Type Consolidation (3 types to 1)
+
+Three types currently carry the same concept:
+
+- `PatchCandidate { path, value }` — in `atlassy-adf`, no `op` field, always implies replace.
+- `PatchOperation { op: String, path, value }` — in `atlassy-adf`, `op` is always `"replace"`.
+- `PatchOp { op: String, path, value }` — in `atlassy-contracts`, duplicate of `PatchOperation`.
+
+All three are replaced by a single `Operation` enum in `atlassy-contracts`:
+
+- Phase 5.5: `Operation::Replace { path: String, value: Value }` (only variant).
+- Phase 6 adds: `Operation::Insert { parent_path, index, block }` and `Operation::Remove { target_path }`.
+
+`Operation` is the single type flowing from candidate construction through merge, patch, and verify. Data and serialization live in `atlassy-contracts`; application behavior (`apply_replace`, `apply_insert`, `apply_remove`) lives in `atlassy-adf`.
+
+### Pipeline State Addition
+
+`AdfBlockOps` is added to the pipeline state order between `AdfTableEdit` and `MergeCandidates`:
+
+`fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> adf_block_ops -> merge_candidates -> patch -> verify -> publish`
+
+In Phase 5.5, `AdfBlockOps` is a no-op pass-through. Phase 6 activates it to process `block_ops` from `RunRequest`.
+
+### Contract Changes
+
+- `RunRequest` gains `block_ops: Vec<BlockOp>` field (always empty in Phase 5.5).
+- `MergeCandidatesOutput.changed_paths: Vec<String>` becomes `operations: Vec<Operation>`.
+- `PatchOutput.patch_ops: Vec<PatchOp>` becomes `operations: Vec<Operation>`.
+- `VerifyInput.changed_paths: Vec<String>` becomes `operations: Vec<Operation>`.
+
+### Verify Restructuring
+
+`verify.rs` is split into focused check functions (Extract Method):
+
+- `check_operation_legality(ops, scope, index)` — scope/route/table guards per operation.
+- `check_structural_validity(adf)` — post-mutation ADF validation (stub in Phase 5.5, activated in Phase 6).
+
+Structural validity logic lives in `atlassy-adf` (ADF domain knowledge), called from the pipeline verify state.
+
 ## Structural Architecture Extensions (Phases 6-9)
 
 ### Block Operation Model

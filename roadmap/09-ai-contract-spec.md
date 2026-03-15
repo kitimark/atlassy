@@ -8,9 +8,11 @@
 - `routes`: `editable_prose | table_adf | locked_structural`
 - `path_format`: `json_pointer` (RFC 6901)
 - `operation_kinds`: `replace | insert | remove`
-- `state_order`: `fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> merge_candidates -> patch -> verify -> publish`
+- `state_order`: `fetch -> classify -> extract_prose -> md_assist_edit -> adf_table_edit -> adf_block_ops -> merge_candidates -> patch -> verify -> publish`
 
 Contract version `1.0.0` (Foundation) is fully backward compatible. Structural additions (2.0.0) are additive; existing `replace`-only payloads remain valid.
+
+Phase 5.5 consolidates `PatchCandidate`, `PatchOperation`, and `PatchOp` into a single `Operation` enum (D-017 revised). The `Operation` enum is the unified type for all pipeline operations. `RunRequest` gains a `block_ops: Vec<BlockOp>` field for structural operations (D-021).
 
 ## Global Rules
 

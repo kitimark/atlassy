@@ -113,12 +113,12 @@
 
 ## Decision Log (Structural Phases)
 
-### D-017: Patch operation type strategy
+### D-017: Operation type consolidation strategy (revised)
 
-- Decision: expand `PatchOperation` to support `Replace`, `Insert`, and `Remove` operation kinds via a typed enum.
-- Rationale: v1's `replace`-only constraint prevents structural editing. Typed operations enable compile-time safety for different mutation semantics. `Insert` adds a new ADF block at a specified position. `Remove` deletes an existing ADF block. `Replace` retains v1 behavior (text-value replacement at leaf paths).
-- Constraint: `Insert` and `Remove` require post-mutation ADF schema validation. `Replace` does not (it preserves structure by construction).
-- Phase: 6.
+- Decision: consolidate `PatchCandidate` (from `atlassy-adf`), `PatchOperation` (from `atlassy-adf`), and `PatchOp` (from `atlassy-contracts`) into a single `Operation` enum in `atlassy-contracts`. Phase 5.5 introduces the enum with `Operation::Replace { path, value }` only (zero behavior change). Phase 6 adds `Operation::Insert { parent_path, index, block }` and `Operation::Remove { target_path }` variants.
+- Rationale: the three existing types carry the same concept but are scattered across two crates (Shotgun Surgery smell per refactoring.guru). A single typed enum eliminates primitive obsession (`op: String`), removes redundant type conversions, and ensures compile-time safety for different mutation semantics. Each variant carries exactly the data it needs — no `Option<Value>` hacks or unused fields.
+- Constraint: `Insert` and `Remove` require post-mutation ADF schema validation. `Replace` does not (it preserves structure by construction). The `Operation` enum is the single type flowing from candidate construction through merge, patch, and verify.
+- Phase: 5.5 (type introduction), 6 (Insert/Remove variants).
 
 ### D-018: Block insert/delete scope (Phase 6)
 
@@ -137,8 +137,17 @@
 - Decision: process insert and delete patch operations in reverse document order (highest index first) to prevent cascading index shifts.
 - Rationale: avoids the complexity of a full stable-ID addressing refactor while enabling correct multi-operation scenarios. The current JSON Pointer addressing system is positional (array indices); inserting at `/content/2` would invalidate all subsequent sibling paths. Processing bottom-up eliminates this problem for non-overlapping operations.
 - Constraint: operations within the same parent array must be sorted by descending index before application. Overlapping operations (insert and delete at the same position) require explicit ordering rules.
+- Implementation: ordering logic lives in `atlassy-adf/src/ordering.rs` as a pure function `sort_operations()`. Algorithm: (1) partition into leaf replaces and structural ops; (2) replaces first (they don't shift indices); (3) structural ops grouped by parent path, descending index; (4) at same index: remove before insert. Conflict detection: reject if a remove path is a prefix of another operation's path.
 - Upgrade path: if reverse-order processing proves insufficient for complex multi-operation scenarios, stable-ID-based node addressing can be introduced as a future decision.
-- Phase: 6.
+- Phase: 5.5 (module stub with identity sort), 6 (full algorithm).
+
+### D-021: Preparatory refactoring strategy
+
+- Decision: apply structural refactoring before feature implementation, following refactoring.guru principles. Phase 5.5 performs type consolidation, method extraction, and interface preparation with zero behavior change, ensuring Phase 6 feature work builds on a clean type system.
+- Rationale: the current codebase has three code smells that would compound if Phase 6 features were bolted on: Primitive Obsession (`op: String`), Shotgun Surgery (operation concept split across 3 types in 2 crates), and Divergent Change (`verify.rs` handling too many concerns). Refactoring first follows the principle: "when you need to add a feature, refactor the code first to make adding the feature easy, then add the feature."
+- Refactoring techniques applied: Replace Type Code with Class (Operation enum), Inline Class (drop PatchCandidate/PatchOp), Extract Method (verify check functions), Add Parameter (block_ops on RunRequest).
+- Constraint: Phase 5.5 must produce zero behavior change. All 159 existing tests must pass identically. `Operation::Replace` must produce byte-identical output to the previous `PatchOperation { op: "replace" }`.
+- Phase: 5.5.
 
 ## Default Route Matrix
 

@@ -32,6 +32,7 @@ The Foundation phases (0-5) established a token-efficient, minimal-change text-r
 - Phase 3: Table cell edit route (complete)
 - Phase 4: PoC execution and metrics validation (complete)
 - Phase 5: Hardening and v1 readiness (complete)
+- Phase 5.5: Structural refactor (preparatory)
 - Phase 6: Block operation foundation
 - Phase 7: Structural composition
 - Phase 8: Multi-page content control
@@ -50,11 +51,12 @@ The Foundation phases (0-5) established a token-efficient, minimal-change text-r
 - Foundation KPI status: `iterate` (context reduction at 64.18% vs 70% target; publish latency p90 regression). Root cause: Pattern B selector strategy on mixed-content pages.
 - Foundation KPI framework is superseded by Structural KPI framework (D-019). The Pattern B selector issue becomes addressable through Phase 6 structural operations rather than narrower scoped fetching.
 
-### Structural Status (Phases 6-9): Planning
+### Structural Status (Phases 5.5-9): Planning
 
 - Roadmap redesigned to target insert/edit/delete of ADF blocks across pages and sub-pages.
-- Decisions D-017 through D-020 define the architectural approach (patch operation types, block scope, revised KPIs, reverse-order processing).
-- Phase 6 (Block Operation Foundation) is the next implementation target.
+- Decisions D-017 through D-021 define the architectural approach (type consolidation, block scope, revised KPIs, reverse-order processing, preparatory refactoring).
+- Phase 5.5 (Structural Refactor) is the next implementation target: type consolidation and pipeline preparation with zero behavior change.
+- Phase 6 (Block Operation Foundation) follows immediately after Phase 5.5 on the refactored foundation.
 
 ## Phase 0: Design Baseline
 
@@ -182,22 +184,53 @@ Before paired KPI experiments can produce valid results, the following must be r
 - Readiness checklist is signed.
 - Final recommendation is documented (`go | iterate | stop`).
 
+## Phase 5.5: Structural Refactor
+
+### Scope
+
+Preparatory refactoring to make Phase 6 feature work clean and sustainable. Follows refactoring.guru principles: cure existing code smells before adding new behavior. Zero behavior change — all 159 existing tests must pass identically (D-021).
+
+- **Replace Type Code with Class** (Primitive Obsession cure): consolidate `PatchCandidate`, `PatchOperation`, and `PatchOp` into a single `Operation` enum in `atlassy-contracts` with one variant: `Operation::Replace { path, value }` (D-017 revised).
+- **Inline Class** (Shotgun Surgery cure): drop `PatchCandidate` (from `atlassy-adf`) and `PatchOp` (from `atlassy-contracts`). The `Operation` enum replaces all three types as the single operation representation flowing through the pipeline.
+- **Extract Method** (Divergent Change cure): split `verify.rs` into focused check functions — `check_operation_legality()` for scope/route/table guards and a stub for `check_structural_validity()` (activated in Phase 6).
+- **Add Parameter**: add `block_ops: Vec<BlockOp>` field to `RunRequest` (always empty in Phase 5.5 — no processing yet).
+- **New pipeline state stub**: add `AdfBlockOps` to `PipelineState` enum, positioned between `AdfTableEdit` and `MergeCandidates`. Implemented as a no-op pass-through in Phase 5.5.
+- **Ordering module stub**: add `atlassy-adf/src/ordering.rs` with `sort_operations()` that returns operations unchanged (identity sort). Phase 6 adds the reverse-document-order algorithm.
+- **Contract alignment**: `MergeCandidatesOutput` changes from `changed_paths: Vec<String>` to `operations: Vec<Operation>`.
+
+### Key Decisions
+
+- D-017 (revised): Operation type consolidation strategy
+- D-021: Preparatory refactoring strategy
+
+### Acceptance Criteria
+
+- All 159 existing tests pass with zero behavior change.
+- `Operation::Replace` produces byte-identical ADF output to previous `PatchOperation { op: "replace" }`.
+- `PatchCandidate`, `PatchOperation`, and `PatchOp` types are removed from the codebase.
+- `RunRequest` accepts `block_ops` field (defaults to empty vec).
+- `AdfBlockOps` pipeline state exists and passes through as no-op.
+- Verify stage uses extracted check functions with identical behavior.
+- No new features, no new operation types, no new error codes.
+
 ## Phase 6: Block Operation Foundation
 
 ### Scope
 
-- Expand `PatchOperation` from string `"replace"` to typed enum: `Replace`, `Insert`, `Remove` (D-017).
-- Implement reverse-document-order processing for insert and delete operations to handle index shifts (D-020).
-- `Insert`: add a new ADF block at a specified position within scope. Phase 6 scope limited to `editable_prose` types: paragraph, heading, bulletList, orderedList, listItem, blockquote, codeBlock (D-018).
-- `Remove`: delete an existing ADF block within scope. Same type scope as insert.
-- Post-mutation ADF schema validation: resulting document must pass schema checks before publish.
-- Update classification to handle newly inserted nodes (route assignment for blocks that did not exist at fetch time).
-- Update verification to distinguish intentional structural changes (declared in operation manifest) from accidental mutations.
+Add insert and delete capabilities to the `Operation` enum established in Phase 5.5. All feature work builds on the refactored type system.
+
+- Add `Operation::Insert { parent_path, index, block }` and `Operation::Remove { target_path }` variants to the existing `Operation` enum (D-017).
+- Implement `apply_insert()` and `apply_remove()` functions in `atlassy-adf` patch module, alongside existing `apply_replace()`.
+- Implement reverse-document-order sorting in `atlassy-adf/src/ordering.rs`: partition replaces vs structural ops, group by parent path, descending index, remove-before-insert at same index (D-020).
+- Implement `AdfBlockOps` pipeline state: processes `block_ops` from `RunRequest`, validates scope/type/conflicts, produces `Operation` instances that merge with prose and table operations.
+- Phase 6 scope limited to `editable_prose` types: paragraph, heading, bulletList, orderedList, listItem, blockquote, codeBlock (D-018).
+- Implement `check_structural_validity()` in `atlassy-adf`: post-mutation validation that `doc.content` is non-empty, all blocks have valid types, parent-child relationships are correct, headings have `attrs.level`.
+- Activate op-aware verification in `check_operation_legality()`: allow intentional structural changes from declared operations, block unintended mutations.
 - New error codes: `ERR_INSERT_POSITION_INVALID`, `ERR_REMOVE_ANCHOR_MISSING`, `ERR_POST_MUTATION_SCHEMA_INVALID`.
 
 ### Key Decisions
 
-- D-017: Patch operation type strategy
+- D-017: Operation type consolidation strategy (established in Phase 5.5)
 - D-018: Block insert/delete scope (Phase 6)
 - D-019: Revised KPI framework for structural operations
 - D-020: Reverse-order patch processing
@@ -208,7 +241,7 @@ Before paired KPI experiments can produce valid results, the following must be r
 - Delete a paragraph within scope: succeeds and publishes.
 - Insert at an invalid position (out of bounds, inside locked node): fails with `ERR_INSERT_POSITION_INVALID`.
 - Delete a scope anchor heading: blocked with `ERR_REMOVE_ANCHOR_MISSING` or requires explicit re-scoping.
-- Post-mutation ADF passes schema validation for all insert/delete operations.
+- Post-mutation ADF passes structural validation for all insert/delete operations.
 - Existing Foundation text-replacement functionality is unchanged (backward compatible).
 - Multi-operation batch (insert + delete + replace in same run): produces correct results via reverse-order processing.
 
@@ -287,6 +320,7 @@ Before paired KPI experiments can produce valid results, the following must be r
 
 ### Structural (planned)
 
+- `phase5.5-structural-refactor`
 - `phase6-block-operation-foundation`
 - `phase7-structural-composition`
 - `phase8-multi-page-content-control`
