@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/kitimark/atlassy/compare/v0.1.2...v0.1.3) - 2026-03-15
+
+### Other
+
+- remove stale version field from internal path dependencies
+- *(pipeline)* unify operation model for phase-6 readiness
+
 ## [0.1.2](https://github.com/kitimark/atlassy/compare/v0.1.1...v0.1.2) - 2026-03-14
 
 ### Fixed
