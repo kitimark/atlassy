@@ -1,9 +1,10 @@
 use std::collections::BTreeSet;
 
+use atlassy_contracts::Operation;
 use serde_json::Value;
 
+use crate::AdfError;
 use crate::path::{is_json_pointer, is_within_allowed_scope};
-use crate::{AdfError, PatchCandidate, PatchOperation};
 
 pub fn normalize_changed_paths(paths: &[String]) -> Result<Vec<String>, AdfError> {
     let mut unique = BTreeSet::new();
@@ -16,43 +17,39 @@ pub fn normalize_changed_paths(paths: &[String]) -> Result<Vec<String>, AdfError
     Ok(unique.into_iter().collect())
 }
 
-pub fn build_patch_ops(
-    candidates: &[PatchCandidate],
+pub fn validate_operations(
+    operations: &[Operation],
     allowed_scope_paths: &[String],
-) -> Result<Vec<PatchOperation>, AdfError> {
-    let mut ops = Vec::with_capacity(candidates.len());
-    for candidate in candidates {
-        if candidate.path == "/" || candidate.path.is_empty() {
+) -> Result<(), AdfError> {
+    for operation in operations {
+        let path = match operation {
+            Operation::Replace { path, .. } => path,
+        };
+
+        if path == "/" || path.is_empty() {
             return Err(AdfError::WholeBodyRewriteDisallowed);
         }
-        if !is_within_allowed_scope(&candidate.path, allowed_scope_paths) {
-            return Err(AdfError::OutOfScope(candidate.path.clone()));
+        if !is_within_allowed_scope(path, allowed_scope_paths) {
+            return Err(AdfError::OutOfScope(path.clone()));
         }
-        ops.push(PatchOperation {
-            op: "replace".to_string(),
-            path: candidate.path.clone(),
-            value: candidate.value.clone(),
-        });
     }
-    Ok(ops)
+    Ok(())
 }
 
-pub fn apply_patch_ops(base: &Value, patch_ops: &[PatchOperation]) -> Result<Value, AdfError> {
+pub fn apply_operations(base: &Value, operations: &[Operation]) -> Result<Value, AdfError> {
     let mut candidate = base.clone();
-    for op in patch_ops {
-        if op.op != "replace" {
-            return Err(AdfError::MappingIntegrity(format!(
-                "unsupported patch operation `{}`",
-                op.op
-            )));
+    for operation in operations {
+        match operation {
+            Operation::Replace { path, value } => {
+                if path == "/" || path.is_empty() {
+                    return Err(AdfError::WholeBodyRewriteDisallowed);
+                }
+                let target = candidate.pointer_mut(path).ok_or_else(|| {
+                    AdfError::MappingIntegrity(format!("path `{path}` does not resolve"))
+                })?;
+                *target = value.clone();
+            }
         }
-        if op.path == "/" || op.path.is_empty() {
-            return Err(AdfError::WholeBodyRewriteDisallowed);
-        }
-        let target = candidate.pointer_mut(&op.path).ok_or_else(|| {
-            AdfError::MappingIntegrity(format!("path `{}` does not resolve", op.path))
-        })?;
-        *target = op.value.clone();
     }
     Ok(candidate)
 }

@@ -7,8 +7,8 @@ use atlassy_confluence::{
     StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    ContractError, ErrorCode, FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, PipelineState,
-    ProvenanceStamp, RUNTIME_STUB, TableOperation,
+    ContractError, ErrorCode, FLOW_OPTIMIZED, Operation, PATTERN_A, PIPELINE_VERSION,
+    PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
@@ -42,6 +42,7 @@ fn sample_request(run_id: &str) -> RunRequest {
         },
         run_mode: RunMode::NoOp,
         target_index: 0,
+        block_ops: vec![],
         force_verify_fail: false,
         bootstrap_empty_page: false,
     }
@@ -206,10 +207,14 @@ fn pipeline_auto_discovers_and_patches() {
     );
 
     let patch_output = read_state_output(temp.path(), "run-auto-discovery", "patch");
-    assert_eq!(
-        patch_output["payload"]["patch_ops"][0]["path"],
-        serde_json::json!("/content/1/content/0/text")
-    );
+    assert!(patch_output["payload"].get("patch_ops").is_some());
+    let patch_ops: Vec<Operation> =
+        serde_json::from_value(patch_output["payload"]["patch_ops"].clone())
+            .expect("patch_ops should deserialize into Operation list");
+    assert!(matches!(
+        &patch_ops[0],
+        Operation::Replace { path, .. } if path == "/content/1/content/0/text"
+    ));
 }
 
 #[test]
@@ -431,6 +436,7 @@ fn replay_artifacts_exist_for_successful_run() {
         "extract_prose",
         "md_assist_edit",
         "adf_table_edit",
+        "adf_block_ops",
         "merge_candidates",
         "patch",
         "verify",
@@ -478,6 +484,7 @@ fn replay_artifacts_exist_for_failed_run_until_failure_state() {
         "extract_prose",
         "md_assist_edit",
         "adf_table_edit",
+        "adf_block_ops",
         "merge_candidates",
         "patch",
         "verify",

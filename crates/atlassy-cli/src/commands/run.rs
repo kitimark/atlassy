@@ -111,6 +111,7 @@ pub fn execute_run_command(
         provenance,
         run_mode,
         target_index: target_index.unwrap_or_default(),
+        block_ops: vec![],
         force_verify_fail,
         bootstrap_empty_page,
     };

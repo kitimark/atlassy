@@ -1,3 +1,4 @@
+mod adf_block_ops;
 mod adf_table_edit;
 mod classify;
 mod extract_prose;
@@ -8,6 +9,7 @@ mod patch;
 mod publish;
 mod verify;
 
+pub(crate) use adf_block_ops::run_adf_block_ops_state;
 pub(crate) use adf_table_edit::run_adf_table_edit_state;
 pub(crate) use classify::run_classify_state;
 pub(crate) use extract_prose::run_extract_prose_state;

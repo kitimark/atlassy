@@ -1,4 +1,4 @@
-use atlassy_contracts::{ProvenanceStamp, TableOperation};
+use atlassy_contracts::{BlockOp, ProvenanceStamp, TableOperation};
 
 mod artifact_store;
 mod error_map;
@@ -49,6 +49,7 @@ pub struct RunRequest {
     pub provenance: ProvenanceStamp,
     pub run_mode: RunMode,
     pub target_index: usize,
+    pub block_ops: Vec<BlockOp>,
     pub force_verify_fail: bool,
     pub bootstrap_empty_page: bool,
 }

@@ -244,6 +244,13 @@ impl<C: ConfluenceClient> Orchestrator<C> {
             estimate_tokens(&table_edit)?,
         );
 
+        let adf_block_ops = states::run_adf_block_ops_state(&self.artifact_store, request, tracker)
+            .map_err(|error| self.hard_fail(summary, PipelineState::AdfBlockOps, error))?;
+        summary.state_token_usage.insert(
+            PipelineState::AdfBlockOps.as_str().to_string(),
+            estimate_tokens(&adf_block_ops)?,
+        );
+
         let merged = states::run_merge_candidates_state(
             &self.artifact_store,
             request,

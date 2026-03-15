@@ -1,7 +1,7 @@
-use atlassy_adf::{PatchCandidate, apply_patch_ops, build_patch_ops};
+use atlassy_adf::{apply_operations, sort_operations, validate_operations};
 use atlassy_contracts::{
     AdfTableEditOutput, Diagnostics, FetchOutput, MdAssistEditOutput, MergeCandidatesOutput,
-    PatchInput, PatchOp, PatchOutput, PipelineState, StateEnvelope,
+    Operation, PatchInput, PatchOutput, PipelineState, StateEnvelope,
 };
 
 use crate::error_map::to_hard_error;
@@ -27,11 +27,11 @@ pub(crate) fn run_patch_state(
         },
     };
 
-    let candidates = md_edit
+    let operations = md_edit
         .payload
         .prose_change_candidates
         .iter()
-        .map(|candidate| PatchCandidate {
+        .map(|candidate| Operation::Replace {
             path: candidate.path.clone(),
             value: serde_json::Value::String(candidate.markdown.clone()),
         })
@@ -40,25 +40,17 @@ pub(crate) fn run_patch_state(
                 .payload
                 .table_candidates
                 .iter()
-                .map(|candidate| PatchCandidate {
+                .map(|candidate| Operation::Replace {
                     path: candidate.path.clone(),
                     value: candidate.value.clone(),
                 }),
         )
         .collect::<Vec<_>>();
-    let raw_patch_ops = build_patch_ops(&candidates, &fetch.payload.allowed_scope_paths)
+    validate_operations(&operations, &fetch.payload.allowed_scope_paths)
         .map_err(|error| to_hard_error(PipelineState::Patch, error))?;
-    let candidate_page_adf = apply_patch_ops(&fetch.payload.scoped_adf, &raw_patch_ops)
+    let patch_ops = sort_operations(&operations);
+    let candidate_page_adf = apply_operations(&fetch.payload.scoped_adf, &patch_ops)
         .map_err(|error| to_hard_error(PipelineState::Patch, error))?;
-
-    let patch_ops = raw_patch_ops
-        .into_iter()
-        .map(|op| PatchOp {
-            op: op.op,
-            path: op.path,
-            value: op.value,
-        })
-        .collect::<Vec<_>>();
     let patch_ops_bytes = serde_json::to_vec(&patch_ops)
         .map(|value| value.len() as u64)
         .unwrap_or(0);

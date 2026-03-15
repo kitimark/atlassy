@@ -86,6 +86,7 @@ pub(crate) fn execute_manifest_runs(
                 .target_index
                 .map(|index| index as usize)
                 .unwrap_or_default(),
+            block_ops: vec![],
             force_verify_fail: run.force_verify_fail,
             bootstrap_empty_page: run.bootstrap_empty_page.unwrap_or(false),
         };

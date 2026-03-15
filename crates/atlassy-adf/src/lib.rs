@@ -6,6 +6,7 @@ use thiserror::Error;
 
 mod bootstrap;
 mod index;
+mod ordering;
 mod patch;
 mod path;
 mod scope;
@@ -19,19 +20,6 @@ pub struct ScopeResolution {
     pub scope_resolution_failed: bool,
     pub full_page_fetch: bool,
     pub fallback_reason: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PatchCandidate {
-    pub path: String,
-    pub value: Value,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PatchOperation {
-    pub op: String,
-    pub path: String,
-    pub value: Value,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,6 +76,7 @@ pub enum AdfError {
 
 pub use bootstrap::*;
 pub use index::*;
+pub use ordering::*;
 pub use patch::*;
 pub use path::*;
 pub use scope::*;

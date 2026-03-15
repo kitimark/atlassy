@@ -19,6 +19,7 @@ pub enum PipelineState {
     ExtractProse,
     MdAssistEdit,
     AdfTableEdit,
+    AdfBlockOps,
     MergeCandidates,
     Patch,
     Verify,
@@ -26,12 +27,13 @@ pub enum PipelineState {
 }
 
 impl PipelineState {
-    pub const ORDER: [PipelineState; 9] = [
+    pub const ORDER: [PipelineState; 10] = [
         PipelineState::Fetch,
         PipelineState::Classify,
         PipelineState::ExtractProse,
         PipelineState::MdAssistEdit,
         PipelineState::AdfTableEdit,
+        PipelineState::AdfBlockOps,
         PipelineState::MergeCandidates,
         PipelineState::Patch,
         PipelineState::Verify,
@@ -45,6 +47,7 @@ impl PipelineState {
             PipelineState::ExtractProse => "extract_prose",
             PipelineState::MdAssistEdit => "md_assist_edit",
             PipelineState::AdfTableEdit => "adf_table_edit",
+            PipelineState::AdfBlockOps => "adf_block_ops",
             PipelineState::MergeCandidates => "merge_candidates",
             PipelineState::Patch => "patch",
             PipelineState::Verify => "verify",
@@ -261,11 +264,27 @@ pub struct MergeCandidatesOutput {
     pub changed_paths: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PatchOp {
-    pub op: String,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "op", rename_all = "snake_case")]
+pub enum Operation {
+    Replace {
+        path: String,
+        value: serde_json::Value,
+    },
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BlockOpKind {
+    Insert,
+    Remove,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BlockOp {
+    pub kind: BlockOpKind,
     pub path: String,
-    pub value: serde_json::Value,
+    pub value: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -276,7 +295,7 @@ pub struct PatchInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PatchOutput {
-    pub patch_ops: Vec<PatchOp>,
+    pub patch_ops: Vec<Operation>,
     pub candidate_page_adf: serde_json::Value,
     pub patch_ops_bytes: u64,
 }

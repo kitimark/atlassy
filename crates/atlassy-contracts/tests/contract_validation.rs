@@ -19,12 +19,42 @@ fn pipeline_state_enum_values_are_stable() {
             "extract_prose",
             "md_assist_edit",
             "adf_table_edit",
+            "adf_block_ops",
             "merge_candidates",
             "patch",
             "verify",
             "publish",
         ]
     );
+}
+
+#[test]
+fn patch_output_serializes_operation_replace_with_patch_ops_key() {
+    let output = PatchOutput {
+        patch_ops: vec![Operation::Replace {
+            path: "/content/0/content/0/text".to_string(),
+            value: serde_json::json!("after"),
+        }],
+        candidate_page_adf: serde_json::json!({"type": "doc", "content": []}),
+        patch_ops_bytes: 0,
+    };
+
+    let serialized = serde_json::to_value(&output).unwrap();
+    assert!(serialized.get("patch_ops").is_some());
+    assert_eq!(
+        serialized["patch_ops"][0]["op"],
+        serde_json::json!("replace")
+    );
+    assert_eq!(
+        serialized["patch_ops"][0]["path"],
+        serde_json::json!("/content/0/content/0/text")
+    );
+
+    let decoded: PatchOutput = serde_json::from_value(serialized).unwrap();
+    assert!(matches!(
+        &decoded.patch_ops[0],
+        Operation::Replace { path, .. } if path == "/content/0/content/0/text"
+    ));
 }
 
 #[test]

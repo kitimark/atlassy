@@ -1,14 +1,15 @@
 use atlassy_adf::*;
+use atlassy_contracts::Operation;
 use serde_json::Value;
 
 #[test]
 fn rejects_whole_body_patch() {
-    let candidates = vec![PatchCandidate {
+    let operations = vec![Operation::Replace {
         path: "/".to_string(),
         value: serde_json::json!({}),
     }];
 
-    let error = build_patch_ops(&candidates, &["/content/0".to_string()]).unwrap_err();
+    let error = validate_operations(&operations, &["/content/0".to_string()]).unwrap_err();
     assert_eq!(error, AdfError::WholeBodyRewriteDisallowed);
 }
 
@@ -22,7 +23,7 @@ fn canonicalizes_relative_path_to_scope_root() {
 }
 
 #[test]
-fn applies_patch_ops_to_candidate_payload() {
+fn applies_operations_to_candidate_payload() {
     let base = serde_json::json!({
         "type": "doc",
         "content": [
@@ -30,13 +31,12 @@ fn applies_patch_ops_to_candidate_payload() {
         ]
     });
 
-    let ops = vec![PatchOperation {
-        op: "replace".to_string(),
+    let operations = vec![Operation::Replace {
         path: "/content/0/content/0/text".to_string(),
         value: serde_json::Value::String("after".to_string()),
     }];
 
-    let patched = apply_patch_ops(&base, &ops).unwrap();
+    let patched = apply_operations(&base, &operations).unwrap();
     assert_eq!(
         patched
             .pointer("/content/0/content/0/text")
