@@ -4,7 +4,7 @@ use atlassy_contracts::{
 };
 
 use super::adf_block_ops::AdfBlockOpsOutput;
-use super::locked_boundary::{check_locked_boundary, LockedPath};
+use super::locked_boundary::{LockedPath, check_locked_boundary};
 use crate::util::meta;
 use crate::{ArtifactStore, PipelineError, RunRequest, StateTracker};
 

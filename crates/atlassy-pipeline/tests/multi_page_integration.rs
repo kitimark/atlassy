@@ -8,8 +8,8 @@ use atlassy_confluence::{
     StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    BlockOp, ErrorCode, MultiPageRequest, PageRunMode, PageTarget, PipelineState, ProvenanceStamp,
-    FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, RUNTIME_STUB,
+    BlockOp, ErrorCode, FLOW_OPTIMIZED, MultiPageRequest, PATTERN_A, PIPELINE_VERSION, PageRunMode,
+    PageTarget, PipelineState, ProvenanceStamp, RUNTIME_STUB,
 };
 use atlassy_pipeline::{MultiPageOrchestrator, Orchestrator, PipelineError, RunMode, RunRequest};
 

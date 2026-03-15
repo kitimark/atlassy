@@ -7,8 +7,8 @@ use atlassy_confluence::{
     StubConfluenceClient, StubPage,
 };
 use atlassy_contracts::{
-    BlockOp, ContractError, ErrorCode, Operation, PipelineState, ProvenanceStamp, TableOperation,
-    FLOW_OPTIMIZED, PATTERN_A, PIPELINE_VERSION, RUNTIME_STUB,
+    BlockOp, ContractError, ErrorCode, FLOW_OPTIMIZED, Operation, PATTERN_A, PIPELINE_VERSION,
+    PipelineState, ProvenanceStamp, RUNTIME_STUB, TableOperation,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest, StateTracker};
 
@@ -563,12 +563,13 @@ fn replay_artifacts_exist_for_successful_run() {
         assert!(state_dir.join("diagnostics.json").exists());
     }
 
-    assert!(temp
-        .path()
-        .join("artifacts")
-        .join("run-success-artifacts")
-        .join("summary.json")
-        .exists());
+    assert!(
+        temp.path()
+            .join("artifacts")
+            .join("run-success-artifacts")
+            .join("summary.json")
+            .exists()
+    );
 }
 
 #[test]
@@ -652,12 +653,12 @@ fn extract_prose_mapping_is_deterministic() {
     second.run_mode = RunMode::NoOp;
     orchestrator.run(second).expect("second run should succeed");
 
-    let map_a = read_state_output(temp.path(), "run-map-a", "extract_prose")["payload"]
-        ["md_to_adf_map"]
-        .clone();
-    let map_b = read_state_output(temp.path(), "run-map-b", "extract_prose")["payload"]
-        ["md_to_adf_map"]
-        .clone();
+    let map_a =
+        read_state_output(temp.path(), "run-map-a", "extract_prose")["payload"]["md_to_adf_map"]
+            .clone();
+    let map_b =
+        read_state_output(temp.path(), "run-map-b", "extract_prose")["payload"]["md_to_adf_map"]
+            .clone();
     assert_eq!(map_a, map_b);
 }
 
@@ -938,11 +939,13 @@ fn remove_only_run_produces_correct_adf_and_publishes() {
     assert_eq!(summary.applied_paths, vec!["/content/1".to_string()]);
 
     let patch_output = read_state_output(temp.path(), "run-remove-only", "patch");
-    assert!(patch_output["payload"]["candidate_page_adf"]["content"]
-        .as_array()
-        .expect("content should be array")
-        .iter()
-        .all(|block| block["type"] != serde_json::json!("paragraph")));
+    assert!(
+        patch_output["payload"]["candidate_page_adf"]["content"]
+            .as_array()
+            .expect("content should be array")
+            .iter()
+            .all(|block| block["type"] != serde_json::json!("paragraph"))
+    );
     assert_eq!(orchestrator.client().publish_attempts(), 1);
 }
 
@@ -975,9 +978,11 @@ fn mixed_insert_replace_remove_run_produces_expected_result() {
         .run(request)
         .expect("mixed operation run should succeed");
     assert!(summary.success);
-    assert!(summary
-        .applied_paths
-        .contains(&"/content/1/content/0/text".to_string()));
+    assert!(
+        summary
+            .applied_paths
+            .contains(&"/content/1/content/0/text".to_string())
+    );
     assert!(summary.applied_paths.contains(&"/content/2".to_string()));
     assert!(summary.applied_paths.contains(&"/content/0".to_string()));
 
@@ -1017,9 +1022,11 @@ fn replace_only_run_remains_backward_compatible() {
     let patch_ops: Vec<Operation> =
         serde_json::from_value(patch_output["payload"]["patch_ops"].clone())
             .expect("patch_ops should deserialize");
-    assert!(patch_ops
-        .iter()
-        .all(|operation| matches!(operation, Operation::Replace { .. })));
+    assert!(
+        patch_ops
+            .iter()
+            .all(|operation| matches!(operation, Operation::Replace { .. }))
+    );
 }
 
 #[test]
@@ -1409,8 +1416,7 @@ fn update_attrs_run_updates_panel_attrs_without_touching_content() {
         serde_json::json!("warning")
     );
     assert_eq!(
-        patch_output["payload"]["candidate_page_adf"]["content"][1]["content"][0]["content"][0]
-            ["text"],
+        patch_output["payload"]["candidate_page_adf"]["content"][1]["content"][0]["content"][0]["text"],
         serde_json::json!("Panel body")
     );
 }
@@ -1509,9 +1515,11 @@ fn mixed_insert_section_and_replace_run_succeeds() {
         .run(request)
         .expect("mixed replace + insert section should succeed");
     assert!(summary.success);
-    assert!(summary
-        .applied_paths
-        .contains(&"/content/1/content/0/text".to_string()));
+    assert!(
+        summary
+            .applied_paths
+            .contains(&"/content/1/content/0/text".to_string())
+    );
     assert!(summary.applied_paths.contains(&"/content/2".to_string()));
     assert!(summary.applied_paths.contains(&"/content/3".to_string()));
 

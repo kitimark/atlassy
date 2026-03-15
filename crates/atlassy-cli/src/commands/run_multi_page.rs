@@ -6,7 +6,7 @@ use atlassy_confluence::{ConfluenceError, LiveConfluenceClient, StubConfluenceCl
 use atlassy_contracts::{ErrorCode, MultiPageRequest, RUNTIME_LIVE, RUNTIME_STUB};
 use atlassy_pipeline::{MultiPageOrchestrator, PipelineError};
 
-use crate::{demo_page, DynError};
+use crate::{DynError, demo_page};
 
 fn map_live_startup_error(error: ConfluenceError) -> PipelineError {
     PipelineError::Hard {

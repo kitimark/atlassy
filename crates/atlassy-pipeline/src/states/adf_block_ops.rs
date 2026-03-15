@@ -1,7 +1,7 @@
 use atlassy_adf::{
-    build_list, build_section, build_table, build_table_cell, build_table_header, build_table_row,
-    find_section_range, is_attr_editable_type, is_insertable_type, is_removable_type,
-    is_within_allowed_scope, AdfError,
+    AdfError, build_list, build_section, build_table, build_table_cell, build_table_header,
+    build_table_row, find_section_range, is_attr_editable_type, is_insertable_type,
+    is_removable_type, is_within_allowed_scope,
 };
 use atlassy_contracts::{
     BlockOp, Diagnostics, FetchOutput, Operation, PipelineState, StateEnvelope,

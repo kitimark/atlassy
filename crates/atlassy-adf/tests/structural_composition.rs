@@ -1,7 +1,8 @@
 use atlassy_adf::{
-    build_heading, build_list, build_paragraph, build_section, build_table, build_table_cell,
-    build_table_header, build_table_row, build_text, check_structural_validity, find_section_range,
-    is_attr_editable_type, is_editable_prose, is_insertable_type, is_removable_type, AdfError,
+    AdfError, build_heading, build_list, build_paragraph, build_section, build_table,
+    build_table_cell, build_table_header, build_table_row, build_text, check_structural_validity,
+    find_section_range, is_attr_editable_type, is_editable_prose, is_insertable_type,
+    is_removable_type,
 };
 use serde_json::json;
 

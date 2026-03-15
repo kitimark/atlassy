@@ -6,8 +6,8 @@ use std::time::Instant;
 
 use atlassy_confluence::{ConfluenceClient, ConfluenceError, CreatePageResponse};
 use atlassy_contracts::{
-    ErrorCode, MultiPageRequest, MultiPageSummary, PageResult, PageRunMode, PageSnapshot,
-    PageTarget, PipelineState, RollbackResult, RunSummary, FLOW_OPTIMIZED, PATTERN_A,
+    ErrorCode, FLOW_OPTIMIZED, MultiPageRequest, MultiPageSummary, PATTERN_A, PageResult,
+    PageRunMode, PageSnapshot, PageTarget, PipelineState, RollbackResult, RunSummary,
 };
 
 use crate::error_map::confluence_error_to_hard_error;
@@ -558,8 +558,8 @@ mod tests {
         FetchPageResponse, PublishPageResponse, StubConfluenceClient, StubPage,
     };
     use atlassy_contracts::{
-        BlockOp, CreatePageTarget, PageRunMode, ProvenanceStamp, TableOperation, PIPELINE_VERSION,
-        RUNTIME_STUB,
+        BlockOp, CreatePageTarget, PIPELINE_VERSION, PageRunMode, ProvenanceStamp, RUNTIME_STUB,
+        TableOperation,
     };
 
     use super::*;

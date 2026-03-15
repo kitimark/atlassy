@@ -3,8 +3,8 @@ use std::collections::BTreeSet;
 use atlassy_contracts::Operation;
 use serde_json::Value;
 
-use crate::path::{is_json_pointer, is_within_allowed_scope};
 use crate::AdfError;
+use crate::path::{is_json_pointer, is_within_allowed_scope};
 
 pub fn normalize_changed_paths(paths: &[String]) -> Result<Vec<String>, AdfError> {
     let mut unique = BTreeSet::new();

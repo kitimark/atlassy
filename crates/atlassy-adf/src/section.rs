@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::{split_parent_index, AdfError};
+use crate::{AdfError, split_parent_index};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SectionRange {

@@ -9,7 +9,7 @@ use atlassy_pipeline::{Orchestrator, RunRequest};
 use crate::batch::{build_artifact_index, rebuild_batch_report_from_artifacts};
 use crate::manifest::{normalize_manifest, run_mode_from_manifest, validate_manifest};
 use crate::provenance::collect_provenance;
-use crate::{demo_page, empty_page, BatchReport, DynError, RunManifest};
+use crate::{BatchReport, DynError, RunManifest, demo_page, empty_page};
 
 pub fn execute_batch_from_manifest_file(
     manifest_path: &Path,

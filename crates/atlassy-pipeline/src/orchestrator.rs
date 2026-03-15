@@ -4,13 +4,13 @@ use std::path::Path;
 use atlassy_adf::{bootstrap_scaffold, build_node_path_index, is_page_effectively_empty};
 use atlassy_confluence::ConfluenceClient;
 use atlassy_contracts::{
-    validate_run_summary_telemetry, ErrorCode, Operation, PipelineState, PublishResult, RunSummary,
-    VerifyResult,
+    ErrorCode, Operation, PipelineState, PublishResult, RunSummary, VerifyResult,
+    validate_run_summary_telemetry,
 };
 
 use crate::error_map::to_hard_error;
 use crate::util::{add_duration_suffix, compute_section_bytes, estimate_tokens};
-use crate::{states, ArtifactStore, PipelineError, RunRequest, StateTracker};
+use crate::{ArtifactStore, PipelineError, RunRequest, StateTracker, states};
 
 pub struct Orchestrator<C: ConfluenceClient> {
     client: C,

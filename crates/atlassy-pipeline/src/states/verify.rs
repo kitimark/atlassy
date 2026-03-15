@@ -248,8 +248,8 @@ fn check_operation_legality(
                 }
 
                 let block_type = block.get("type").and_then(Value::as_str);
-                let is_table_cell_insert =
-                    block_type.is_some_and(|node_type| matches!(node_type, "tableCell" | "tableHeader"));
+                let is_table_cell_insert = block_type
+                    .is_some_and(|node_type| matches!(node_type, "tableCell" | "tableHeader"));
                 if !block_type.is_some_and(is_insertable_type) && !is_table_cell_insert {
                     diagnostics.errors.push(ErrorInfo {
                         code: ErrorCode::InsertPositionInvalid.to_string(),

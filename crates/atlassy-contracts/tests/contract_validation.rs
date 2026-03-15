@@ -349,13 +349,15 @@ fn markdown_mapping_must_be_one_to_one_and_in_scope() {
         },
     ];
 
-    assert!(validate_markdown_mapping(
-        &markdown_blocks,
-        &valid_map,
-        &["/content/1".to_string(), "/content/2".to_string()],
-        &["/content".to_string()]
-    )
-    .is_ok());
+    assert!(
+        validate_markdown_mapping(
+            &markdown_blocks,
+            &valid_map,
+            &["/content/1".to_string(), "/content/2".to_string()],
+            &["/content".to_string()]
+        )
+        .is_ok()
+    );
 
     let duplicate_block_map = vec![
         MarkdownMapEntry {

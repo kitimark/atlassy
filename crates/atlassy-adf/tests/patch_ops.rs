@@ -1,6 +1,6 @@
 use atlassy_adf::*;
 use atlassy_contracts::Operation;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 fn base_adf() -> Value {
     json!({

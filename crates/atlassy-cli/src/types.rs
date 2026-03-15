@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::error::Error;
 
-use atlassy_contracts::{BlockOp, ErrorCode, ProvenanceStamp, RunSummary, RUNTIME_STUB};
+use atlassy_contracts::{BlockOp, ErrorCode, ProvenanceStamp, RUNTIME_STUB, RunSummary};
 use chrono::Utc;
 use serde::de::Error as DeError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
