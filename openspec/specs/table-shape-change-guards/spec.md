@@ -20,17 +20,17 @@ The table route MUST reject candidate operations that modify table-level or stru
 - **THEN** the route rejects the request with `ERR_TABLE_SHAPE_CHANGE`
 
 ### Requirement: Shape guard checks are enforced before publish
-Verifier integration SHALL treat detected table shape or attribute drift as hard failure and block publish. The check MUST be implemented as an extracted function `check_table_shape_integrity()` that returns `Option<VerifyResult>`, returning `Some(Fail)` with `ERR_TABLE_SHAPE_CHANGE` diagnostic when a violation is found, or `None` to continue to the next check.
+Verifier integration SHALL treat detected table shape or attribute drift as hard failure and block publish. The check MUST operate on paths extracted from the operation list and MUST be positioned in the verify chain before `check_operation_legality` and `check_structural_validity`.
 
 #### Scenario: Drift detected at verify
 - **WHEN** candidate page ADF contains unauthorized table topology or attribute changes
 - **THEN** verify fails with `ERR_TABLE_SHAPE_CHANGE`
 - **AND** publish is blocked
 
-#### Scenario: Table shape check is an independent function
-- **WHEN** the verify stage runs
-- **THEN** table shape integrity MUST be checked by calling `check_table_shape_integrity()` as a separate function
-- **AND** the function MUST be callable and testable independently of the full verify pipeline
+#### Scenario: Table shape check receives paths from operations
+- **WHEN** the verify stage runs with `Vec<Operation>` in the input
+- **THEN** `check_table_shape_integrity` MUST extract paths from the operations and check them
+- **AND** the behavior MUST be identical to the previous path-based check for Replace-only runs
 
 ### Requirement: Verify check functions are independently extracted
 The verify stage MUST extract its checks into focused functions: `check_forced_fail()`, `check_table_shape_integrity()`, and `check_scope_containment()`. Each function SHALL accept the relevant inputs and return `Option<VerifyResult>` - `Some(Fail)` to halt with a specific error, or `None` to continue.

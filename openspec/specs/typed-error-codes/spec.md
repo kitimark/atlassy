@@ -5,15 +5,24 @@ Define a typed, closed-set error code taxonomy for pipeline hard errors while pr
 ## Requirements
 
 ### Requirement: Error codes are a closed typed enum
-The system SHALL represent pipeline error codes as variants of an `ErrorCode` enum rather than string constants. The enum MUST be defined in `atlassy-contracts` and MUST contain exactly the 12 error classifications: `ScopeMiss`, `RouteViolation`, `SchemaInvalid`, `OutOfScopeMutation`, `LockedNodeMutation`, `TableShapeChange`, `ConflictRetryExhausted`, `RuntimeBackend`, `RuntimeUnmappedHard`, `BootstrapRequired`, `BootstrapInvalidState`, `TargetDiscoveryFailed`.
+The `ErrorCode` enum MUST include variants for all pipeline failure modes including Insert/Remove operation failures. Three new variants MUST be added: `InsertPositionInvalid`, `RemoveAnchorMissing`, `PostMutationSchemaInvalid`.
 
-#### Scenario: Exhaustive match on error codes
-- **WHEN** code matches on an `ErrorCode` value
-- **THEN** the compiler SHALL require all 12 variants to be handled (or a wildcard arm), preventing silent omission of new error classifications
+#### Scenario: InsertPositionInvalid error code
+- **WHEN** an insert operation fails due to out-of-bounds index, invalid parent path, or disallowed block type
+- **THEN** the error code MUST be `ERR_INSERT_POSITION_INVALID`
 
-#### Scenario: Construction requires a valid variant
-- **WHEN** a `PipelineError::Hard` is constructed
-- **THEN** the `code` field MUST be an `ErrorCode` variant, and the compiler SHALL reject arbitrary strings
+#### Scenario: RemoveAnchorMissing error code
+- **WHEN** a remove operation fails due to non-existent target, scope anchor protection, or disallowed block type
+- **THEN** the error code MUST be `ERR_REMOVE_ANCHOR_MISSING`
+
+#### Scenario: PostMutationSchemaInvalid error code
+- **WHEN** post-mutation ADF fails structural validity checks
+- **THEN** the error code MUST be `ERR_POST_MUTATION_SCHEMA_INVALID`
+
+#### Scenario: New error codes appear in ALL constant and tests
+- **WHEN** the `ErrorCode::ALL` array is checked
+- **THEN** it MUST include `InsertPositionInvalid`, `RemoveAnchorMissing`, and `PostMutationSchemaInvalid`
+- **AND** `as_str()` and `Display` tests MUST cover all new variants
 
 ### Requirement: Stable string representation
 Each `ErrorCode` variant SHALL produce a stable `ERR_*` string via `Display` and `as_str()`. The string representation MUST match the original `&str` constant values exactly (e.g., `ErrorCode::ScopeMiss` displays as `"ERR_SCOPE_MISS"`).

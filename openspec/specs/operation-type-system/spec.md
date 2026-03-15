@@ -5,16 +5,23 @@ Define a unified operation type system for patch operations and Phase 6 block-op
 ## Requirements
 
 ### Requirement: Unified Operation enum replaces three patch types
-The system SHALL provide a single `Operation` enum in `atlassy-contracts` that replaces `PatchCandidate`, `PatchOperation`, and `PatchOp`. In Phase 5.5, the enum MUST have exactly one variant: `Operation::Replace { path: String, value: Value }`.
+The system SHALL provide a single `Operation` enum in `atlassy-contracts` that replaces `PatchCandidate`, `PatchOperation`, and `PatchOp`. The enum MUST have three variants: `Operation::Replace { path: String, value: Value }`, `Operation::Insert { parent_path: String, index: usize, block: Value }`, and `Operation::Remove { target_path: String }`.
 
 #### Scenario: Operation::Replace carries path and value
 - **WHEN** a replace operation is constructed
 - **THEN** `Operation::Replace` SHALL contain a `path` field (JSON pointer) and a `value` field (serde_json::Value)
-- **AND** no other fields or `op` string field exists
+
+#### Scenario: Operation::Insert carries parent_path, index, and block
+- **WHEN** an insert operation is constructed
+- **THEN** `Operation::Insert` SHALL contain `parent_path` (JSON pointer to parent array), `index` (usize position), and `block` (complete ADF node as Value)
+
+#### Scenario: Operation::Remove carries target_path
+- **WHEN** a remove operation is constructed
+- **THEN** `Operation::Remove` SHALL contain `target_path` (JSON pointer to the block to remove)
 
 #### Scenario: Operation enum is the sole operation type in patch output
 - **WHEN** the patch stage produces output
-- **THEN** `PatchOutput.patch_ops` MUST be `Vec<Operation>` and MUST NOT reference `PatchOp`, `PatchCandidate`, or `PatchOperation`
+- **THEN** `PatchOutput.patch_ops` MUST be `Vec<Operation>` containing Replace, Insert, and/or Remove variants
 
 ### Requirement: Operation serializes identically to previous PatchOp
 The `Operation` enum MUST use `#[serde(tag = "op", rename_all = "snake_case")]` so that `Operation::Replace { path, value }` serializes as `{"op": "replace", "path": "...", "value": ...}`, byte-identical to the previous `PatchOp { op: "replace", path, value }`.
@@ -34,9 +41,19 @@ The types `PatchCandidate` (from `atlassy-adf`), `PatchOperation` (from `atlassy
 - **WHEN** any source file references `PatchCandidate`, `PatchOperation`, or `PatchOp`
 - **THEN** the build MUST fail with an unresolved type error
 
-### Requirement: BlockOp and BlockOpKind types exist for Phase 6 preparation
-The system SHALL define `BlockOp { kind: BlockOpKind, path: String, value: Option<Value> }` and `BlockOpKind` enum with `Insert` and `Remove` variants in `atlassy-contracts`. These types are unused in Phase 5.5.
+### Requirement: BlockOp is an enum with per-variant data
+The `BlockOp` type MUST be an enum with `Insert { parent_path: String, index: usize, block: Value }` and `Remove { target_path: String }` variants. The `BlockOpKind` enum MUST be removed.
 
-#### Scenario: BlockOp types compile and serialize
-- **WHEN** a `BlockOp` with `kind: BlockOpKind::Insert` is constructed and serialized
-- **THEN** it MUST produce valid JSON without runtime errors
+#### Scenario: BlockOp::Insert carries required insert data
+- **WHEN** a caller constructs `BlockOp::Insert`
+- **THEN** it MUST provide `parent_path`, `index`, and `block`
+- **AND** the compiler MUST enforce all fields are present
+
+#### Scenario: BlockOp::Remove carries target path only
+- **WHEN** a caller constructs `BlockOp::Remove`
+- **THEN** it MUST provide only `target_path`
+- **AND** no `value` or `index` field exists
+
+#### Scenario: BlockOpKind is removed
+- **WHEN** any source file references `BlockOpKind`
+- **THEN** the build MUST fail with an unresolved type error

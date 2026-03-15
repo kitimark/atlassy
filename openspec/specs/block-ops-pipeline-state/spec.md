@@ -4,17 +4,39 @@ Define Phase 5.5 block-ops pipeline scaffolding, including no-op execution and s
 
 ## Requirements
 
-### Requirement: AdfBlockOps pipeline state exists as no-op
-The pipeline MUST include an `AdfBlockOps` state positioned between `AdfTableEdit` and `MergeCandidates` in the execution order. In Phase 5.5, this state SHALL be a no-op pass-through that produces empty output without affecting the pipeline data flow.
+### Requirement: AdfBlockOps pipeline state translates BlockOp to Operation
+The `AdfBlockOps` state MUST translate each `BlockOp` from `RunRequest.block_ops` into a corresponding `Operation` variant. `BlockOp::Insert` MUST produce `Operation::Insert`. `BlockOp::Remove` MUST produce `Operation::Remove`. The state MUST validate each operation before producing it.
 
-#### Scenario: AdfBlockOps executes without error
-- **WHEN** a pipeline run executes with any RunMode
-- **THEN** the `AdfBlockOps` state MUST execute between `AdfTableEdit` and `MergeCandidates` without error
-- **AND** its output MUST NOT affect the merge, patch, verify, or publish stages
+#### Scenario: BlockOp::Insert translated to Operation::Insert
+- **WHEN** `RunRequest.block_ops` contains `BlockOp::Insert { parent_path, index, block }`
+- **THEN** `AdfBlockOps` output MUST include `Operation::Insert { parent_path, index, block }`
 
-#### Scenario: AdfBlockOps persists artifacts
-- **WHEN** the `AdfBlockOps` state executes
-- **THEN** it MUST persist state input and output artifacts to the artifact store following the same pattern as other pipeline states
+#### Scenario: BlockOp::Remove translated to Operation::Remove
+- **WHEN** `RunRequest.block_ops` contains `BlockOp::Remove { target_path }`
+- **THEN** `AdfBlockOps` output MUST include `Operation::Remove { target_path }`
+
+#### Scenario: Block type not in editable_prose scope
+- **WHEN** a `BlockOp::Insert` specifies a block with type not in `EDITABLE_PROSE_TYPES`
+- **THEN** `AdfBlockOps` MUST fail with `ERR_INSERT_POSITION_INVALID`
+
+#### Scenario: Insert parent path outside allowed scope
+- **WHEN** a `BlockOp::Insert` has parent_path outside `allowed_scope_paths`
+- **THEN** `AdfBlockOps` MUST fail with `ERR_OUT_OF_SCOPE_MUTATION`
+
+#### Scenario: Remove target path outside allowed scope
+- **WHEN** a `BlockOp::Remove` has target_path outside `allowed_scope_paths`
+- **THEN** `AdfBlockOps` MUST fail with `ERR_OUT_OF_SCOPE_MUTATION`
+
+#### Scenario: Empty block_ops produces empty operations
+- **WHEN** `RunRequest.block_ops` is empty
+- **THEN** `AdfBlockOps` output MUST have an empty `operations` list (backward compatible)
+
+### Requirement: AdfBlockOps output is wired to merge
+The orchestrator MUST pass `AdfBlockOps` output to the `MergeCandidates` state so that block operations are included in the unified operation list.
+
+#### Scenario: AdfBlockOps operations flow to merge
+- **WHEN** `AdfBlockOps` produces operations
+- **THEN** those operations MUST be received by `MergeCandidates` and included in its output
 
 ### Requirement: RunRequest accepts block_ops field
 `RunRequest` MUST include a `block_ops: Vec<BlockOp>` field. In Phase 5.5, this field MUST always be an empty vector. The pipeline MUST NOT process block_ops in Phase 5.5.
