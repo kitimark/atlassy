@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use atlassy_contracts::{Diagnostics, PipelineState, RunSummary, StateEnvelope};
+use atlassy_contracts::{Diagnostics, MultiPageSummary, PipelineState, RunSummary, StateEnvelope};
 
 use crate::PipelineError;
 
@@ -46,6 +46,20 @@ impl ArtifactStore {
         fs::create_dir_all(&run_dir)?;
         fs::write(
             run_dir.join("summary.json"),
+            serde_json::to_string_pretty(summary)?,
+        )?;
+        Ok(())
+    }
+
+    pub fn persist_multi_page_summary(
+        &self,
+        plan_id: &str,
+        summary: &MultiPageSummary,
+    ) -> Result<(), PipelineError> {
+        let plan_dir = self.root.join("artifacts").join(plan_id);
+        fs::create_dir_all(&plan_dir)?;
+        fs::write(
+            plan_dir.join("multi_page_summary.json"),
             serde_json::to_string_pretty(summary)?,
         )?;
         Ok(())

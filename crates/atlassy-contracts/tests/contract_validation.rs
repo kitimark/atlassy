@@ -528,3 +528,136 @@ fn provenance_stamp_validation_requires_sha_and_runtime_mode() {
         ))
     );
 }
+
+#[test]
+fn multi_page_types_round_trip_serde() {
+    let provenance = ProvenanceStamp {
+        git_commit_sha: "0123456789abcdef0123456789abcdef01234567".to_string(),
+        git_dirty: false,
+        pipeline_version: PIPELINE_VERSION.to_string(),
+        runtime_mode: RUNTIME_STUB.to_string(),
+    };
+
+    let run_summary = RunSummary {
+        success: true,
+        run_id: "run-1".to_string(),
+        request_id: "req-1".to_string(),
+        page_id: "page-1".to_string(),
+        flow: FLOW_OPTIMIZED.to_string(),
+        pattern: PATTERN_A.to_string(),
+        edit_intent_hash: "hash-1".to_string(),
+        scope_selectors: vec!["heading:Overview".to_string()],
+        scope_resolution_failed: false,
+        full_page_fetch: false,
+        full_page_adf_bytes: 1024,
+        scoped_adf_bytes: 512,
+        context_reduction_ratio: 0.5,
+        pipeline_version: PIPELINE_VERSION.to_string(),
+        git_commit_sha: provenance.git_commit_sha.clone(),
+        git_dirty: provenance.git_dirty,
+        runtime_mode: provenance.runtime_mode.clone(),
+        state_token_usage: BTreeMap::new(),
+        total_tokens: 0,
+        retry_count: 0,
+        retry_tokens: 0,
+        patch_ops_bytes: 64,
+        verify_result: "pass".to_string(),
+        verify_error_codes: vec![],
+        publish_result: "published".to_string(),
+        publish_error_code: None,
+        new_version: Some(2),
+        start_ts: "2026-03-15T00:00:00Z".to_string(),
+        verify_end_ts: "2026-03-15T00:00:01Z".to_string(),
+        publish_end_ts: "2026-03-15T00:00:02Z".to_string(),
+        latency_ms: 42,
+        locked_node_mutation: false,
+        out_of_scope_mutation: false,
+        telemetry_complete: true,
+        discovered_target_path: None,
+        applied_paths: vec![],
+        blocked_paths: vec![],
+        error_codes: vec![],
+        token_metrics: BTreeMap::new(),
+        failure_state: None,
+        empty_page_detected: false,
+        bootstrap_applied: false,
+    };
+
+    let request = MultiPageRequest {
+        plan_id: "plan-1".to_string(),
+        pages: vec![PageTarget {
+            page_id: None,
+            create: Some(CreatePageTarget {
+                title: "Report".to_string(),
+                parent_page_id: "123".to_string(),
+                space_key: "PROJ".to_string(),
+            }),
+            edit_intent: "Create report section".to_string(),
+            scope_selectors: vec![],
+            run_mode: PageRunMode::SimpleScopedProseUpdate {
+                target_path: Some("/content/0/content/0/text".to_string()),
+                markdown: "Hello".to_string(),
+            },
+            block_ops: vec![BlockOp::InsertSection {
+                parent_path: "/content".to_string(),
+                index: 0,
+                heading_level: 2,
+                heading_text: "Overview".to_string(),
+                body_blocks: vec![serde_json::json!({
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Body"}]
+                })],
+            }],
+            bootstrap_empty_page: true,
+            depends_on: vec!["@0".to_string()],
+        }],
+        rollback_on_failure: true,
+        provenance: provenance.clone(),
+        timestamp: "2026-03-15T00:00:00Z".to_string(),
+    };
+
+    let snapshot = PageSnapshot {
+        page_id: "page-1".to_string(),
+        version_before: 4,
+        adf_before: serde_json::json!({"type": "doc", "content": []}),
+        version_after: Some(5),
+    };
+
+    let summary = MultiPageSummary {
+        plan_id: "plan-1".to_string(),
+        success: false,
+        page_results: vec![PageResult {
+            page_id: "page-1".to_string(),
+            created: false,
+            summary: run_summary,
+        }],
+        rollback_results: vec![RollbackResult {
+            page_id: "page-1".to_string(),
+            success: true,
+            conflict: false,
+            error: None,
+        }],
+        total_pages: 1,
+        succeeded_pages: 0,
+        failed_pages: 1,
+        rolled_back_pages: 1,
+        latency_ms: 123,
+    };
+
+    let request_round_trip: MultiPageRequest =
+        serde_json::from_str(&serde_json::to_string(&request).unwrap()).unwrap();
+    let snapshot_round_trip: PageSnapshot =
+        serde_json::from_str(&serde_json::to_string(&snapshot).unwrap()).unwrap();
+    let summary_round_trip: MultiPageSummary =
+        serde_json::from_str(&serde_json::to_string(&summary).unwrap()).unwrap();
+
+    assert_eq!(request_round_trip.plan_id, request.plan_id);
+    assert_eq!(request_round_trip.pages.len(), 1);
+    assert!(matches!(
+        request_round_trip.pages[0].run_mode,
+        PageRunMode::SimpleScopedProseUpdate { .. }
+    ));
+    assert_eq!(snapshot_round_trip.version_after, Some(5));
+    assert_eq!(summary_round_trip.plan_id, summary.plan_id);
+    assert_eq!(summary_round_trip.rollback_results.len(), 1);
+}

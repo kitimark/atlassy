@@ -43,6 +43,16 @@ pub struct RunBatchArgs {
 }
 
 #[derive(Debug, Args)]
+pub struct RunMultiPageArgs {
+    #[arg(long)]
+    pub manifest: PathBuf,
+    #[arg(long, default_value = ".")]
+    pub artifacts_dir: PathBuf,
+    #[arg(long, value_enum, default_value_t = RuntimeBackend::Stub)]
+    pub runtime_backend: RuntimeBackend,
+}
+
+#[derive(Debug, Args)]
 pub struct RunReadinessArgs {
     #[arg(long, default_value = ".")]
     pub artifacts_dir: PathBuf,

@@ -22,10 +22,14 @@ pub enum ErrorCode {
     TargetDiscoveryFailed,
     SectionBoundaryInvalid,
     StructuralCompositionFailed,
+    MultiPagePartialFailure,
+    RollbackConflict,
+    DependencyCycle,
+    PageCreationFailed,
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 21] = [
         Self::ScopeMiss,
         Self::RouteViolation,
         Self::SchemaInvalid,
@@ -43,6 +47,10 @@ impl ErrorCode {
         Self::TargetDiscoveryFailed,
         Self::SectionBoundaryInvalid,
         Self::StructuralCompositionFailed,
+        Self::MultiPagePartialFailure,
+        Self::RollbackConflict,
+        Self::DependencyCycle,
+        Self::PageCreationFailed,
     ];
 
     pub const fn as_str(&self) -> &'static str {
@@ -64,6 +72,10 @@ impl ErrorCode {
             Self::TargetDiscoveryFailed => "ERR_TARGET_DISCOVERY_FAILED",
             Self::SectionBoundaryInvalid => "ERR_SECTION_BOUNDARY_INVALID",
             Self::StructuralCompositionFailed => "ERR_STRUCTURAL_COMPOSITION_FAILED",
+            Self::MultiPagePartialFailure => "ERR_MULTI_PAGE_PARTIAL_FAILURE",
+            Self::RollbackConflict => "ERR_ROLLBACK_CONFLICT",
+            Self::DependencyCycle => "ERR_DEPENDENCY_CYCLE",
+            Self::PageCreationFailed => "ERR_PAGE_CREATION_FAILED",
         }
     }
 }
@@ -138,6 +150,13 @@ mod tests {
                 ErrorCode::StructuralCompositionFailed,
                 "ERR_STRUCTURAL_COMPOSITION_FAILED",
             ),
+            (
+                ErrorCode::MultiPagePartialFailure,
+                "ERR_MULTI_PAGE_PARTIAL_FAILURE",
+            ),
+            (ErrorCode::RollbackConflict, "ERR_ROLLBACK_CONFLICT"),
+            (ErrorCode::DependencyCycle, "ERR_DEPENDENCY_CYCLE"),
+            (ErrorCode::PageCreationFailed, "ERR_PAGE_CREATION_FAILED"),
         ];
 
         assert_eq!(cases.len(), ErrorCode::ALL.len());

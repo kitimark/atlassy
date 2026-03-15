@@ -2,6 +2,7 @@ use atlassy_contracts::{BlockOp, ProvenanceStamp, TableOperation};
 
 mod artifact_store;
 mod error_map;
+pub mod multi_page;
 mod orchestrator;
 mod state_tracker;
 mod states;
@@ -9,6 +10,7 @@ mod util;
 
 pub use artifact_store::ArtifactStore;
 pub use error_map::PipelineError;
+pub use multi_page::MultiPageOrchestrator;
 pub use orchestrator::Orchestrator;
 pub use state_tracker::StateTracker;
 

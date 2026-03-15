@@ -4,12 +4,12 @@ use std::path::PathBuf;
 
 use atlassy_confluence::{ConfluenceError, LiveConfluenceClient, StubConfluenceClient, StubPage};
 use atlassy_contracts::{
-    ErrorCode, FLOW_OPTIMIZED, PATTERN_A, PipelineState, RUNTIME_LIVE, RUNTIME_STUB,
+    ErrorCode, PipelineState, FLOW_OPTIMIZED, PATTERN_A, RUNTIME_LIVE, RUNTIME_STUB,
 };
 use atlassy_pipeline::{Orchestrator, PipelineError, RunMode, RunRequest};
 use chrono::Utc;
 
-use crate::{DynError, collect_provenance, demo_page};
+use crate::{collect_provenance, demo_page, DynError};
 
 fn map_live_startup_error(error: ConfluenceError) -> PipelineError {
     PipelineError::Hard {

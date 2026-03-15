@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 
 mod cli_args;
 
-use cli_args::{CreateSubpageArgs, RunArgs, RunBatchArgs, RunReadinessArgs};
+use cli_args::{CreateSubpageArgs, RunArgs, RunBatchArgs, RunMultiPageArgs, RunReadinessArgs};
 
 #[derive(Debug, Parser)]
 #[command(name = "atlassy")]
@@ -18,6 +18,7 @@ struct Cli {
 enum Commands {
     Run(RunArgs),
     RunBatch(RunBatchArgs),
+    RunMultiPage(RunMultiPageArgs),
     RunReadiness(RunReadinessArgs),
     CreateSubpage(CreateSubpageArgs),
 }
@@ -81,6 +82,13 @@ fn main() -> Result<(), DynError> {
                 args.runtime_backend.as_str(),
             )?;
             println!("{}", serde_json::to_string_pretty(&report)?);
+        }
+        Commands::RunMultiPage(args) => {
+            execute_multi_page_from_manifest_file_with_backend(
+                &args.manifest,
+                &args.artifacts_dir,
+                args.runtime_backend.as_str(),
+            )?;
         }
         Commands::RunReadiness(args) => {
             let readiness = generate_readiness_outputs_from_artifacts(&args.artifacts_dir)?;

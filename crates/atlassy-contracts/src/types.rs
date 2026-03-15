@@ -420,6 +420,95 @@ pub struct RunSummary {
     pub bootstrap_applied: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MultiPageRequest {
+    pub plan_id: String,
+    pub pages: Vec<PageTarget>,
+    pub rollback_on_failure: bool,
+    pub provenance: ProvenanceStamp,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PageTarget {
+    pub page_id: Option<String>,
+    pub create: Option<CreatePageTarget>,
+    pub edit_intent: String,
+    pub scope_selectors: Vec<String>,
+    pub run_mode: PageRunMode,
+    pub block_ops: Vec<BlockOp>,
+    pub bootstrap_empty_page: bool,
+    pub depends_on: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreatePageTarget {
+    pub title: String,
+    pub parent_page_id: String,
+    pub space_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PageSnapshot {
+    pub page_id: String,
+    pub version_before: u64,
+    pub adf_before: serde_json::Value,
+    pub version_after: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MultiPageSummary {
+    pub plan_id: String,
+    pub success: bool,
+    pub page_results: Vec<PageResult>,
+    pub rollback_results: Vec<RollbackResult>,
+    pub total_pages: usize,
+    pub succeeded_pages: usize,
+    pub failed_pages: usize,
+    pub rolled_back_pages: usize,
+    pub latency_ms: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PageResult {
+    pub page_id: String,
+    pub created: bool,
+    pub summary: RunSummary,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RollbackResult {
+    pub page_id: String,
+    pub success: bool,
+    pub conflict: bool,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "mode", rename_all = "snake_case")]
+pub enum PageRunMode {
+    NoOp,
+    SimpleScopedProseUpdate {
+        target_path: Option<String>,
+        markdown: String,
+    },
+    SimpleScopedTableCellUpdate {
+        target_path: Option<String>,
+        text: String,
+    },
+    ForbiddenTableOperation {
+        target_path: String,
+        operation: TableOperation,
+    },
+    SyntheticRouteConflict {
+        prose_path: String,
+        table_path: String,
+    },
+    SyntheticTableShapeDrift {
+        path: String,
+    },
+}
+
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum ContractError {
     #[error("missing required field: {0}")]
