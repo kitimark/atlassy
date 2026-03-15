@@ -49,6 +49,28 @@ This project follows the [Conventional Commits](https://www.conventionalcommits.
 | `perf` | Performance improvement |
 | `style` | Formatting, whitespace (no logic change) |
 
+### Choosing the Right Type
+
+Ask: **"Does this change make something possible that wasn't possible before?"**
+
+- **YES** → `feat` (new enum variant, new function, new error code, new pipeline state, new CLI flag)
+- **NO** → "Does it fix a bug?" → `fix`
+- **NO** → "Does it restructure code with identical behavior?" → `refactor`
+- **NO** → "Is it docs only?" → `docs`
+- **NO** → "Is it test-only?" → `test`
+- **NO** → "Is it maintenance/archiving/scaffolding?" → `chore`
+
+The critical distinction between `feat` and `refactor`:
+
+- `feat` = new behavior exists after this commit that did not exist before
+- `refactor` = same inputs produce same outputs, code is just organized differently
+
+### Common Mistakes
+
+- Using `refactor` when adding new `Operation` variants or error codes → should be `feat` (new capability)
+- Using `refactor(pipeline)` for changes spanning pipeline + contracts + adf → should omit scope: `refactor: ...`
+- Using `feat` for renaming types or extracting modules → should be `refactor` (same behavior, different structure)
+
 ### Scopes
 
 | Scope | Area |
