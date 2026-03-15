@@ -5,7 +5,7 @@ Define a unified operation type system for patch operations and Phase 6 block-op
 ## Requirements
 
 ### Requirement: Unified Operation enum replaces three patch types
-The system SHALL provide a single `Operation` enum in `atlassy-contracts` that replaces `PatchCandidate`, `PatchOperation`, and `PatchOp`. The enum MUST have three variants: `Operation::Replace { path: String, value: Value }`, `Operation::Insert { parent_path: String, index: usize, block: Value }`, and `Operation::Remove { target_path: String }`.
+The system SHALL provide a single `Operation` enum in `atlassy-contracts` that replaces `PatchCandidate`, `PatchOperation`, and `PatchOp`. The enum MUST have four variants: `Operation::Replace { path: String, value: Value }`, `Operation::Insert { parent_path: String, index: usize, block: Value }`, `Operation::Remove { target_path: String }`, and `Operation::UpdateAttrs { target_path: String, attrs: Value }`.
 
 #### Scenario: Operation::Replace carries path and value
 - **WHEN** a replace operation is constructed
@@ -19,9 +19,17 @@ The system SHALL provide a single `Operation` enum in `atlassy-contracts` that r
 - **WHEN** a remove operation is constructed
 - **THEN** `Operation::Remove` SHALL contain `target_path` (JSON pointer to the block to remove)
 
+#### Scenario: Operation::UpdateAttrs carries target_path and attrs
+- **WHEN** an update-attrs operation is constructed
+- **THEN** `Operation::UpdateAttrs` SHALL contain `target_path` (JSON pointer to the node) and `attrs` (serde_json::Value)
+
 #### Scenario: Operation enum is the sole operation type in patch output
 - **WHEN** the patch stage produces output
-- **THEN** `PatchOutput.patch_ops` MUST be `Vec<Operation>` containing Replace, Insert, and/or Remove variants
+- **THEN** `PatchOutput.patch_ops` MUST be `Vec<Operation>` containing Replace, Insert, Remove, and/or UpdateAttrs variants
+
+#### Scenario: UpdateAttrs serialization
+- **WHEN** `Operation::UpdateAttrs` is serialized
+- **THEN** it MUST produce `{"op": "update_attrs", "target_path": "...", "attrs": {...}}`
 
 ### Requirement: Operation serializes identically to previous PatchOp
 The `Operation` enum MUST use `#[serde(tag = "op", rename_all = "snake_case")]` so that `Operation::Replace { path, value }` serializes as `{"op": "replace", "path": "...", "value": ...}`, byte-identical to the previous `PatchOp { op: "replace", path, value }`.
@@ -42,7 +50,7 @@ The types `PatchCandidate` (from `atlassy-adf`), `PatchOperation` (from `atlassy
 - **THEN** the build MUST fail with an unresolved type error
 
 ### Requirement: BlockOp enum supports structural composition intents
-The `BlockOp` enum MUST include higher-level variants that expand into multiple `Operation` commands: `InsertSection`, `RemoveSection`, `InsertTable`, `InsertList`.
+The `BlockOp` enum MUST include higher-level variants that expand into multiple `Operation` commands: `InsertSection`, `RemoveSection`, `InsertTable`, `InsertList`, `InsertRow { table_path, index, cells: Vec<String> }`, `RemoveRow { table_path, index }`, `InsertColumn { table_path, index }`, `RemoveColumn { table_path, index }`, and `UpdateAttrs { target_path, attrs: Value }`.
 
 #### Scenario: BlockOp::Insert carries required insert data
 - **WHEN** a caller constructs `BlockOp::Insert`
@@ -69,6 +77,18 @@ The `BlockOp` enum MUST include higher-level variants that expand into multiple 
 #### Scenario: BlockOp::InsertList carries list data
 - **WHEN** a caller constructs `BlockOp::InsertList`
 - **THEN** it MUST provide `parent_path: String`, `index: usize`, `ordered: bool`, `items: Vec<String>`
+
+#### Scenario: BlockOp::InsertRow carries row insertion data
+- **WHEN** a caller constructs `BlockOp::InsertRow`
+- **THEN** it MUST provide `table_path: String`, `index: usize`, and `cells: Vec<String>`
+
+#### Scenario: BlockOp::InsertColumn carries column insertion data
+- **WHEN** a caller constructs `BlockOp::InsertColumn`
+- **THEN** it MUST provide `table_path: String` and `index: usize`
+
+#### Scenario: BlockOp::UpdateAttrs carries attr update data
+- **WHEN** a caller constructs `BlockOp::UpdateAttrs`
+- **THEN** it MUST provide `target_path: String` and `attrs: Value`
 
 #### Scenario: All BlockOp variants serialize and deserialize
 - **WHEN** any `BlockOp` variant is serialized to JSON and deserialized

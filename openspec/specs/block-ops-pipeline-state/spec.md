@@ -5,7 +5,7 @@ Define Phase 5.5 block-ops pipeline scaffolding, including no-op execution and s
 ## Requirements
 
 ### Requirement: AdfBlockOps translates all BlockOp variants to Operations
-The `AdfBlockOps` state MUST handle all 6 BlockOp variants (Insert, Remove, InsertSection, RemoveSection, InsertTable, InsertList) by dispatching to per-variant translate functions.
+The `AdfBlockOps` state MUST handle all 11 BlockOp variants (Insert, Remove, InsertSection, RemoveSection, InsertTable, InsertList, InsertRow, RemoveRow, InsertColumn, RemoveColumn, UpdateAttrs) by dispatching to per-variant translate functions.
 
 #### Scenario: BlockOp::Insert translated to Operation::Insert
 - **WHEN** `RunRequest.block_ops` contains `BlockOp::Insert { parent_path, index, block }`
@@ -31,6 +31,26 @@ The `AdfBlockOps` state MUST handle all 6 BlockOp variants (Insert, Remove, Inse
 #### Scenario: InsertList translated to single Operation::Insert
 - **WHEN** `RunRequest.block_ops` contains `BlockOp::InsertList`
 - **THEN** `AdfBlockOps` MUST use `build_list()` to construct the ADF and produce 1 `Operation::Insert`
+
+#### Scenario: InsertRow translated
+- **WHEN** `BlockOp::InsertRow` is processed
+- **THEN** `translate_insert_row()` MUST produce a single `Operation::Insert` containing a valid tableRow
+
+#### Scenario: RemoveRow translated
+- **WHEN** `BlockOp::RemoveRow` is processed
+- **THEN** `translate_remove_row()` MUST produce a single `Operation::Remove` targeting the tableRow
+
+#### Scenario: InsertColumn translated to N operations
+- **WHEN** `BlockOp::InsertColumn` is processed on a table with 3 rows
+- **THEN** `translate_insert_column()` MUST produce 3 `Operation::Insert` commands (one per row)
+
+#### Scenario: RemoveColumn translated to N operations
+- **WHEN** `BlockOp::RemoveColumn` is processed on a table with 3 rows
+- **THEN** `translate_remove_column()` MUST produce 3 `Operation::Remove` commands (one per row)
+
+#### Scenario: UpdateAttrs translated 1:1
+- **WHEN** `BlockOp::UpdateAttrs` is processed
+- **THEN** `translate_update_attrs()` MUST produce a single `Operation::UpdateAttrs`
 
 #### Scenario: Block type not in editable_prose scope
 - **WHEN** a `BlockOp::Insert` specifies a block with type not in `EDITABLE_PROSE_TYPES`

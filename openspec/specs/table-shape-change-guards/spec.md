@@ -4,13 +4,24 @@ Define v1 guardrails that block forbidden table topology and attribute mutations
 
 ## Requirements
 
-### Requirement: Forbidden table shape operations are rejected
-The table route MUST reject candidate operations that change table topology, including row/column add-remove and merge-split behavior.
+### Requirement: Table shape guard is op-type-aware for declared operations
+The `check_table_shape_integrity` function MUST allow table structural changes that are declared via BlockOp row/column operations, while continuing to block undeclared table mutations.
 
-#### Scenario: Row add operation requested
-- **WHEN** an edit request implies insertion of a table row
-- **THEN** the route rejects the request with `ERR_TABLE_SHAPE_CHANGE`
-- **AND** no publish attempt is allowed
+#### Scenario: Declared row add passes table shape guard
+- **WHEN** the operation manifest includes a `BlockOp::InsertRow` and the resulting operations modify table structure
+- **THEN** the table shape guard MUST allow the changes
+
+#### Scenario: Declared column remove passes table shape guard
+- **WHEN** the operation manifest includes a `BlockOp::RemoveColumn` and the resulting operations modify table structure
+- **THEN** the table shape guard MUST allow the changes
+
+#### Scenario: Undeclared table structural change remains blocked
+- **WHEN** a table structural change is detected that does not correspond to a declared row/column BlockOp
+- **THEN** the table shape guard MUST fail with `ERR_TABLE_SHAPE_CHANGE`
+
+#### Scenario: Cell merge/split remains blocked
+- **WHEN** a table mutation corresponds to merge/split semantics
+- **THEN** the table shape guard MUST fail with `ERR_TABLE_SHAPE_CHANGE` (Mode 3 not in scope)
 
 ### Requirement: Table attribute changes are rejected in v1
 The table route MUST reject candidate operations that modify table-level or structural attributes in v1 scope.
